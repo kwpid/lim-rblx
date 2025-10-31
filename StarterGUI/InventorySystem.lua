@@ -41,15 +41,23 @@ else
   print("⚠️ SearchBar not found (optional)")
 end
 
--- Ensure Selected value exists
+-- Ensure Selected value exists (create as StringValue if needed)
 local selected = handler:FindFirstChild("Selected")
 if not selected then
   selected = Instance.new("StringValue")
   selected.Name = "Selected"
   selected.Parent = handler
-  print("✓ Created Selected value")
+  print("✓ Created Selected StringValue")
+elseif not selected:IsA("StringValue") then
+  -- If it exists but is wrong type (like ObjectValue), replace it
+  warn("⚠️ Selected was wrong type (" .. selected.ClassName .. "), replacing with StringValue")
+  selected:Destroy()
+  selected = Instance.new("StringValue")
+  selected.Name = "Selected"
+  selected.Parent = handler
+  print("✓ Created new Selected StringValue")
 else
-  print("✓ Found Selected value")
+  print("✓ Found Selected StringValue")
 end
 
 -- Wait for RemoteEvents

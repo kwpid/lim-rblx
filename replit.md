@@ -72,6 +72,14 @@ Before testing in Roblox Studio, you **must** enable DataStore access:
 The scripts now include detailed error messages to help diagnose this issue.
 
 ## Recent Changes
+- **2025-10-31**: Fixed crate animation issues
+  - Animation now lands on the correct item (searches for chosen item in array)
+  - Fixed animation speed to be consistent (pow = 4 instead of random 2-10)
+  - Added logging to show chosen item and position during animation
+  - Prevents "wrong item" bug where animation didn't match awarded item
+- **2025-10-31**: Fixed inventory Selected value error
+  - Detects and replaces ObjectValue with StringValue if wrong type exists
+  - Prevents "Instance expected, got string" error when clicking items
 - **2025-10-31**: Added comprehensive error logging to inventory system
   - Server-side logging for GetInventory requests
   - Client-side logging for every step of inventory initialization and refresh

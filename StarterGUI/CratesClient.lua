@@ -81,9 +81,27 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
 
   -- allItems is an array of items for the animation
   -- chosenItem is the actual item the player won
+  
+  print("🎰 Starting crate animation with " .. #allItems .. " items")
+  print("🎯 Chosen item: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")")
 
   local numItems = #allItems
-  local chosenPosition = rnd:NextInteger(15, numItems - 5)
+  
+  -- Find the chosen item in the array and place it at a specific position
+  local chosenPosition = nil
+  for i, item in ipairs(allItems) do
+    if item.Name == chosenItem.Name and item.RobloxId == chosenItem.RobloxId then
+      chosenPosition = i
+      print("✓ Found chosen item at position " .. i)
+      break
+    end
+  end
+  
+  -- If not found (shouldn't happen), place it in the middle
+  if not chosenPosition then
+    warn("⚠️ Chosen item not found in animation array, placing at center")
+    chosenPosition = math.floor(numItems / 2)
+  end
 
   -- Create item frames for animation
   for i = 1, numItems do
@@ -137,7 +155,8 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   openedFrame.Visible = true
   openedGui.Enabled = true
 
-  local pow = rnd:NextNumber(2, 10)
+  -- Use consistent animation speed (easing power)
+  local pow = 4  -- Fixed easing for consistent animation speed
   local lastSlot = 0
 
   -- Animation loop
