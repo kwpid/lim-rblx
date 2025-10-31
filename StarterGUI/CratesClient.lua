@@ -150,6 +150,13 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   print("🎰 Starting crate animation")
   print("🎯 Chosen item: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")")
 
+  -- Clear any existing items from previous roll
+  for _, child in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do
+    if child:IsA("Frame") or child:IsA("ImageLabel") then
+      child:Destroy()
+    end
+  end
+
   local numItems = 100  -- Fixed number for consistent scroll
   local chosenPosition = 25  -- Position where chosen item will appear
 
@@ -210,7 +217,7 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
 
   -- Show opening frame
   openedFrame.CrateName.Text = "Opening Case..."
-  closeOpenedBtn.Visible = false
+  closeOpenedBtn.Visible = false  -- Always hide at start
   openedFrame.Visible = true
   openedGui.Enabled = true
 
@@ -245,7 +252,11 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
 
   -- Show won item
   openedFrame.CrateName.Text = "You won: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")!"
-  closeOpenedBtn.Visible = true
+  
+  -- Only show continue button if NOT auto-rolling
+  if not isAutoRolling then
+    closeOpenedBtn.Visible = true
+  end
 
   -- Mark rolling as complete
   isCurrentlyRolling = false
@@ -260,15 +271,29 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
     if hasPlayerMoved() then
       stopAutoRoll()
       print("🚶 Player moved - auto-roll stopped")
+      -- Show continue button since autoroll stopped
+      closeOpenedBtn.Visible = true
     else
       -- Wait a moment before next roll
-      task.delay(0.5, function()
+      task.delay(1.5, function()
         if isAutoRolling and not isCurrentlyRolling then
           -- Check again if player moved during delay
           if hasPlayerMoved() then
             stopAutoRoll()
             print("🚶 Player moved - auto-roll stopped")
+            -- Show continue button since autoroll stopped
+            closeOpenedBtn.Visible = true
           else
+            -- Hide the crate result and start next roll
+            openedFrame.Visible = false
+            
+            -- Clear items for next animation
+            for _, child in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do
+              if child:IsA("Frame") or child:IsA("ImageLabel") then
+                child:Destroy()
+              end
+            end
+            
             -- Start next roll
             isCurrentlyRolling = true
             rollButton.Visible = false
