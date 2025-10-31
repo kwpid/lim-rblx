@@ -17,13 +17,16 @@ function ItemDatabase:LoadItems()
     if jsonData then
       self.Items = HttpService:JSONDecode(jsonData)
 
-      -- Migrate legacy items (add Stock/CurrentStock if missing)
+      -- Migrate legacy items (add Stock/CurrentStock/Owners if missing)
       for _, item in ipairs(self.Items) do
         if item.Stock == nil then
           item.Stock = 0
         end
         if item.CurrentStock == nil then
           item.CurrentStock = 0
+        end
+        if item.Owners == nil then
+          item.Owners = 0
         end
       end
 
@@ -95,6 +98,7 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
     Rarity = rarity,
     Stock = stock,  -- 0 = regular, 1-100 = stock item
     CurrentStock = 0,  -- How many have been rolled (starts at 0)
+    Owners = 0,  -- How many players own this item
     CreatedAt = os.time()
   }
 
@@ -165,6 +169,26 @@ function ItemDatabase:GetItemByRobloxId(robloxId)
     end
   end
   return nil
+end
+
+-- Increment owners count for an item
+function ItemDatabase:IncrementOwners(robloxId)
+  local item = self:GetItemByRobloxId(robloxId)
+  if item then
+    item.Owners = (item.Owners or 0) + 1
+    self:SaveItems()
+    return item.Owners
+  end
+  return nil
+end
+
+-- Get owners count for an item
+function ItemDatabase:GetOwners(robloxId)
+  local item = self:GetItemByRobloxId(robloxId)
+  if item then
+    return item.Owners or 0
+  end
+  return 0
 end
 
 -- Initialize database

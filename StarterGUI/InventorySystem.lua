@@ -129,6 +129,18 @@ function refresh()
       t1Label.Visible = false
     end
 
+    -- Display copies (owners count)
+    local copiesLabel = button:FindFirstChild("copies")
+    if copiesLabel then
+      local ownersCount = item.Owners or 0
+      if ownersCount > 0 then
+        copiesLabel.Text = "copies: " .. ownersCount
+        copiesLabel.Visible = true
+      else
+        copiesLabel.Visible = false
+      end
+    end
+
     -- Display value
     local valueLabel = contentFrame and contentFrame:FindFirstChild("Value")
     if valueLabel then

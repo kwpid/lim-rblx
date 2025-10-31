@@ -3,6 +3,7 @@
 -- Use this module from other server scripts to modify player data
 
 local DataStoreManager = require(script.Parent.DataStoreManager)
+local ItemDatabase = require(script.Parent.ItemDatabase)
 
 local DataStoreAPI = {}
 
@@ -19,6 +20,8 @@ function DataStoreAPI:AddItem(player, itemData)
     return false
   end
 
+  local isNewOwner = false
+
   -- Check if this is a stock item (has SerialNumber) or regular item
   if itemData.SerialNumber then
     -- Stock item - add as unique item with serial number
@@ -30,6 +33,7 @@ function DataStoreAPI:AddItem(player, itemData)
       SerialNumber = itemData.SerialNumber,
       ObtainedAt = os.time()
     })
+    isNewOwner = true  -- Stock items always count as new owner
     print("➕ Added stock item to " .. player.Name .. "'s inventory: " .. itemData.Name .. " #" .. itemData.SerialNumber)
   else
     -- Regular item - check if already exists and stack
@@ -55,12 +59,18 @@ function DataStoreAPI:AddItem(player, itemData)
         Amount = 1,
         ObtainedAt = os.time()
       })
+      isNewOwner = true  -- First time getting this regular item
       print("➕ Added new item to " .. player.Name .. "'s inventory: " .. itemData.Name)
     end
   end
 
   -- Update inventory value
   self:UpdateInventoryValue(player)
+
+  -- Increment owners count only if this is a new owner
+  if isNewOwner then
+    ItemDatabase:IncrementOwners(itemData.RobloxId)
+  end
 
   return true
 end
@@ -120,11 +130,18 @@ function DataStoreAPI:IncrementCasesOpened(player)
   return false
 end
 
--- Get player's inventory
+-- Get player's inventory (with Owners count added to each item)
 function DataStoreAPI:GetInventory(player)
   local data = self:GetPlayerData(player)
   if data then
-    return data.Inventory
+    -- Add Owners count to each item from ItemDatabase
+    local inventoryWithOwners = {}
+    for _, item in ipairs(data.Inventory) do
+      local itemCopy = table.clone(item)
+      itemCopy.Owners = ItemDatabase:GetOwners(item.RobloxId)
+      table.insert(inventoryWithOwners, itemCopy)
+    end
+    return inventoryWithOwners
   end
   return {}
 end
