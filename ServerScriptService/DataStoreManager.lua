@@ -12,7 +12,8 @@ local DataStoreManager = {}
 local DEFAULT_DATA = {
   Inventory = {},  -- Will store item data as table
   CasesOpened = 0,
-  Cash = 0
+  Cash = 0,
+  InvValue = 0  -- Total inventory value
 }
 
 -- Save player data
@@ -62,7 +63,8 @@ function DataStoreManager:GetDefaultData()
   local defaultCopy = {
     Inventory = {},
     CasesOpened = 0,
-    Cash = 0
+    Cash = 0,
+    InvValue = 0
   }
   return defaultCopy
 end
@@ -89,6 +91,11 @@ end
 -- Increment cases opened
 function DataStoreManager:IncrementCasesOpened(playerData)
   playerData.CasesOpened += 1
+end
+
+-- Set inventory value
+function DataStoreManager:SetInvValue(playerData, value)
+  playerData.InvValue = value
 end
 
 return DataStoreManager
