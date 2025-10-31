@@ -72,6 +72,14 @@ Before testing in Roblox Studio, you **must** enable DataStore access:
 The scripts now include detailed error messages to help diagnose this issue.
 
 ## Recent Changes
+- **2025-10-31**: Added comprehensive error logging to inventory system
+  - Server-side logging for GetInventory requests
+  - Client-side logging for every step of inventory initialization and refresh
+  - Protected pcall wrappers around table.clone and ItemDatabase calls
+  - Detailed item processing logs to identify where failures occur
+- **2025-10-31**: Fixed leaderstats not appearing (timing issue with PlayerAdded event)
+  - Created setupPlayer() function to handle both new and existing players
+  - Added loop to process players who joined before scripts loaded
 - **2025-10-31**: Fixed leaderstats and inventory loading issues
   - Added comprehensive error handling for DataStore failures
   - Added validation for data structure to prevent nil errors

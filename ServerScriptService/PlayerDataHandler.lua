@@ -155,7 +155,19 @@ getInventoryFunction.Parent = remoteEventsFolder
 
 -- Handle inventory requests
 getInventoryFunction.OnServerInvoke = function(player)
-  return DataStoreAPI:GetInventory(player)
+  print("📥 GetInventory request from: " .. player.Name)
+  
+  local success, result = pcall(function()
+    return DataStoreAPI:GetInventory(player)
+  end)
+  
+  if not success then
+    warn("❌ GetInventory failed for " .. player.Name .. ": " .. tostring(result))
+    return {}
+  end
+  
+  print("📤 Sending inventory to " .. player.Name .. ": " .. #result .. " items")
+  return result
 end
 
 -- Create RemoteEvent for inventory updates

@@ -132,18 +132,56 @@ end
 
 -- Get player's inventory (with Owners count added to each item)
 function DataStoreAPI:GetInventory(player)
+  print("🔍 GetInventory called for: " .. player.Name)
+  
   local data = self:GetPlayerData(player)
-  if data then
-    -- Add Owners count to each item from ItemDatabase
-    local inventoryWithOwners = {}
-    for _, item in ipairs(data.Inventory) do
-      local itemCopy = table.clone(item)
-      itemCopy.Owners = ItemDatabase:GetOwners(item.RobloxId)
-      table.insert(inventoryWithOwners, itemCopy)
-    end
-    return inventoryWithOwners
+  if not data then
+    warn("⚠️ No player data found for " .. player.Name)
+    return {}
   end
-  return {}
+  
+  print("📋 Player has " .. #data.Inventory .. " items in data")
+  
+  -- Add Owners count to each item from ItemDatabase
+  local inventoryWithOwners = {}
+  for i, item in ipairs(data.Inventory) do
+    print("  Processing item " .. i .. ": " .. (item.Name or "Unknown"))
+    
+    local success, itemCopy = pcall(function()
+      return table.clone(item)
+    end)
+    
+    if not success then
+      warn("❌ Failed to clone item " .. i .. ": " .. tostring(itemCopy))
+      -- Create a manual copy instead
+      itemCopy = {
+        RobloxId = item.RobloxId,
+        Name = item.Name,
+        Value = item.Value,
+        Rarity = item.Rarity,
+        Amount = item.Amount,
+        SerialNumber = item.SerialNumber,
+        ObtainedAt = item.ObtainedAt
+      }
+    end
+    
+    -- Get owners count
+    local ownersSuccess, owners = pcall(function()
+      return ItemDatabase:GetOwners(item.RobloxId)
+    end)
+    
+    if ownersSuccess then
+      itemCopy.Owners = owners
+    else
+      warn("⚠️ Failed to get owners for " .. (item.Name or "item") .. ": " .. tostring(owners))
+      itemCopy.Owners = 0
+    end
+    
+    table.insert(inventoryWithOwners, itemCopy)
+  end
+  
+  print("✅ Returning " .. #inventoryWithOwners .. " items to client")
+  return inventoryWithOwners
 end
 
 -- Get player's cash
