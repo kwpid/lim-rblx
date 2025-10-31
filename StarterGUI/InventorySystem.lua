@@ -94,18 +94,20 @@ function refresh()
   print("🔄 Starting inventory refresh...")
   
   -- Get inventory from server
-  local success, inventory = pcall(function()
-    print("📡 Calling GetInventoryFunction:InvokeServer()...")
-    return getInventoryFunction:InvokeServer()
+  print("📡 Calling GetInventoryFunction:InvokeServer()...")
+  
+  local inventory
+  local success, err = pcall(function()
+    inventory = getInventoryFunction:InvokeServer()
   end)
 
   if not success then
-    warn("❌ Failed to get inventory from server: " .. tostring(inventory))
-    warn("⚠️ Make sure Studio API Access is enabled in Game Settings!")
+    warn("❌ InvokeServer failed with error: " .. tostring(err))
+    warn("⚠️ This usually means the server function errored or timed out")
     return
   end
 
-  print("✓ Received response from server")
+  print("✓ InvokeServer completed successfully")
 
   if not inventory then
     warn("❌ Inventory is nil!")

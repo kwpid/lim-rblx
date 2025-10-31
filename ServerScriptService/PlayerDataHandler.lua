@@ -149,13 +149,28 @@ if not remoteEventsFolder then
 end
 
 -- Create RemoteFunction for getting inventory
-local getInventoryFunction = Instance.new("RemoteFunction")
-getInventoryFunction.Name = "GetInventoryFunction"
-getInventoryFunction.Parent = remoteEventsFolder
+local getInventoryFunction = remoteEventsFolder:FindFirstChild("GetInventoryFunction")
+if not getInventoryFunction then
+  getInventoryFunction = Instance.new("RemoteFunction")
+  getInventoryFunction.Name = "GetInventoryFunction"
+  getInventoryFunction.Parent = remoteEventsFolder
+  print("✅ Created GetInventoryFunction RemoteFunction")
+else
+  print("✅ GetInventoryFunction already exists")
+end
 
 -- Handle inventory requests
 getInventoryFunction.OnServerInvoke = function(player)
+  print("🔔 OnServerInvoke CALLED!")
   print("📥 GetInventory request from: " .. player.Name)
+  
+  -- Wait a moment if player data isn't ready yet
+  local attempts = 0
+  while not _G.PlayerData[player.UserId] and attempts < 10 do
+    attempts = attempts + 1
+    print("⏳ Waiting for player data... attempt " .. attempts)
+    task.wait(0.1)
+  end
   
   local success, result = pcall(function()
     return DataStoreAPI:GetInventory(player)
@@ -166,9 +181,16 @@ getInventoryFunction.OnServerInvoke = function(player)
     return {}
   end
   
+  if not result then
+    warn("❌ GetInventory returned nil for " .. player.Name)
+    return {}
+  end
+  
   print("📤 Sending inventory to " .. player.Name .. ": " .. #result .. " items")
   return result
 end
+
+print("✅ GetInventoryFunction.OnServerInvoke is now set!")
 
 -- Create RemoteEvent for inventory updates
 local inventoryUpdatedEvent = Instance.new("RemoteEvent")

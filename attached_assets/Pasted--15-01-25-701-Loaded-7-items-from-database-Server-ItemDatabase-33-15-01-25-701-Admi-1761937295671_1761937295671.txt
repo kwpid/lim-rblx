@@ -1,0 +1,39 @@
+  15:01:25.701  📚 Loaded 7 items from database  -  Server - ItemDatabase:33
+  15:01:25.701  ✅ Admin Item Handler initialized!  -  Server - AdminItemHandler:109
+  15:01:25.702  💡 Admin Console Commands:  -  Server - AdminItemHandler:110
+  15:01:25.702     - CheckDatabase() - View all items  -  Server - AdminItemHandler:111
+  15:01:25.702     - CheckRarities() - View item count by rarity  -  Server - AdminItemHandler:112
+  15:01:25.702  🎮 Setting up player: 2kwpid  -  Server - PlayerDataHandler:17
+  15:01:25.702  ✅ PlayerDataHandler initialized!  -  Server - PlayerDataHandler:178
+  15:01:25.702  ✅ Crates Server loaded!  -  Server - CratesServer:194
+  15:01:25.702  💰 Roll cost: FREE  -  Server - CratesServer:195
+  15:01:25.982  Requiring asset 512742721.
+Callstack:
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 29
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 28
+  -  Server
+  15:01:25.986  Animation Spoofer cannot run while game is running  -  Server
+  15:01:26.120  Requiring asset 518094091.
+Callstack:
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 30
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 28
+  -  Server
+  15:01:26.231  Animation Spoofer cannot run while game is running  -  Client
+  15:01:26.362  📂 Loaded existing data for 2kwpid  -  Server - DataStoreManager:44
+  15:01:26.362  ✅ Data loaded for 2kwpid (Cash: 0, Cases: 15, Inventory: 5 items)  -  Server - PlayerDataHandler:81
+  15:01:26.503  ✅ Crates Client loaded!  -  Client - CratesClient:177
+  15:01:26.503  📋 Inventory System starting initialization...  -  Client - InventorySytem:13
+  15:01:26.503  ✓ Found Handler  -  Client - InventorySytem:21
+  15:01:26.503  ✓ Found Sample template  -  Client - InventorySytem:28
+  15:01:26.503  ✓ Found Frame  -  Client - InventorySytem:35
+  15:01:26.503  ✓ Found SearchBar  -  Client - InventorySytem:39
+  15:01:26.504  ✓ Found Selected value  -  Client - InventorySytem:52
+  15:01:26.504  ⏳ Waiting for RemoteEvents...  -  Client - InventorySytem:56
+  15:01:26.504  ✓ Found RemoteEvents  -  Client - InventorySytem:62
+  15:01:26.504  ✓ Found GetInventoryFunction  -  Client - InventorySytem:70
+  15:01:26.504  ⏳ Waiting 1 second for DataStore to load...  -  Client - InventorySytem:294
+  15:01:26.622  ✅ Admin panel available  -  Client - AdminGUI:35
+  15:01:26.622  ✅ Admin GUI script loaded  -  Client - AdminGUI:136
+  15:01:27.517  🚀 Starting initial inventory refresh...  -  Client - InventorySytem:296
+  15:01:27.518  🔄 Starting inventory refresh...  -  Client - InventorySytem:94
+  15:01:27.518  📡 Calling GetInventoryFunction:InvokeServer()...  -  Client - InventorySytem:98
