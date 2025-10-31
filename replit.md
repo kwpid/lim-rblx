@@ -14,8 +14,12 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 ### Core Game Systems
 -   **Item System**: Items have Roblox asset IDs, names, values, and rarities (8 tiers from Common to Insane). Supports both stackable regular items and limited stock items with serial numbers. Weighted probability ensures higher value items are rarer.
 -   **Crate Opening**: Free rolls with a 5-second animation. Uses weighted random selection. Includes visual scrolling animation with rarity-colored item names, serial number display for stock items, and a "continue" button after each roll.
--   **Admin Tools**: Whitelisted admin system with a GUI for creating and giving items to players (by User ID or username). Features live item previews, a global "New Item" notification system, and console commands for database checks.
--   **Data Persistence**: Utilizes Roblox DataStore Service for player inventories (with auto-stacking), cases opened, cash, and inventory value. Auto-saves every 2 minutes. Includes a data version system to manage wipes and resets.
+-   **Admin Tools**: Whitelisted admin system with a GUI for creating, giving, and deleting items. Features include:
+    - Create items with live item previews and auto-fill item names from Roblox marketplace
+    - Give items to players (by User ID or username) with notifications for both admin and recipient
+    - Delete items with confirmation dialog (double-click required), removes from all players' inventories with automatic cleanup for offline players
+    - Global "New Item" notification system and console commands for database checks
+-   **Data Persistence**: Utilizes Roblox DataStore Service for player inventories (with auto-stacking), cases opened, cash, and inventory value. Auto-saves every 2 minutes. Includes a data version system to manage wipes and resets. Features automatic cleanup of deleted items when offline players rejoin.
 -   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays stock item counts ("copies: X / Y exist") and regular item counts ("copies: X"). Includes search/filter functionality and detailed item info on click.
 -   **Equipping Items**: Players can equip/unequip items from their inventory, which are then visible to all players. Uses Roblox asset IDs to load and attach items (accessories, hats, tools) to the character, with equipped items persisting across sessions.
 -   **Selling Items**: Players can sell regular items for 80% of their value. Features a confirmation step and options to sell single items or all copies of an item. Selling stock items is prevented. Cash is added to the player's wallet, and inventory value updates automatically.
