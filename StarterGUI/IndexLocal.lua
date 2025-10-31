@@ -11,7 +11,7 @@ if not handler then
   return
 end
 
-local sample = handler:FindFirstChild("Sample")
+local sample = script.Sample
 if not sample then
   warn("❌ Sample template not found in Handler")
   return
