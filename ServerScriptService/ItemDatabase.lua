@@ -7,15 +7,54 @@ local HttpService = game:GetService("HttpService")
 local ItemDataStore = DataStoreService:GetDataStore("ItemDatabase_v1")
 local ItemRarityModule = require(game.ReplicatedStorage.ItemRarityModule)
 
+-- 🔑 DATA VERSION - Must match DataStoreManager.lua to keep data in sync
+local DATA_VERSION = "DataVersion.10"
+
 local ItemDatabase = {}
 ItemDatabase.Items = {}
+ItemDatabase.DataVersion = DATA_VERSION
 
 -- Load all items from DataStore
 function ItemDatabase:LoadItems()
   local success, result = pcall(function()
     local jsonData = ItemDataStore:GetAsync("AllItems")
     if jsonData then
-      self.Items = HttpService:JSONDecode(jsonData)
+      local data = HttpService:JSONDecode(jsonData)
+      
+      -- Check if this is old format (just array) or new format (with version)
+      local items
+      local savedVersion
+      
+      if data.Items then
+        -- New format with version
+        items = data.Items
+        savedVersion = data.DataVersion
+      else
+        -- Old format (just array of items)
+        items = data
+        savedVersion = nil
+      end
+      
+      self.Items = items
+      
+      -- Check if data version matches
+      if savedVersion ~= DATA_VERSION then
+        print("🔄 Item database version mismatch (Old: " .. tostring(savedVersion) .. ", New: " .. DATA_VERSION .. ")")
+        print("🗑️ Resetting all stock counts and owner counts...")
+        
+        -- Reset stock and owners for all items
+        for _, item in ipairs(self.Items) do
+          item.CurrentStock = 0
+          item.Owners = 0
+        end
+        
+        -- Save with new version
+        self.DataVersion = DATA_VERSION
+        self:SaveItems()
+        print("✅ Item database reset complete!")
+      else
+        self.DataVersion = savedVersion
+      end
 
       -- Migrate legacy items (add Stock/CurrentStock/Owners if missing)
       for _, item in ipairs(self.Items) do
@@ -33,6 +72,7 @@ function ItemDatabase:LoadItems()
       print("📚 Loaded " .. #self.Items .. " items from database")
     else
       self.Items = {}
+      self.DataVersion = DATA_VERSION
       print("📚 No items found, starting with empty database")
     end
   end)
@@ -40,13 +80,19 @@ function ItemDatabase:LoadItems()
   if not success then
     warn("❌ Failed to load items: " .. tostring(result))
     self.Items = {}
+    self.DataVersion = DATA_VERSION
   end
 end
 
 -- Save all items to DataStore
 function ItemDatabase:SaveItems()
   local success, errorMessage = pcall(function()
-    local jsonData = HttpService:JSONEncode(self.Items)
+    -- Save with data version
+    local dataToSave = {
+      Items = self.Items,
+      DataVersion = self.DataVersion or DATA_VERSION
+    }
+    local jsonData = HttpService:JSONEncode(dataToSave)
     ItemDataStore:SetAsync("AllItems", jsonData)
   end)
 

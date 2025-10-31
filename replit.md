@@ -39,7 +39,7 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - Inventory value (InvValue) - auto-calculated total value
 - Auto-save every 2 minutes
 - DataStore versions: ItemDatabase_v1, PlayerData_v1
-- Data version system: Change DATA_VERSION in DataStoreManager.lua to wipe all player data (e.g., "DataVersion.10" → "DataVersion.11")
+- Data version system: Change DATA_VERSION in both DataStoreManager.lua AND ItemDatabase.lua to wipe all player data AND reset stock/serial numbers (e.g., "DataVersion.10" → "DataVersion.11")
 
 ### Inventory Display
 - Shows all owned items with thumbnails and rarity colors
@@ -79,7 +79,7 @@ The scripts now include detailed error messages to help diagnose this issue.
 
 ## Recent Changes
 - **2025-10-31**: Added new features and improvements
-  - Added data version system for wiping player data (change DATA_VERSION in DataStoreManager.lua)
+  - Added data version system for wiping player data AND resetting item stock/serials (change DATA_VERSION in both DataStoreManager.lua and ItemDatabase.lua)
   - Continue button now shows after every roll (including auto-rolls)
   - Inventory now displays "copies: X / Y exist" for stock items (X = owners, Y = total stock)
   - Serial numbers now displayed when rolling stock items (e.g., "You won: Egg (#1)")
