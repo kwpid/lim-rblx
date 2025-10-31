@@ -52,10 +52,13 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 
 ### Equipping Items
 - Players can equip items from their inventory to their character
-- Equip button in inventory detail panel
+- Equip/Unequip button in inventory detail panel
+- Button text changes to "Unequip" when item is equipped
+- Click again to unequip and remove from character
 - Equipped items are visible to all players (server-side)
 - Uses item's Roblox asset ID to load and attach to character
 - Works with accessories, hats, and tools
+- Items are tagged with OriginalRobloxId for precise unequipping
 
 ### Selling Items
 - **Sell**: Sell a single copy of an item for 80% of its value
@@ -101,10 +104,12 @@ The scripts now include detailed error messages to help diagnose this issue.
 
 ## Recent Changes
 - **2025-10-31**: Added equipping and selling functionality
-  - **Equip System**: Players can equip items to their character using Roblox asset IDs
-    - Equip button in inventory detail panel (Frame.Frame.Equip)
+  - **Equip System**: Players can equip and unequip items to their character using Roblox asset IDs
+    - Equip/Unequip button in inventory detail panel (Frame.Equip)
+    - Button dynamically changes to "Unequip" when item is equipped
     - Server-side equipping so other players can see equipped items
     - Uses InsertService to load and attach accessories/tools to character
+    - Items tagged with OriginalRobloxId for precise unequipping
   - **Sell System**: Players can sell items for 80% of their value
     - Sell button: Sells one copy of the selected item
     - SellAll button: Sells all copies of the selected item at once

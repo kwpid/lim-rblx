@@ -42,9 +42,13 @@ if not sellAllItemEvent then
   print("✅ Created SellAllItemEvent")
 end
 
--- Equip item to player's character
-equipItemEvent.OnServerEvent:Connect(function(player, robloxId)
-  print("🎽 " .. player.Name .. " attempting to equip item with RobloxId: " .. tostring(robloxId))
+-- Equip/Unequip item to player's character
+equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
+  if shouldUnequip then
+    print("👕 " .. player.Name .. " attempting to unequip item with RobloxId: " .. tostring(robloxId))
+  else
+    print("🎽 " .. player.Name .. " attempting to equip item with RobloxId: " .. tostring(robloxId))
+  end
   
   if not robloxId or type(robloxId) ~= "number" then
     warn("❌ Invalid RobloxId provided: " .. tostring(robloxId))
@@ -72,36 +76,72 @@ equipItemEvent.OnServerEvent:Connect(function(player, robloxId)
     return
   end
   
-  -- Try to equip the item
-  local success, result = pcall(function()
-    local model = InsertService:LoadAsset(robloxId)
-    if model then
-      -- Find the accessory or tool in the loaded model
-      local item = model:FindFirstChildOfClass("Accessory") or model:FindFirstChildOfClass("Tool") or model:FindFirstChildOfClass("Hat")
-      
-      if item then
-        -- Clone it and parent to character
-        local itemClone = item:Clone()
-        itemClone.Parent = character
-        print("✅ Equipped " .. itemClone.Name .. " to " .. player.Name)
-      else
-        -- If it's not an accessory/tool, try to just parent the whole model
-        for _, child in ipairs(model:GetChildren()) do
-          if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
-            local itemClone = child:Clone()
-            itemClone.Parent = character
-            print("✅ Equipped " .. itemClone.Name .. " to " .. player.Name)
-            break
-          end
+  if shouldUnequip then
+    -- Unequip: Find and remove items that came from this RobloxId
+    local itemsRemoved = 0
+    for _, child in ipairs(character:GetChildren()) do
+      if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
+        -- Check if this item came from the RobloxId we want to unequip
+        -- We'll store the RobloxId in the item when we equip it
+        local storedId = child:FindFirstChild("OriginalRobloxId")
+        if storedId and storedId.Value == robloxId then
+          child:Destroy()
+          itemsRemoved = itemsRemoved + 1
         end
       end
-      
-      model:Destroy()
     end
-  end)
-  
-  if not success then
-    warn("❌ Failed to equip item: " .. tostring(result))
+    
+    if itemsRemoved > 0 then
+      print("✅ Unequipped " .. itemsRemoved .. " item(s) from " .. player.Name)
+    else
+      warn("⚠️ No equipped items found with RobloxId: " .. robloxId)
+    end
+  else
+    -- Equip the item
+    local success, result = pcall(function()
+      local model = InsertService:LoadAsset(robloxId)
+      if model then
+        -- Find the accessory or tool in the loaded model
+        local item = model:FindFirstChildOfClass("Accessory") or model:FindFirstChildOfClass("Tool") or model:FindFirstChildOfClass("Hat")
+        
+        if item then
+          -- Clone it and parent to character
+          local itemClone = item:Clone()
+          
+          -- Store the RobloxId so we can unequip it later
+          local idValue = Instance.new("IntValue")
+          idValue.Name = "OriginalRobloxId"
+          idValue.Value = robloxId
+          idValue.Parent = itemClone
+          
+          itemClone.Parent = character
+          print("✅ Equipped " .. itemClone.Name .. " to " .. player.Name)
+        else
+          -- If it's not an accessory/tool, try to just parent the whole model
+          for _, child in ipairs(model:GetChildren()) do
+            if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
+              local itemClone = child:Clone()
+              
+              -- Store the RobloxId so we can unequip it later
+              local idValue = Instance.new("IntValue")
+              idValue.Name = "OriginalRobloxId"
+              idValue.Value = robloxId
+              idValue.Parent = itemClone
+              
+              itemClone.Parent = character
+              print("✅ Equipped " .. itemClone.Name .. " to " .. player.Name)
+              break
+            end
+          end
+        end
+        
+        model:Destroy()
+      end
+    end)
+    
+    if not success then
+      warn("❌ Failed to equip item: " .. tostring(result))
+    end
   end
 end)
 

@@ -63,6 +63,9 @@ end
 -- Store the currently selected item data
 local selectedItemData = nil
 
+-- Track equipped items by RobloxId
+local equippedItems = {}
+
 -- Wait for RemoteEvents
 print("⏳ Waiting for RemoteEvents...")
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents", 10)
@@ -333,6 +336,16 @@ function refresh()
       previewImg.BorderSizePixel = 0
       previewImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
       previewImg.Parent = imgFrame
+      
+      -- Update Equip button text based on whether item is equipped
+      local equipButton = frame:FindFirstChild("Equip")
+      if equipButton then
+        if equippedItems[item.RobloxId] then
+          equipButton.Text = "Unequip"
+        else
+          equipButton.Text = "Equip"
+        end
+      end
     end)
   end
   
@@ -377,13 +390,26 @@ else
   warn("⚠️ InventoryUpdatedEvent not found (inventory won't auto-update)")
 end
 
--- Set up Equip button
+-- Set up Equip/Unequip button
 local equipButton = frame:FindFirstChild("Equip")
 if equipButton and equipItemEvent then
   equipButton.MouseButton1Click:Connect(function()
     if selectedItemData and selectedItemData.RobloxId then
-      print("🎽 Attempting to equip: " .. selectedItemData.Name .. " (RobloxId: " .. selectedItemData.RobloxId .. ")")
-      equipItemEvent:FireServer(selectedItemData.RobloxId)
+      local isEquipped = equippedItems[selectedItemData.RobloxId]
+      
+      if isEquipped then
+        -- Unequip the item
+        print("👕 Attempting to unequip: " .. selectedItemData.Name .. " (RobloxId: " .. selectedItemData.RobloxId .. ")")
+        equipItemEvent:FireServer(selectedItemData.RobloxId, true)  -- true = unequip
+        equippedItems[selectedItemData.RobloxId] = nil
+        equipButton.Text = "Equip"
+      else
+        -- Equip the item
+        print("🎽 Attempting to equip: " .. selectedItemData.Name .. " (RobloxId: " .. selectedItemData.RobloxId .. ")")
+        equipItemEvent:FireServer(selectedItemData.RobloxId, false)  -- false = equip
+        equippedItems[selectedItemData.RobloxId] = true
+        equipButton.Text = "Unequip"
+      end
     else
       warn("⚠️ No item selected or missing RobloxId")
     end
