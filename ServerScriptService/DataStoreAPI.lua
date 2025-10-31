@@ -59,6 +59,9 @@ function DataStoreAPI:AddItem(player, itemData)
     end
   end
 
+  -- Update inventory value
+  self:UpdateInventoryValue(player)
+
   return true
 end
 
@@ -69,6 +72,8 @@ function DataStoreAPI:RemoveItem(player, inventoryIndex)
     local success = DataStoreManager:RemoveItemFromInventory(data, inventoryIndex)
     if success then
       print("➖ Removed item from " .. player.Name .. "'s inventory")
+      -- Update inventory value
+      self:UpdateInventoryValue(player)
     end
     return success
   end
