@@ -378,7 +378,7 @@ else
 end
 
 -- Set up Equip button
-local equipButton = frame:FindFirstChild("Frame") and frame.Frame:FindFirstChild("Equip")
+local equipButton = frame:FindFirstChild("Equip")
 if equipButton and equipItemEvent then
   equipButton.MouseButton1Click:Connect(function()
     if selectedItemData and selectedItemData.RobloxId then
@@ -390,11 +390,11 @@ if equipButton and equipItemEvent then
   end)
   print("✅ Equip button connected")
 else
-  warn("⚠️ Equip button not found in Frame.Frame")
+  warn("⚠️ Equip button not found in Frame")
 end
 
 -- Set up Sell button
-local sellButton = frame:FindFirstChild("Frame") and frame.Frame:FindFirstChild("Sell")
+local sellButton = frame:FindFirstChild("Sell")
 if sellButton and sellItemEvent then
   sellButton.MouseButton1Click:Connect(function()
     if selectedItemData and selectedItemData.RobloxId then
@@ -407,11 +407,11 @@ if sellButton and sellItemEvent then
   end)
   print("✅ Sell button connected")
 else
-  warn("⚠️ Sell button not found in Frame.Frame")
+  warn("⚠️ Sell button not found in Frame")
 end
 
 -- Set up SellAll button
-local sellAllButton = frame:FindFirstChild("Frame") and frame.Frame:FindFirstChild("SellAll")
+local sellAllButton = frame:FindFirstChild("SellAll")
 if sellAllButton and sellAllItemEvent then
   sellAllButton.MouseButton1Click:Connect(function()
     if selectedItemData and selectedItemData.RobloxId then
@@ -424,7 +424,7 @@ if sellAllButton and sellAllItemEvent then
   end)
   print("✅ SellAll button connected")
 else
-  warn("⚠️ SellAll button not found in Frame.Frame")
+  warn("⚠️ SellAll button not found in Frame")
 end
 
 print("✅ Inventory System fully loaded and ready!")
