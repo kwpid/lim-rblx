@@ -220,7 +220,7 @@ function DataStoreAPI:CalculateInventoryValue(player)
   for _, item in ipairs(data.Inventory) do
     local itemValue = item.Value or 0
     local amount = item.Amount or 1
-    totalValue += (itemValue * amount)
+    totalValue = totalValue + (itemValue * amount)
   end
 
   return totalValue

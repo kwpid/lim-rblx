@@ -264,6 +264,58 @@ function ItemDatabase:GetOwners(robloxId)
   return 0
 end
 
+-- Decrement owners count for an item (when a player sells/removes it)
+function ItemDatabase:DecrementOwners(robloxId)
+  -- Convert to number to ensure proper lookup
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    warn("❌ ItemDatabase:DecrementOwners - Invalid RobloxId: " .. tostring(robloxId))
+    return nil
+  end
+  
+  local item = self:GetItemByRobloxId(numericId)
+  if item then
+    local oldOwners = item.Owners or 0
+    item.Owners = math.max(0, oldOwners - 1)  -- Don't go below 0
+    self:SaveItems()
+    print("✅ Decremented owners for item " .. item.Name .. " (RobloxId: " .. numericId .. "): " .. oldOwners .. " → " .. item.Owners)
+    return item.Owners
+  else
+    warn("❌ ItemDatabase:DecrementOwners - Item not found for RobloxId: " .. numericId)
+    return nil
+  end
+end
+
+-- Decrement stock for an item (when someone sells a stock item)
+-- Returns true on success, nil if not a stock item or already at 0
+function ItemDatabase:DecrementStock(robloxId)
+  -- Convert to number to ensure proper lookup
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    warn("❌ ItemDatabase:DecrementStock - Invalid RobloxId: " .. tostring(robloxId))
+    return nil
+  end
+  
+  local item = self:GetItemByRobloxId(numericId)
+  if not item then
+    warn("❌ ItemDatabase:DecrementStock - Item not found for RobloxId: " .. numericId)
+    return nil
+  end
+  
+  -- Default to 0 if nil (legacy data)
+  local stock = item.Stock or 0
+  local currentStock = item.CurrentStock or 0
+  
+  if stock > 0 and currentStock > 0 then
+    item.CurrentStock = currentStock - 1
+    self:SaveItems()
+    print("📉 Decremented stock for " .. item.Name .. ": " .. currentStock .. " → " .. item.CurrentStock .. " (can be rolled again!)")
+    return true
+  end
+  
+  return nil
+end
+
 -- Initialize database
 ItemDatabase:LoadItems()
 

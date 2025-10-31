@@ -36,7 +36,7 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 ### Data Persistence
 - Player inventory with automatic stacking
 - Cases opened counter
-- Cash system (tracked but not currently used)
+- Cash system (earned from selling items)
 - Inventory value (InvValue) - auto-calculated total value
 - Auto-save every 2 minutes
 - DataStore versions: ItemDatabase_v1, PlayerData_v1
@@ -49,6 +49,25 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - Displays "copies: X" for regular items (X = unique owners)
 - Search/filter functionality
 - Click to view detailed item info
+
+### Equipping Items
+- Players can equip items from their inventory to their character
+- Equip button in inventory detail panel
+- Equipped items are visible to all players (server-side)
+- Uses item's Roblox asset ID to load and attach to character
+- Works with accessories, hats, and tools
+
+### Selling Items
+- **Sell**: Sell a single copy of an item for 80% of its value
+  - Regular items: Decreases stack count, or removes if only 1 left
+  - Stock items: Removes the item and decrements CurrentStock (makes it rollable again)
+  - Players who sell all copies have their owner count decremented
+- **Sell All**: Sell all copies of an item at once
+  - Calculates total value of all copies and gives 80% cash back
+  - Removes all matching items from inventory
+  - Stock items sold this way restore their stock availability
+- Cash is added to player's wallet after selling
+- Inventory value updates automatically after selling
 
 ## File Structure
 
@@ -63,6 +82,7 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - **DataStoreManager.lua** - DataStore operations
 - **ItemDatabase.lua** - Global item database
 - **PlayerDataHandler.lua** - Player join/leave/save
+- **EquipSellHandler.lua** - Equip and sell item functionality
 
 ### StarterGUI/
 - **AdminGUI.lua** - Admin panel client script
@@ -80,6 +100,27 @@ Before testing in Roblox Studio, you **must** enable DataStore access:
 The scripts now include detailed error messages to help diagnose this issue.
 
 ## Recent Changes
+- **2025-10-31**: Added equipping and selling functionality
+  - **Equip System**: Players can equip items to their character using Roblox asset IDs
+    - Equip button in inventory detail panel (Frame.Frame.Equip)
+    - Server-side equipping so other players can see equipped items
+    - Uses InsertService to load and attach accessories/tools to character
+  - **Sell System**: Players can sell items for 80% of their value
+    - Sell button: Sells one copy of the selected item
+    - SellAll button: Sells all copies of the selected item at once
+    - Selling stock items decrements CurrentStock in ItemDatabase (makes them rollable again)
+    - Owner counts are decremented when players sell all their copies
+    - Cash is automatically added to player's wallet
+  - Created EquipSellHandler.lua server script with RemoteEvents:
+    - EquipItemEvent - Handles item equipping
+    - SellItemEvent - Handles selling single items
+    - SellAllItemEvent - Handles selling all copies
+  - Added ItemDatabase functions:
+    - DecrementStock() - Decreases CurrentStock when stock items are sold
+    - DecrementOwners() - Decreases owner count when players sell items
+  - Updated InventorySystem.lua to wire up Equip, Sell, and SellAll buttons
+    - Stores full item data (RobloxId, Amount, SerialNumber, etc.) when item is selected
+    - Buttons automatically refresh inventory after successful operations
 - **2025-10-31**: Updated IndexLocal.lua to work with ItemDatabase system
   - Now fetches all items from server via GetAllItemsFunction RemoteFunction
   - Displays items using Roblox thumbnails (RobloxId)
@@ -160,6 +201,9 @@ The scripts now include detailed error messages to help diagnose this issue.
 - GetInventoryFunction RemoteFunction allows clients to fetch inventory data
 - GetAllItemsFunction RemoteFunction allows clients to fetch all items in the game
 - InventoryUpdatedEvent notifies clients when inventory changes
+- EquipItemEvent, SellItemEvent, SellAllItemEvent handle inventory item interactions
+- Selling stock items restores their availability in the item pool (decrements CurrentStock)
+- Cash system is now active - players earn cash by selling items (80% of value)
 
 ## Current Project Status
 ✅ Core mechanics implemented

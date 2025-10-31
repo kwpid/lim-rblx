@@ -60,6 +60,9 @@ else
   print("✓ Found Selected StringValue")
 end
 
+-- Store the currently selected item data
+local selectedItemData = nil
+
 -- Wait for RemoteEvents
 print("⏳ Waiting for RemoteEvents...")
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents", 10)
@@ -76,6 +79,29 @@ if not getInventoryFunction then
   return
 end
 print("✓ Found GetInventoryFunction")
+
+-- Get equip/sell RemoteEvents
+local equipItemEvent = remoteEvents:WaitForChild("EquipItemEvent", 10)
+local sellItemEvent = remoteEvents:WaitForChild("SellItemEvent", 10)
+local sellAllItemEvent = remoteEvents:WaitForChild("SellAllItemEvent", 10)
+
+if equipItemEvent then
+  print("✓ Found EquipItemEvent")
+else
+  warn("⚠️ EquipItemEvent not found")
+end
+
+if sellItemEvent then
+  print("✓ Found SellItemEvent")
+else
+  warn("⚠️ SellItemEvent not found")
+end
+
+if sellAllItemEvent then
+  print("✓ Found SellAllItemEvent")
+else
+  warn("⚠️ SellAllItemEvent not found")
+end
 
 -- Rarity colors matching our 8-tier system (from ItemRarityModule)
 local rarityColors = {
@@ -283,6 +309,9 @@ function refresh()
       -- Update selected item display
       itemNameText.Text = item.Name
       selected.Value = item.Name
+      
+      -- Store the full item data for equip/sell operations
+      selectedItemData = item
 
       itemValueText.Text = "R$ " .. formatNumber(item.Value)
 
@@ -346,6 +375,56 @@ if inventoryUpdatedEvent then
   end)
 else
   warn("⚠️ InventoryUpdatedEvent not found (inventory won't auto-update)")
+end
+
+-- Set up Equip button
+local equipButton = frame:FindFirstChild("Frame") and frame.Frame:FindFirstChild("Equip")
+if equipButton and equipItemEvent then
+  equipButton.MouseButton1Click:Connect(function()
+    if selectedItemData and selectedItemData.RobloxId then
+      print("🎽 Attempting to equip: " .. selectedItemData.Name .. " (RobloxId: " .. selectedItemData.RobloxId .. ")")
+      equipItemEvent:FireServer(selectedItemData.RobloxId)
+    else
+      warn("⚠️ No item selected or missing RobloxId")
+    end
+  end)
+  print("✅ Equip button connected")
+else
+  warn("⚠️ Equip button not found in Frame.Frame")
+end
+
+-- Set up Sell button
+local sellButton = frame:FindFirstChild("Frame") and frame.Frame:FindFirstChild("Sell")
+if sellButton and sellItemEvent then
+  sellButton.MouseButton1Click:Connect(function()
+    if selectedItemData and selectedItemData.RobloxId then
+      print("💵 Attempting to sell: " .. selectedItemData.Name)
+      -- Send RobloxId and SerialNumber (if it exists) for precise targeting
+      sellItemEvent:FireServer(selectedItemData.RobloxId, selectedItemData.SerialNumber)
+    else
+      warn("⚠️ No item selected or missing RobloxId")
+    end
+  end)
+  print("✅ Sell button connected")
+else
+  warn("⚠️ Sell button not found in Frame.Frame")
+end
+
+-- Set up SellAll button
+local sellAllButton = frame:FindFirstChild("Frame") and frame.Frame:FindFirstChild("SellAll")
+if sellAllButton and sellAllItemEvent then
+  sellAllButton.MouseButton1Click:Connect(function()
+    if selectedItemData and selectedItemData.RobloxId then
+      print("💵💵 Attempting to sell all: " .. selectedItemData.Name)
+      -- Send RobloxId to sell all items with this ID
+      sellAllItemEvent:FireServer(selectedItemData.RobloxId)
+    else
+      warn("⚠️ No item selected or missing RobloxId")
+    end
+  end)
+  print("✅ SellAll button connected")
+else
+  warn("⚠️ SellAll button not found in Frame.Frame")
 end
 
 print("✅ Inventory System fully loaded and ready!")
