@@ -10,11 +10,36 @@ local player = Players.LocalPlayer
 local gui = script.Parent
 local buttons = {}
 
+print("📋 Inventory System starting initialization...")
+
 -- Get GUI elements
-local handler = gui:WaitForChild("Handler")
-local sample = script.Sample
-local frame = gui:WaitForChild("Frame")
+local handler = gui:WaitForChild("Handler", 5)
+if not handler then
+  warn("❌ INVENTORY ERROR: Handler not found in InventorySystem GUI!")
+  return
+end
+print("✓ Found Handler")
+
+local sample = script:FindFirstChild("Sample")
+if not sample then
+  warn("❌ INVENTORY ERROR: Sample template not found in InventorySystem script!")
+  return
+end
+print("✓ Found Sample template")
+
+local frame = gui:WaitForChild("Frame", 5)
+if not frame then
+  warn("❌ INVENTORY ERROR: Frame not found in InventorySystem GUI!")
+  return
+end
+print("✓ Found Frame")
+
 local searchBar = gui:FindFirstChild("SearchBar")
+if searchBar then
+  print("✓ Found SearchBar")
+else
+  print("⚠️ SearchBar not found (optional)")
+end
 
 -- Ensure Selected value exists
 local selected = handler:FindFirstChild("Selected")
@@ -22,11 +47,27 @@ if not selected then
   selected = Instance.new("StringValue")
   selected.Name = "Selected"
   selected.Parent = handler
+  print("✓ Created Selected value")
+else
+  print("✓ Found Selected value")
 end
 
 -- Wait for RemoteEvents
-local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
-local getInventoryFunction = remoteEvents:WaitForChild("GetInventoryFunction")
+print("⏳ Waiting for RemoteEvents...")
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents", 10)
+if not remoteEvents then
+  warn("❌ INVENTORY ERROR: RemoteEvents folder not found in ReplicatedStorage!")
+  return
+end
+print("✓ Found RemoteEvents")
+
+local getInventoryFunction = remoteEvents:WaitForChild("GetInventoryFunction", 10)
+if not getInventoryFunction then
+  warn("❌ INVENTORY ERROR: GetInventoryFunction not found in RemoteEvents!")
+  warn("⚠️ Make sure PlayerDataHandler script has loaded on the server")
+  return
+end
+print("✓ Found GetInventoryFunction")
 
 -- Rarity colors matching our 8-tier system (from ItemRarityModule)
 local rarityColors = {
@@ -50,8 +91,11 @@ function formatNumber(n)
 end
 
 function refresh()
+  print("🔄 Starting inventory refresh...")
+  
   -- Get inventory from server
   local success, inventory = pcall(function()
+    print("📡 Calling GetInventoryFunction:InvokeServer()...")
     return getInventoryFunction:InvokeServer()
   end)
 
@@ -61,12 +105,23 @@ function refresh()
     return
   end
 
-  if not inventory or type(inventory) ~= "table" then
-    warn("❌ Invalid inventory data received")
+  print("✓ Received response from server")
+
+  if not inventory then
+    warn("❌ Inventory is nil!")
+    return
+  end
+
+  if type(inventory) ~= "table" then
+    warn("❌ Invalid inventory data type: " .. type(inventory))
     return
   end
   
   print("📦 Refreshing inventory: " .. #inventory .. " items")
+  
+  if #inventory == 0 then
+    print("⚠️ Inventory is empty (no items to display)")
+  end
 
   -- Clear existing buttons
   for _, button in pairs(buttons) do
@@ -80,10 +135,15 @@ function refresh()
   end)
 
   for i, item in ipairs(inventory) do
+    print("🔨 Creating button for item " .. i .. ": " .. (item.Name or "Unknown"))
+    
     local button = sample:Clone()
-    button.Name = item.Name
+    button.Name = item.Name or "Item_" .. i
     button.LayoutOrder = i
+    button.Visible = true
     button.Parent = handler
+    
+    print("✓ Button created and parented to Handler")
 
     local contentFrame = button:FindFirstChild("Content")
     local content2Frame = button:FindFirstChild("content2")
@@ -179,9 +239,11 @@ function refresh()
     end
 
     table.insert(buttons, button)
+    print("✓ Item button fully configured: " .. item.Name)
 
     -- Click handler for item selection
     button.MouseButton1Click:Connect(function()
+      print("🖱️ Clicked item: " .. item.Name)
       local itemNameText = frame:WaitForChild("ItemName")
       local itemValueText = frame:WaitForChild("Value")
       local totalValueText = frame:FindFirstChild("TotalValue")
@@ -213,6 +275,8 @@ function refresh()
       previewImg.Parent = imgFrame
     end)
   end
+  
+  print("✅ Inventory refresh complete! " .. #buttons .. " buttons created")
 end
 
 -- Search bar functionality
@@ -227,21 +291,30 @@ if searchBar and searchBar:IsA("TextBox") then
 end
 
 -- Initial refresh
-task.wait(1)  -- Wait for DataStore to load
+print("⏳ Waiting 1 second for DataStore to load...")
+task.wait(1)
+print("🚀 Starting initial inventory refresh...")
 local success, err = pcall(refresh)
 if not success then
   warn("❌ Initial inventory refresh failed: " .. tostring(err))
+  warn("Stack trace: " .. debug.traceback())
+else
+  print("✅ Initial inventory refresh completed successfully")
 end
 
 -- Listen for inventory updates from server
 local inventoryUpdatedEvent = remoteEvents:FindFirstChild("InventoryUpdatedEvent")
 if inventoryUpdatedEvent then
+  print("✓ Found InventoryUpdatedEvent, connecting listener")
   inventoryUpdatedEvent.OnClientEvent:Connect(function()
+    print("📬 Received inventory update event from server")
     local refreshSuccess, refreshErr = pcall(refresh)
     if not refreshSuccess then
       warn("❌ Inventory update failed: " .. tostring(refreshErr))
     end
   end)
+else
+  warn("⚠️ InventoryUpdatedEvent not found (inventory won't auto-update)")
 end
 
-print("✅ Inventory System loaded")
+print("✅ Inventory System fully loaded and ready!")
