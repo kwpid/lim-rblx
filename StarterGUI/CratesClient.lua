@@ -45,13 +45,13 @@ local function hasPlayerMoved()
   if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
     return false
   end
-  
+
   local currentPosition = player.Character.HumanoidRootPart.Position
   if lastPlayerPosition then
     local distance = (currentPosition - lastPlayerPosition).Magnitude
     return distance > 1 -- Movement threshold
   end
-  
+
   lastPlayerPosition = currentPosition
   return false
 end
@@ -107,7 +107,7 @@ rollButton.MouseButton1Click:Connect(function()
   end
 
   isCurrentlyRolling = true
-  
+
   -- Hide both buttons during roll
   rollButton.Visible = false
   autoRollButton.Visible = false
@@ -121,16 +121,16 @@ autoRollButton.MouseButton1Click:Connect(function()
   if isCurrentlyRolling then
     return
   end
-  
+
   isAutoRolling = not isAutoRolling
-  
+
   if isAutoRolling then
     autoRollButton.Text = "[AUTOROLL: ON]"
     print("✅ Auto-roll enabled")
-    
+
     -- Update initial position
     updatePlayerPosition()
-    
+
     -- Start first roll
     isCurrentlyRolling = true
     rollButton.Visible = false
@@ -143,10 +143,9 @@ end)
 
 -- Handle crate opening animation
 crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
-
   -- allItems is an array of items for the animation
   -- chosenItem is the actual item the player won
-  
+
   print("🎰 Starting crate animation")
   print("🎯 Chosen item: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")")
 
@@ -157,13 +156,13 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
     end
   end
 
-  local numItems = 100  -- Fixed number for consistent scroll
-  local chosenPosition = 25  -- Position where chosen item will appear
+  local numItems = 100      -- Fixed number for consistent scroll
+  local chosenPosition = 25 -- Position where chosen item will appear
 
   -- Create item frames for animation
   for i = 1, numItems do
     local itemData
-    
+
     if i == chosenPosition then
       -- This position gets the actual chosen item
       itemData = chosenItem
@@ -211,18 +210,18 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   local nextOffset = -cellSize - padding
 
   local posFinal = pos1 + (chosenPosition - 1) * nextOffset
-  local rndOffset = 0  -- No random offset - lands exactly on chosen item
+  local rndOffset = 0 -- No random offset - lands exactly on chosen item
 
   local timeOpened = tick()
 
   -- Show opening frame
-  openedFrame.CrateName.Text = "Opening Case..."
-  closeOpenedBtn.Visible = false  -- Always hide at start
+  openedFrame.CrateName.Text = "Rolling..."
+  closeOpenedBtn.Visible = false -- Always hide at start
   openedFrame.Visible = true
   openedGui.Enabled = true
 
   -- Use consistent animation speed (easing power)
-  local pow = 2.5  -- Fixed easing for consistent animation speed
+  local pow = 2.5 -- Fixed easing for consistent animation speed
   local lastSlot = 0
 
   -- Animation loop
@@ -252,7 +251,7 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
 
   -- Show won item
   openedFrame.CrateName.Text = "You won: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")!"
-  
+
   -- Only show continue button if NOT auto-rolling
   if not isAutoRolling then
     closeOpenedBtn.Visible = true
@@ -260,11 +259,11 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
 
   -- Mark rolling as complete
   isCurrentlyRolling = false
-  
+
   -- Show buttons again
   rollButton.Visible = true
   autoRollButton.Visible = true
-  
+
   -- Handle auto-roll
   if isAutoRolling then
     -- Check if player moved
@@ -286,14 +285,14 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
           else
             -- Hide the crate result and start next roll
             openedFrame.Visible = false
-            
+
             -- Clear items for next animation
             for _, child in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do
               if child:IsA("Frame") or child:IsA("ImageLabel") then
                 child:Destroy()
               end
             end
-            
+
             -- Start next roll
             isCurrentlyRolling = true
             rollButton.Visible = false
