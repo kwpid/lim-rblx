@@ -75,6 +75,12 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
   - Hide rarity label for Common items
   - Hide serial label when items don't have serial numbers
   - Hide t1 label by default
+- **2025-10-31**: Added owner tracking system
+  - Tracks how many unique players own each item (not total copies)
+  - Regular items only increment owners on first acquisition
+  - Stock items always increment owners (each is unique)
+  - Displays "copies: X" in inventory UI
+  - Properly handles stacking without inflating owner count
 
 ## User Preferences
 - User will test the game in Roblox and provide feedback

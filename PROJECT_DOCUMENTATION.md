@@ -72,6 +72,7 @@ Items are automatically assigned rarity based on their value:
   - Color-coded by rarity
   - Shows serial numbers for stock items
   - Shows quantity for stackable items
+  - Shows "copies: X" for owner count (how many players own it)
   - Search bar for filtering
   - Click to view detailed item info
 - **Item Stacking:**
@@ -82,6 +83,17 @@ Items are automatically assigned rarity based on their value:
   - Includes stacked items (Value × Amount)
   - Updates in real-time when items are added/removed
   - Displayed in leaderstats as "InvValue"
+
+### 8. Owner Tracking System
+- **Unique Ownership:**
+  - Tracks how many unique players own each item globally
+  - Regular items: +1 owner only when a NEW player gets the item
+  - Stock items: +1 owner for each unique stock item acquired
+  - Displayed as "copies: X" in inventory UI
+- **Smart Counting:**
+  - If player already has a regular item and gets it again, it stacks (no owner increment)
+  - Stock items always count as new owners since each serial is unique
+  - Shows true rarity based on how many players actually own the item
 
 ## 🗂️ File Structure Explained
 
@@ -163,6 +175,7 @@ Client-side UI scripts:
   Rarity = "Uncommon",
   Stock = 50,          -- 0 = unlimited, 1-100 = limited
   CurrentStock = 12,   -- How many claimed so far
+  Owners = 8,          -- How many unique players own this item
   CreatedAt = timestamp
 }
 ```
