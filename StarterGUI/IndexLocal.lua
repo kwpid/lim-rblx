@@ -307,6 +307,14 @@ end
 task.wait(1)
 pcall(refresh)
 
+-- Listen for when the GUI is opened (Enabled property changes to true)
+gui:GetPropertyChangedSignal("Enabled"):Connect(function()
+  if gui.Enabled then
+    -- Refresh data whenever the index is opened
+    pcall(refresh)
+  end
+end)
+
 -- Listen for item database updates (when new items are created)
 local createItemEvent = remoteEvents:FindFirstChild("CreateItemEvent")
 if createItemEvent then

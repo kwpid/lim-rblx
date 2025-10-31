@@ -46,7 +46,7 @@ function pickRandomItem(items)
   -- Calculate total inverse value
   local totalInverseValue = 0
   for _, item in ipairs(items) do
-    totalInverseValue += (1 / item.Value)
+    totalInverseValue = totalInverseValue + (1 / item.Value)
   end
 
   -- Pick random item (weighted by inverse value - higher value = lower chance)
@@ -54,7 +54,7 @@ function pickRandomItem(items)
   local cumulative = 0
 
   for _, item in ipairs(items) do
-    cumulative += (1 / item.Value)
+    cumulative = cumulative + (1 / item.Value)
     if randomValue <= cumulative then
       return item
     end
@@ -66,7 +66,8 @@ end
 
 -- Generate random items for animation
 function generateAnimationItems(chosenItem, numItems)
-  local allItems = ItemDatabase:GetAllItems()
+  -- Use rollable items only (excludes sold-out stock items)
+  local allItems = ItemDatabase:GetRollableItems()
 
   if #allItems == 0 then
     warn("⚠️ No items in database! Cannot generate animation.")
@@ -81,7 +82,7 @@ function generateAnimationItems(chosenItem, numItems)
       -- Insert the actual chosen item
       table.insert(animationItems, chosenItem)
     else
-      -- Pick random item for filler
+      -- Pick random item for filler (only from rollable items)
       local randomItem = pickRandomItem(allItems)
       if randomItem then
         table.insert(animationItems, randomItem)
