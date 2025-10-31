@@ -111,11 +111,22 @@ function refresh()
       end
     end
 
-    -- Display rarity
+    -- Display rarity (hide if Common)
     local rarityLabel = contentFrame and contentFrame:FindFirstChild("Rarity")
     if rarityLabel then
-      rarityLabel.Text = item.Rarity
-      rarityLabel.TextColor3 = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+      if item.Rarity == "Common" then
+        rarityLabel.Visible = false
+      else
+        rarityLabel.Visible = true
+        rarityLabel.Text = item.Rarity
+        rarityLabel.TextColor3 = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+      end
+    end
+
+    -- Hide t1 label if it doesn't exist on item
+    local t1Label = button:FindFirstChild("t1")
+    if t1Label then
+      t1Label.Visible = false
     end
 
     -- Display value
@@ -139,20 +150,11 @@ function refresh()
       nameLabel.Text = displayName
     end
 
-    -- Remove old ViewportFrames/ImageLabels
-    for _, child in ipairs(button:GetChildren()) do
-      if child:IsA("ViewportFrame") or child:IsA("ImageLabel") then
-        child:Destroy()
-      end
+    -- Set item image using existing ImageLabel (Sample.Image)
+    local img = button:FindFirstChild("Image")
+    if img and img:IsA("ImageLabel") then
+      img.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
     end
-
-    -- Create ImageLabel with Roblox item thumbnail
-    local img = Instance.new("ImageLabel")
-    img.Size = UDim2.new(1, 0, 1, 0)
-    img.BackgroundTransparency = 1
-    img.BorderSizePixel = 0
-    img.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
-    img.Parent = button
 
     table.insert(buttons, button)
 

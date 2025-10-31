@@ -70,6 +70,11 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
   - Updates in real-time when items are added/removed
   - Displayed in leaderstats for UI access
   - Fixed inventory UI loading by adding GetInventoryFunction RemoteFunction
+- **2025-10-31**: Fixed inventory UI issues
+  - Fixed image display using Sample.Image property instead of creating children
+  - Hide rarity label for Common items
+  - Hide serial label when items don't have serial numbers
+  - Hide t1 label by default
 
 ## User Preferences
 - User will test the game in Roblox and provide feedback
