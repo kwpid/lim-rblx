@@ -8,6 +8,68 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
 local ItemDatabase = require(script.Parent.ItemDatabase)
 
+-- Function to equip an item to a character
+local function equipItemToCharacter(player, robloxId)
+  local character = player.Character
+  if not character then
+    return false, "No character"
+  end
+  
+  local success, result = pcall(function()
+    local model = InsertService:LoadAsset(robloxId)
+    if model then
+      local item = model:FindFirstChildOfClass("Accessory") or model:FindFirstChildOfClass("Tool") or model:FindFirstChildOfClass("Hat")
+      
+      if item then
+        local itemClone = item:Clone()
+        local idValue = Instance.new("IntValue")
+        idValue.Name = "OriginalRobloxId"
+        idValue.Value = robloxId
+        idValue.Parent = itemClone
+        itemClone.Parent = character
+        print("✅ Equipped " .. itemClone.Name .. " to " .. player.Name)
+      else
+        for _, child in ipairs(model:GetChildren()) do
+          if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
+            local itemClone = child:Clone()
+            local idValue = Instance.new("IntValue")
+            idValue.Name = "OriginalRobloxId"
+            idValue.Value = robloxId
+            idValue.Parent = itemClone
+            itemClone.Parent = character
+            print("✅ Equipped " .. itemClone.Name .. " to " .. player.Name)
+            break
+          end
+        end
+      end
+      model:Destroy()
+    end
+  end)
+  
+  return success, result
+end
+
+-- Function to unequip items with a specific RobloxId
+local function unequipItemFromCharacter(player, robloxId)
+  local character = player.Character
+  if not character then
+    return 0
+  end
+  
+  local itemsRemoved = 0
+  for _, child in ipairs(character:GetChildren()) do
+    if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
+      local storedId = child:FindFirstChild("OriginalRobloxId")
+      if storedId and storedId.Value == robloxId then
+        child:Destroy()
+        itemsRemoved = itemsRemoved + 1
+      end
+    end
+  end
+  
+  return itemsRemoved
+end
+
 -- Create RemoteEvents folder if it doesn't exist
 local remoteEventsFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
 if not remoteEventsFolder then
@@ -42,6 +104,33 @@ if not sellAllItemEvent then
   print("✅ Created SellAllItemEvent")
 end
 
+-- Get or create notification event
+local notificationEvent = remoteEventsFolder:FindFirstChild("CreateNotification")
+if not notificationEvent then
+  notificationEvent = Instance.new("RemoteEvent")
+  notificationEvent.Name = "CreateNotification"
+  notificationEvent.Parent = remoteEventsFolder
+  print("✅ Created CreateNotification")
+end
+
+-- Create RemoteFunction to get equipped items for client sync
+local getEquippedItemsFunction = remoteEventsFolder:FindFirstChild("GetEquippedItemsFunction")
+if not getEquippedItemsFunction then
+  getEquippedItemsFunction = Instance.new("RemoteFunction")
+  getEquippedItemsFunction.Name = "GetEquippedItemsFunction"
+  getEquippedItemsFunction.Parent = remoteEventsFolder
+  print("✅ Created GetEquippedItemsFunction")
+end
+
+-- Function to get player's equipped items
+getEquippedItemsFunction.OnServerInvoke = function(player)
+  local data = DataStoreAPI:GetPlayerData(player)
+  if data and data.EquippedItems then
+    return data.EquippedItems
+  end
+  return {}
+end
+
 -- Equip/Unequip item to player's character
 equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
   if shouldUnequip then
@@ -55,18 +144,14 @@ equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
     return
   end
   
-  local character = player.Character
-  if not character then
-    warn("❌ Player has no character")
-    return
-  end
-  
   -- Verify player owns this item
   local inventory = DataStoreAPI:GetInventory(player)
   local ownsItem = false
+  local itemName = "Item"
   for _, item in ipairs(inventory) do
     if item.RobloxId == robloxId then
       ownsItem = true
+      itemName = item.Name
       break
     end
   end
@@ -76,70 +161,69 @@ equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
     return
   end
   
+  -- Get player data
+  local data = DataStoreAPI:GetPlayerData(player)
+  if not data then
+    warn("❌ No player data found for " .. player.Name)
+    return
+  end
+  
+  if not data.EquippedItems then
+    data.EquippedItems = {}
+  end
+  
   if shouldUnequip then
-    -- Unequip: Find and remove items that came from this RobloxId
-    local itemsRemoved = 0
-    for _, child in ipairs(character:GetChildren()) do
-      if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
-        -- Check if this item came from the RobloxId we want to unequip
-        -- We'll store the RobloxId in the item when we equip it
-        local storedId = child:FindFirstChild("OriginalRobloxId")
-        if storedId and storedId.Value == robloxId then
-          child:Destroy()
-          itemsRemoved = itemsRemoved + 1
-        end
-      end
-    end
+    -- Unequip from character
+    local itemsRemoved = unequipItemFromCharacter(player, robloxId)
     
     if itemsRemoved > 0 then
       print("✅ Unequipped " .. itemsRemoved .. " item(s) from " .. player.Name)
+      
+      -- Remove from EquippedItems array
+      for i = #data.EquippedItems, 1, -1 do
+        if data.EquippedItems[i] == robloxId then
+          table.remove(data.EquippedItems, i)
+        end
+      end
+      
+      -- Send notification
+      local notificationData = {
+        Type = "UNEQUIP",
+        Title = "Item Unequipped",
+        Body = itemName .. " was unequipped",
+        ImageId = robloxId
+      }
+      notificationEvent:FireClient(player, notificationData)
     else
       warn("⚠️ No equipped items found with RobloxId: " .. robloxId)
     end
   else
     -- Equip the item
-    local success, result = pcall(function()
-      local model = InsertService:LoadAsset(robloxId)
-      if model then
-        -- Find the accessory or tool in the loaded model
-        local item = model:FindFirstChildOfClass("Accessory") or model:FindFirstChildOfClass("Tool") or model:FindFirstChildOfClass("Hat")
-        
-        if item then
-          -- Clone it and parent to character
-          local itemClone = item:Clone()
-          
-          -- Store the RobloxId so we can unequip it later
-          local idValue = Instance.new("IntValue")
-          idValue.Name = "OriginalRobloxId"
-          idValue.Value = robloxId
-          idValue.Parent = itemClone
-          
-          itemClone.Parent = character
-          print("✅ Equipped " .. itemClone.Name .. " to " .. player.Name)
-        else
-          -- If it's not an accessory/tool, try to just parent the whole model
-          for _, child in ipairs(model:GetChildren()) do
-            if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
-              local itemClone = child:Clone()
-              
-              -- Store the RobloxId so we can unequip it later
-              local idValue = Instance.new("IntValue")
-              idValue.Name = "OriginalRobloxId"
-              idValue.Value = robloxId
-              idValue.Parent = itemClone
-              
-              itemClone.Parent = character
-              print("✅ Equipped " .. itemClone.Name .. " to " .. player.Name)
-              break
-            end
-          end
-        end
-        
-        model:Destroy()
-      end
-    end)
+    local success, result = equipItemToCharacter(player, robloxId)
     
-    if not success then
+    if success then
+      -- Add to EquippedItems array if not already there
+      local alreadyEquipped = false
+      for _, equippedId in ipairs(data.EquippedItems) do
+        if equippedId == robloxId then
+          alreadyEquipped = true
+          break
+        end
+      end
+      
+      if not alreadyEquipped then
+        table.insert(data.EquippedItems, robloxId)
+      end
+      
+      -- Send notification
+      local notificationData = {
+        Type = "EQUIP",
+        Title = "Item Equipped!",
+        Body = itemName .. " is now equipped",
+        ImageId = robloxId
+      }
+      notificationEvent:FireClient(player, notificationData)
+    else
       warn("❌ Failed to equip item: " .. tostring(result))
     end
   end
@@ -244,6 +328,15 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
   
   -- Update inventory value
   DataStoreAPI:UpdateInventoryValue(player)
+  
+  -- Send notification
+  local notificationData = {
+    Type = "SELL",
+    Title = "Item Sold!",
+    Body = "Sold " .. itemName .. " for R$ " .. sellValue,
+    ImageId = item.RobloxId
+  }
+  notificationEvent:FireClient(player, notificationData)
 end)
 
 -- Sell all copies of an item
@@ -324,6 +417,85 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
   DataStoreAPI:UpdateInventoryValue(player)
   
   print("💰💰 " .. player.Name .. " sold " .. itemsSold .. "x " .. firstItem.Name .. " for R$ " .. totalSellValue)
+  
+  -- Send notification
+  local notificationData = {
+    Type = "SELL",
+    Title = "Items Sold!",
+    Body = "Sold " .. itemsSold .. "x " .. firstItem.Name .. " for R$ " .. totalSellValue,
+    ImageId = firstItem.RobloxId
+  }
+  notificationEvent:FireClient(player, notificationData)
 end)
+
+-- Auto-equip function: equips all saved equipped items to a character
+local function autoEquipItems(player)
+  -- Wait a moment for character to fully load
+  task.wait(0.5)
+  
+  local data = DataStoreAPI:GetPlayerData(player)
+  if not data or not data.EquippedItems then
+    return
+  end
+  
+  -- Get player's current inventory for failsafe check
+  local inventory = DataStoreAPI:GetInventory(player)
+  local ownedRobloxIds = {}
+  for _, item in ipairs(inventory) do
+    ownedRobloxIds[item.RobloxId] = true
+  end
+  
+  -- Equip each item, but only if player still owns it (failsafe)
+  local itemsToRemove = {}
+  for i, robloxId in ipairs(data.EquippedItems) do
+    if ownedRobloxIds[robloxId] then
+      -- Player still owns this item, equip it
+      local success, result = equipItemToCharacter(player, robloxId)
+      if success then
+        print("🔄 Auto-equipped item " .. robloxId .. " to " .. player.Name)
+      else
+        warn("⚠️ Failed to auto-equip item " .. robloxId .. ": " .. tostring(result))
+      end
+    else
+      -- Player no longer owns this item, mark for removal from EquippedItems
+      print("⚠️ Player " .. player.Name .. " no longer owns equipped item " .. robloxId .. ", removing from EquippedItems")
+      table.insert(itemsToRemove, i)
+    end
+  end
+  
+  -- Remove items player no longer owns (in reverse order to preserve indices)
+  for i = #itemsToRemove, 1, -1 do
+    table.remove(data.EquippedItems, itemsToRemove[i])
+  end
+  
+  if #itemsToRemove > 0 then
+    print("🧹 Cleaned up " .. #itemsToRemove .. " equipped items that are no longer owned")
+  end
+end
+
+-- Listen for player character spawns to auto-equip items
+Players.PlayerAdded:Connect(function(player)
+  player.CharacterAdded:Connect(function(character)
+    print("👤 Character spawned for " .. player.Name .. ", auto-equipping items...")
+    autoEquipItems(player)
+  end)
+  
+  -- Also equip for current character if it exists
+  if player.Character then
+    autoEquipItems(player)
+  end
+end)
+
+-- Handle players already in game
+for _, player in pairs(Players:GetPlayers()) do
+  player.CharacterAdded:Connect(function(character)
+    print("👤 Character spawned for " .. player.Name .. ", auto-equipping items...")
+    autoEquipItems(player)
+  end)
+  
+  if player.Character then
+    autoEquipItems(player)
+  end
+end
 
 print("✅ EquipSellHandler ready!")

@@ -106,6 +106,21 @@ Before testing in Roblox Studio, you **must** enable DataStore access:
 The scripts now include detailed error messages to help diagnose this issue.
 
 ## Recent Changes
+- **2025-10-31**: Added equipped item persistence and notifications
+  - **Equipped Items Persistence**: Equipped items now save to player data and auto-equip on rejoin
+    - EquippedItems array added to player data structure (DataStoreManager.lua)
+    - Items automatically equip when player spawns or rejoins the game
+    - Failsafe: Items that are no longer owned are removed from EquippedItems
+    - Equip button reflects equipped state (shows "Unequip" for equipped items)
+    - Client syncs equipped items from server on inventory load
+  - **Notification System Expanded**: Added notifications for all player actions
+    - Equip notification: Shows when item is equipped
+    - Unequip notification: Shows when item is unequipped
+    - Sell notification: Shows when item is sold (single or all)
+    - Data loaded notification: Shows "Welcome Back!" when data loads successfully
+    - Data error notification: Shows error if data fails to load
+  - New notification presets: EQUIP, UNEQUIP, SELL, DATA_LOADED, DATA_ERROR
+  - GetEquippedItemsFunction RemoteFunction for client-server sync
 - **2025-10-31**: Added equipping and selling functionality
   - **Equip System**: Players can equip and unequip items to their character using Roblox asset IDs
     - Equip/Unequip button in inventory detail panel (Frame.Equip)

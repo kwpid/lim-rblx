@@ -95,6 +95,35 @@ Items are automatically assigned rarity based on their value:
   - Stock items always count as new owners since each serial is unique
   - Shows true rarity based on how many players actually own the item
 
+### 9. Equipped Item Persistence
+- **Auto-Equip System:**
+  - Equipped items are saved to player data in EquippedItems array
+  - When player rejoins, all previously equipped items automatically equip to their character
+  - Items equip when character spawns or respawns
+- **Failsafe Protection:**
+  - System checks if player still owns each equipped item before equipping
+  - Items that are no longer owned are removed from EquippedItems
+  - Prevents errors from trying to equip items player no longer has
+- **Client-Server Sync:**
+  - Client syncs equipped items from server on inventory load
+  - Equip button correctly shows "Unequip" for already-equipped items
+  - GetEquippedItemsFunction RemoteFunction provides server data to client
+
+### 10. Notification System
+- **Notification Types:**
+  - EQUIP: Shows when player equips an item
+  - UNEQUIP: Shows when player unequips an item
+  - SELL: Shows when player sells item(s) with cash earned
+  - DATA_LOADED: "Welcome Back!" when data loads successfully
+  - DATA_ERROR: Error message if data fails to load
+  - GIFT: When admin creates new item (all players notified)
+  - ERROR, VICTORY: Pre-existing notification types
+- **Notification Features:**
+  - Shows item thumbnail image for equip/unequip/sell notifications
+  - Displays cash earned for sell notifications
+  - 2-second delay on data load notifications to ensure client is ready
+  - Queued system handles multiple notifications gracefully
+
 ## 🗂️ File Structure Explained
 
 ### ReplicatedStorage/
@@ -162,7 +191,9 @@ Client-side UI scripts:
   },
   CasesOpened = 10,
   Cash = 0,
-  InvValue = 53000  -- Auto-calculated: (1000 × 3) + (50000 × 1)
+  InvValue = 53000,  -- Auto-calculated: (1000 × 3) + (50000 × 1)
+  EquippedItems = {12345, 67890},  -- Array of RobloxIds of equipped items
+  DataVersion = "DataVersion.10"
 }
 ```
 

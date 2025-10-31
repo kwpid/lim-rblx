@@ -91,6 +91,7 @@ print("✓ Found GetInventoryFunction")
 local equipItemEvent = remoteEvents:WaitForChild("EquipItemEvent", 10)
 local sellItemEvent = remoteEvents:WaitForChild("SellItemEvent", 10)
 local sellAllItemEvent = remoteEvents:WaitForChild("SellAllItemEvent", 10)
+local getEquippedItemsFunction = remoteEvents:WaitForChild("GetEquippedItemsFunction", 10)
 
 if equipItemEvent then
   print("✓ Found EquipItemEvent")
@@ -108,6 +109,12 @@ if sellAllItemEvent then
   print("✓ Found SellAllItemEvent")
 else
   warn("⚠️ SellAllItemEvent not found")
+end
+
+if getEquippedItemsFunction then
+  print("✓ Found GetEquippedItemsFunction")
+else
+  warn("⚠️ GetEquippedItemsFunction not found")
 end
 
 -- Rarity colors matching our 8-tier system (from ItemRarityModule)
@@ -149,6 +156,24 @@ function refresh()
   end
 
   print("✓ InvokeServer completed successfully")
+  
+  -- Sync equipped items from server
+  if getEquippedItemsFunction then
+    local equippedSuccess, equippedResult = pcall(function()
+      return getEquippedItemsFunction:InvokeServer()
+    end)
+    
+    if equippedSuccess and equippedResult then
+      -- Clear and rebuild equippedItems table from server data
+      equippedItems = {}
+      for _, robloxId in ipairs(equippedResult) do
+        equippedItems[robloxId] = true
+      end
+      print("✓ Synced equipped items from server: " .. #equippedResult .. " items equipped")
+    else
+      warn("⚠️ Failed to sync equipped items: " .. tostring(equippedResult))
+    end
+  end
 
   if not inventory then
     warn("❌ Inventory is nil!")

@@ -17,6 +17,7 @@ local DEFAULT_DATA = {
   CasesOpened = 0,
   Cash = 0,
   InvValue = 0,  -- Total inventory value
+  EquippedItems = {},  -- Array of RobloxIds of equipped items
   DataVersion = DATA_VERSION
 }
 
@@ -80,6 +81,7 @@ function DataStoreManager:LoadData(player)
   if not data.CasesOpened then data.CasesOpened = 0 end
   if not data.Cash then data.Cash = 0 end
   if not data.InvValue then data.InvValue = 0 end
+  if not data.EquippedItems then data.EquippedItems = {} end
   if not data.DataVersion then data.DataVersion = DATA_VERSION end
   
   return data
@@ -92,6 +94,7 @@ function DataStoreManager:GetDefaultData()
     CasesOpened = 0,
     Cash = 0,
     InvValue = 0,
+    EquippedItems = {},
     DataVersion = DATA_VERSION
   }
   return defaultCopy

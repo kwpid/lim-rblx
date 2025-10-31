@@ -12,6 +12,21 @@ local PlayerData = {}
 -- Auto-save interval (in seconds)
 local AUTO_SAVE_INTERVAL = 120  -- Save every 2 minutes
 
+-- Get or create notification event
+local remoteEventsFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+if not remoteEventsFolder then
+  remoteEventsFolder = Instance.new("Folder")
+  remoteEventsFolder.Name = "RemoteEvents"
+  remoteEventsFolder.Parent = ReplicatedStorage
+end
+
+local notificationEvent = remoteEventsFolder:FindFirstChild("CreateNotification")
+if not notificationEvent then
+  notificationEvent = Instance.new("RemoteEvent")
+  notificationEvent.Name = "CreateNotification"
+  notificationEvent.Parent = remoteEventsFolder
+end
+
 -- Function to setup a player (used for both PlayerAdded and existing players)
 local function setupPlayer(player)
   print("🎮 Setting up player: " .. player.Name)
@@ -19,10 +34,12 @@ local function setupPlayer(player)
   -- Load their data
   local data = DataStoreManager:LoadData(player)
   
+  local dataLoadFailed = false
   if not data then
     warn("❌ CRITICAL: Failed to load data for " .. player.Name)
     warn("⚠️ Check if Studio API Access is enabled in Game Settings > Security")
     data = DataStoreManager:GetDefaultData()
+    dataLoadFailed = true
   end
   
   PlayerData[player.UserId] = data
@@ -79,6 +96,27 @@ local function setupPlayer(player)
   invValue.Value = totalValue
 
   print("✅ Data loaded for " .. player.Name .. " (Cash: " .. data.Cash .. ", Cases: " .. data.CasesOpened .. ", Inventory: " .. #data.Inventory .. " items)")
+  
+  -- Send notification after a short delay to ensure client is ready
+  task.delay(2, function()
+    if dataLoadFailed then
+      -- Send error notification
+      local notificationData = {
+        Type = "DATA_ERROR",
+        Title = "Data Load Error",
+        Body = "Failed to load your data. Using defaults.",
+      }
+      notificationEvent:FireClient(player, notificationData)
+    else
+      -- Send success notification
+      local notificationData = {
+        Type = "DATA_LOADED",
+        Title = "Welcome Back!",
+        Body = "Your data loaded successfully",
+      }
+      notificationEvent:FireClient(player, notificationData)
+    end
+  end)
 end
 
 -- When a player joins
