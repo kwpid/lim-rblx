@@ -14,7 +14,6 @@ local DataStoreManager = {}
 -- Default data structure for new players
 local DEFAULT_DATA = {
   Inventory = {}, -- Will store item data as table
-  CasesOpened = 0,
   Cash = 0,
   InvValue = 0,       -- Total inventory value
   EquippedItems = {}, -- Array of RobloxIds of equipped items
@@ -74,7 +73,6 @@ function DataStoreManager:LoadData(player)
 
   -- Ensure all required fields exist
   if not data.Inventory then data.Inventory = {} end
-  if not data.CasesOpened then data.CasesOpened = 0 end
   if not data.Cash then data.Cash = 0 end
   if not data.InvValue then data.InvValue = 0 end
   if not data.EquippedItems then data.EquippedItems = {} end
@@ -87,7 +85,6 @@ end
 function DataStoreManager:GetDefaultData()
   local defaultCopy = {
     Inventory = {},
-    CasesOpened = 0,
     Cash = 0,
     InvValue = 0,
     EquippedItems = {},
@@ -112,12 +109,7 @@ end
 
 -- Add cash to player
 function DataStoreManager:AddCash(playerData, amount)
-  playerData.Cash += amount
-end
-
--- Increment cases opened
-function DataStoreManager:IncrementCasesOpened(playerData)
-  playerData.CasesOpened += 1
+  playerData.Cash = playerData.Cash + amount
 end
 
 -- Set inventory value

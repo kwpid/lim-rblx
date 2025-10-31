@@ -120,26 +120,6 @@ function DataStoreAPI:AddCash(player, amount)
   return false
 end
 
--- Increment cases opened
-function DataStoreAPI:IncrementCasesOpened(player)
-  local data = self:GetPlayerData(player)
-  if data then
-    DataStoreManager:IncrementCasesOpened(data)
-
-    -- Update leaderstats
-    if player:FindFirstChild("leaderstats") then
-      local casesOpened = player.leaderstats:FindFirstChild("Cases Opened")
-      if casesOpened then
-        casesOpened.Value = data.CasesOpened
-      end
-    end
-
-
-    return true
-  end
-  return false
-end
-
 -- Get player's inventory (with Owners count added to each item)
 function DataStoreAPI:GetInventory(player)
   local data = self:GetPlayerData(player)
@@ -197,15 +177,6 @@ function DataStoreAPI:GetCash(player)
   local data = self:GetPlayerData(player)
   if data then
     return data.Cash
-  end
-  return 0
-end
-
--- Get player's total cases opened
-function DataStoreAPI:GetCasesOpened(player)
-  local data = self:GetPlayerData(player)
-  if data then
-    return data.CasesOpened
   end
   return 0
 end

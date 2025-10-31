@@ -207,7 +207,6 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
   end
 
   DataStoreAPI:AddItem(player, itemToAdd)
-  DataStoreAPI:IncrementCasesOpened(player)
 
   playersRolling[player] = nil
 end)

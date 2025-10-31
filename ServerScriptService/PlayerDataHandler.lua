@@ -111,11 +111,6 @@ local function setupPlayer(player)
   cash.Value = data.Cash or 0
   cash.Parent = leaderstats
 
-  local casesOpened = Instance.new("IntValue")
-  casesOpened.Name = "Cases Opened"
-  casesOpened.Value = data.CasesOpened or 0
-  casesOpened.Parent = leaderstats
-
   local invValue = Instance.new("IntValue")
   invValue.Name = "InvValue"
   invValue.Value = data.InvValue or 0
@@ -124,12 +119,6 @@ local function setupPlayer(player)
   cash.Changed:Connect(function(newValue)
     if PlayerData[player.UserId] then
       PlayerData[player.UserId].Cash = newValue
-    end
-  end)
-
-  casesOpened.Changed:Connect(function(newValue)
-    if PlayerData[player.UserId] then
-      PlayerData[player.UserId].CasesOpened = newValue
     end
   end)
 
