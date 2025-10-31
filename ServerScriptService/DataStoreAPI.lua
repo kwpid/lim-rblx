@@ -69,7 +69,12 @@ function DataStoreAPI:AddItem(player, itemData)
 
   -- Increment owners count only if this is a new owner
   if isNewOwner then
-    ItemDatabase:IncrementOwners(itemData.RobloxId)
+    local newOwnerCount = ItemDatabase:IncrementOwners(itemData.RobloxId)
+    if not newOwnerCount then
+      warn("⚠️ Failed to increment owners for item: " .. itemData.Name .. " (RobloxId: " .. tostring(itemData.RobloxId) .. ")")
+    else
+      print("📊 Item " .. itemData.Name .. " now has " .. newOwnerCount .. " unique owners")
+    end
   end
 
   return true

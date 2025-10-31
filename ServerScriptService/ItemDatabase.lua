@@ -209,28 +209,55 @@ end
 
 -- Get item by Roblox ID
 function ItemDatabase:GetItemByRobloxId(robloxId)
+  -- Convert to number to handle both string and number inputs
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    warn("❌ ItemDatabase:GetItemByRobloxId - Invalid RobloxId: " .. tostring(robloxId))
+    return nil
+  end
+  
   for _, item in ipairs(self.Items) do
-    if item.RobloxId == robloxId then
+    if item.RobloxId == numericId then
       return item
     end
   end
+  
+  warn("⚠️ ItemDatabase:GetItemByRobloxId - No item found with RobloxId: " .. numericId)
   return nil
 end
 
 -- Increment owners count for an item
 function ItemDatabase:IncrementOwners(robloxId)
-  local item = self:GetItemByRobloxId(robloxId)
-  if item then
-    item.Owners = (item.Owners or 0) + 1
-    self:SaveItems()
-    return item.Owners
+  -- Convert to number to ensure proper lookup
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    warn("❌ ItemDatabase:IncrementOwners - Invalid RobloxId: " .. tostring(robloxId))
+    return nil
   end
-  return nil
+  
+  local item = self:GetItemByRobloxId(numericId)
+  if item then
+    local oldOwners = item.Owners or 0
+    item.Owners = oldOwners + 1
+    self:SaveItems()
+    print("✅ Incremented owners for item " .. item.Name .. " (RobloxId: " .. numericId .. "): " .. oldOwners .. " → " .. item.Owners)
+    return item.Owners
+  else
+    warn("❌ ItemDatabase:IncrementOwners - Item not found for RobloxId: " .. numericId)
+    return nil
+  end
 end
 
 -- Get owners count for an item
 function ItemDatabase:GetOwners(robloxId)
-  local item = self:GetItemByRobloxId(robloxId)
+  -- Convert to number to ensure proper lookup
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    warn("❌ ItemDatabase:GetOwners - Invalid RobloxId: " .. tostring(robloxId))
+    return 0
+  end
+  
+  local item = self:GetItemByRobloxId(numericId)
   if item then
     return item.Owners or 0
   end
