@@ -240,4 +240,37 @@ end
 -- Initialize database
 ItemDatabase:LoadItems()
 
+-- Set up RemoteFunction for clients to get all items
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local remoteEventsFolder = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+-- Create RemoteFunction if it doesn't exist
+local getAllItemsFunction = remoteEventsFolder:FindFirstChild("GetAllItemsFunction")
+if not getAllItemsFunction then
+  getAllItemsFunction = Instance.new("RemoteFunction")
+  getAllItemsFunction.Name = "GetAllItemsFunction"
+  getAllItemsFunction.Parent = remoteEventsFolder
+end
+
+-- Set up the function to return all items to clients
+getAllItemsFunction.OnServerInvoke = function(player)
+  print("📡 Player " .. player.Name .. " requested all items from database")
+  -- Return a copy of all items
+  local itemsCopy = {}
+  for i, item in ipairs(ItemDatabase.Items) do
+    itemsCopy[i] = {
+      RobloxId = item.RobloxId,
+      Name = item.Name,
+      Value = item.Value,
+      Rarity = item.Rarity,
+      Stock = item.Stock or 0,
+      CurrentStock = item.CurrentStock or 0,
+      Owners = item.Owners or 0,
+      CreatedAt = item.CreatedAt
+    }
+  end
+  print("✅ Sending " .. #itemsCopy .. " items to " .. player.Name)
+  return itemsCopy
+end
+
 return ItemDatabase

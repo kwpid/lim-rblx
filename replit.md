@@ -68,6 +68,7 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - **AdminGUI.lua** - Admin panel client script
 - **CratesClient.lua** - Crate animation client script
 - **InventorySystem.lua** - Inventory display client script
+- **IndexLocal.lua** - All items index display (shows entire game catalog)
 
 ## Important Setup Requirements
 
@@ -79,6 +80,14 @@ Before testing in Roblox Studio, you **must** enable DataStore access:
 The scripts now include detailed error messages to help diagnose this issue.
 
 ## Recent Changes
+- **2025-10-31**: Updated IndexLocal.lua to work with ItemDatabase system
+  - Now fetches all items from server via GetAllItemsFunction RemoteFunction
+  - Displays items using Roblox thumbnails (RobloxId)
+  - Shows item stats: Rarity, Value, Owners, Stock (for stock items)
+  - Includes search functionality to filter items by name
+  - Auto-refreshes when new items are created
+  - Sorted by value (highest first), then rarity, then name
+  - Shows special badges (✨ for 3 or less remaining, 💎 for 10 or less remaining)
 - **2025-10-31**: Added new features and improvements
   - Added data version system for wiping player data AND resetting item stock/serials (change DATA_VERSION in both DataStoreManager.lua and ItemDatabase.lua)
   - Continue button now shows after every roll (including auto-rolls)
@@ -149,6 +158,7 @@ The scripts now include detailed error messages to help diagnose this issue.
 - DataStore is used for both player data and global item database
 - Inventory value is automatically recalculated whenever items are added/removed
 - GetInventoryFunction RemoteFunction allows clients to fetch inventory data
+- GetAllItemsFunction RemoteFunction allows clients to fetch all items in the game
 - InventoryUpdatedEvent notifies clients when inventory changes
 
 ## Current Project Status
