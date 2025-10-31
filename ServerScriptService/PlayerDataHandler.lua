@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreManager = require(script.Parent.DataStoreManager)
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
+local ItemDatabase = require(script.Parent.ItemDatabase)
 
 local PlayerData = {}
 local AUTO_SAVE_INTERVAL = 120
@@ -29,6 +30,74 @@ local function setupPlayer(player)
     warn("⚠️ Check Studio API Access in Game Settings > Security")
     data = DataStoreManager:GetDefaultData()
     dataLoadFailed = true
+  end
+
+  -- ═══════════════════════════════════════════════════
+  -- DATA CLEANUP: Remove items that no longer exist in ItemDatabase
+  -- This handles cases where items were deleted while player was offline
+  -- ═══════════════════════════════════════════════════
+  if data.Inventory then
+    local itemsToRemove = {}
+    local removedItemNames = {}
+    
+    for i, invItem in ipairs(data.Inventory) do
+      -- Check if this item still exists in ItemDatabase
+      local itemExists = ItemDatabase:GetItemByRobloxId(invItem.RobloxId)
+      if not itemExists then
+        -- Item was deleted from database - mark for removal
+        table.insert(itemsToRemove, i)
+        table.insert(removedItemNames, invItem.Name or "Unknown Item")
+      end
+    end
+    
+    -- Remove items in reverse order to maintain indices
+    for i = #itemsToRemove, 1, -1 do
+      table.remove(data.Inventory, itemsToRemove[i])
+    end
+    
+    -- Also clean up EquippedItems array
+    if data.EquippedItems then
+      local equippedToRemove = {}
+      for i, robloxId in ipairs(data.EquippedItems) do
+        local itemExists = ItemDatabase:GetItemByRobloxId(robloxId)
+        if not itemExists then
+          table.insert(equippedToRemove, i)
+        end
+      end
+      
+      for i = #equippedToRemove, 1, -1 do
+        table.remove(data.EquippedItems, equippedToRemove[i])
+      end
+    end
+    
+    -- Log and notify player if items were removed
+    if #itemsToRemove > 0 then
+      print("🧹 Cleaned up " .. #itemsToRemove .. " deleted items from " .. player.Name .. "'s inventory")
+      
+      -- Send notification to player about removed items
+      task.delay(3, function()
+        local itemsList = ""
+        for i, itemName in ipairs(removedItemNames) do
+          if i <= 3 then
+            itemsList = itemsList .. itemName
+            if i < math.min(#removedItemNames, 3) then
+              itemsList = itemsList .. ", "
+            end
+          end
+        end
+        
+        if #removedItemNames > 3 then
+          itemsList = itemsList .. " and " .. (#removedItemNames - 3) .. " more"
+        end
+        
+        local notificationData = {
+          Type = "ERROR",
+          Title = "Items Removed",
+          Body = itemsList .. " were removed (deleted by admin)"
+        }
+        notificationEvent:FireClient(player, notificationData)
+      end)
+    end
   end
 
   PlayerData[player.UserId] = data
@@ -75,7 +144,7 @@ local function setupPlayer(player)
     for _, item in ipairs(data.Inventory) do
       local itemValue = item.Value or 0
       local amount = item.Amount or 1
-      totalValue += (itemValue * amount)
+      totalValue = totalValue + (itemValue * amount)
     end
   end
   data.InvValue = totalValue

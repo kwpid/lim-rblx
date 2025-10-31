@@ -432,6 +432,46 @@ function ItemDatabase:GetSerialOwners(robloxId)
   return sorted
 end
 
+-- Delete an item from the database
+-- Returns success (true/false), message, itemData (deleted item info)
+function ItemDatabase:DeleteItem(robloxId)
+  -- Convert to number to ensure proper lookup
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    return false, "Invalid RobloxId: " .. tostring(robloxId), nil
+  end
+
+  -- Find the item index
+  local itemIndex = nil
+  local itemData = nil
+  for i, item in ipairs(self.Items) do
+    if item.RobloxId == numericId then
+      itemIndex = i
+      itemData = item
+      break
+    end
+  end
+
+  if not itemIndex then
+    return false, "Item with ID " .. numericId .. " does not exist", nil
+  end
+
+  -- Remove item from database
+  table.remove(self.Items, itemIndex)
+
+  -- Save to DataStore
+  local saveSuccess = self:SaveItems()
+
+  if saveSuccess then
+    print("🗑️ Deleted item: " .. itemData.Name .. " (RobloxId: " .. numericId .. ")")
+    return true, "Item deleted successfully", itemData
+  else
+    -- Restore item if save failed (failsafe)
+    table.insert(self.Items, itemIndex, itemData)
+    return false, "Failed to save deletion to database", nil
+  end
+end
+
 -- Initialize database
 ItemDatabase:LoadItems()
 

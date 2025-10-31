@@ -30,6 +30,10 @@ local giveItemAmountBox = uiFrame:WaitForChild("Give_Item_Amount")
 local playerIdBox = uiFrame:WaitForChild("Player_Id")
 local giveItemButton = uiFrame:WaitForChild("GiveItem")
 
+-- GUI Elements - Delete Item Section
+local deleteItemIdBox = uiFrame:WaitForChild("Delete_Item_Id")
+local deleteItemButton = uiFrame:WaitForChild("DeleteItem")
+
 -- Start with frame hidden
 uiFrame.Visible = false
 
@@ -139,8 +143,9 @@ end)
 -- GIVE ITEM FUNCTIONALITY
 -- ═══════════════════════════════════════════════════
 
--- Wait for GiveItemEvent
+-- Wait for GiveItemEvent and DeleteItemEvent
 local giveItemEvent = remoteEvents:WaitForChild("GiveItemEvent")
+local deleteItemEvent = remoteEvents:WaitForChild("DeleteItemEvent")
 
 -- Give item button
 giveItemButton.MouseButton1Click:Connect(function()
@@ -190,4 +195,69 @@ giveItemEvent.OnClientEvent:Connect(function(success, message)
   task.wait(2)
   giveItemButton.Text = "GiveItem"
   giveItemButton.Active = true
+end)
+
+-- ═══════════════════════════════════════════════════
+-- DELETE ITEM FUNCTIONALITY
+-- ═══════════════════════════════════════════════════
+
+local deleteConfirmation = false
+
+-- Delete item button
+deleteItemButton.MouseButton1Click:Connect(function()
+  local deleteItemId = tonumber(deleteItemIdBox.Text)
+
+  -- Validate inputs
+  if not deleteItemId then
+    warn("❌ Delete Item ID must be a number!")
+    return
+  end
+
+  -- Confirmation system (similar to sell system)
+  if not deleteConfirmation then
+    -- First click - ask for confirmation
+    deleteConfirmation = true
+    deleteItemButton.Text = "Are you sure?"
+    deleteItemButton.BackgroundColor3 = Color3.fromRGB(198, 34, 34) -- Red
+
+    -- Reset after 3 seconds if not clicked again
+    task.delay(3, function()
+      if deleteConfirmation then
+        deleteConfirmation = false
+        deleteItemButton.Text = "DeleteItem"
+        deleteItemButton.BackgroundColor3 = Color3.fromRGB(85, 85, 85) -- Default gray
+      end
+    end)
+  else
+    -- Second click - confirmed, proceed with deletion
+    deleteConfirmation = false
+    deleteItemButton.Text = "Deleting..."
+    deleteItemButton.BackgroundColor3 = Color3.fromRGB(85, 85, 85)
+    deleteItemButton.Active = false
+
+    -- Send to server
+    deleteItemEvent:FireServer(deleteItemId)
+  end
+end)
+
+-- Handle delete item response
+deleteItemEvent.OnClientEvent:Connect(function(success, message)
+  if success then
+    -- Clear fields
+    deleteItemIdBox.Text = ""
+
+    deleteItemButton.Text = "✅ Deleted!"
+    deleteItemButton.BackgroundColor3 = Color3.fromRGB(111, 218, 40) -- Green
+  else
+    warn("❌ " .. message)
+    deleteItemButton.Text = "❌ Failed"
+    deleteItemButton.BackgroundColor3 = Color3.fromRGB(198, 34, 34) -- Red
+  end
+
+  -- Reset button after delay
+  task.wait(2)
+  deleteItemButton.Text = "DeleteItem"
+  deleteItemButton.BackgroundColor3 = Color3.fromRGB(85, 85, 85) -- Default gray
+  deleteItemButton.Active = true
+  deleteConfirmation = false
 end)

@@ -25,6 +25,11 @@ local giveItemEvent = Instance.new("RemoteEvent")
 giveItemEvent.Name = "GiveItemEvent"
 giveItemEvent.Parent = remoteEventsFolder
 
+-- Create RemoteEvent for deleting items
+local deleteItemEvent = Instance.new("RemoteEvent")
+deleteItemEvent.Name = "DeleteItemEvent"
+deleteItemEvent.Parent = remoteEventsFolder
+
 -- Create RemoteFunction for checking admin status
 local checkAdminFunction = Instance.new("RemoteFunction")
 checkAdminFunction.Name = "CheckAdminFunction"
@@ -174,6 +179,24 @@ giveItemEvent.OnServerEvent:Connect(function(adminPlayer, giveItemId, giveAmount
 
     print("✅ Admin " .. adminPlayer.Name .. " gave " .. giveAmount .. "x " .. item.Name .. " to " .. targetPlayer.Name)
     giveItemEvent:FireClient(adminPlayer, true, "Gave " .. giveAmount .. "x " .. item.Name .. " to " .. targetPlayer.Name)
+    
+    -- Send notification to admin
+    local adminNotification = {
+      Type = "GIFT",
+      Title = "Item Given!",
+      Body = "Gave " .. giveAmount .. "x " .. item.Name .. " to " .. targetPlayer.Name,
+      ImageId = item.RobloxId
+    }
+    notificationEvent:FireClient(adminPlayer, adminNotification)
+    
+    -- Send notification to target player
+    local playerNotification = {
+      Type = "GIFT",
+      Title = "Admin Gift!",
+      Body = "You received " .. giveAmount .. "x " .. item.Name .. " from an admin!",
+      ImageId = item.RobloxId
+    }
+    notificationEvent:FireClient(targetPlayer, playerNotification)
 
   else
     -- ═══════════════════════════════════════════════════
@@ -220,10 +243,154 @@ giveItemEvent.OnServerEvent:Connect(function(adminPlayer, giveItemId, giveAmount
     if itemsGiven > 0 then
       print("✅ Admin " .. adminPlayer.Name .. " gave " .. itemsGiven .. "x " .. item.Name .. " to " .. targetPlayer.Name)
       giveItemEvent:FireClient(adminPlayer, true, "Gave " .. itemsGiven .. "x " .. item.Name .. " to " .. targetPlayer.Name)
+      
+      -- Send notification to admin
+      local adminNotification = {
+        Type = "GIFT",
+        Title = "Item Given!",
+        Body = "Gave " .. itemsGiven .. "x " .. item.Name .. " to " .. targetPlayer.Name,
+        ImageId = item.RobloxId
+      }
+      notificationEvent:FireClient(adminPlayer, adminNotification)
+      
+      -- Send notification to target player
+      local playerNotification = {
+        Type = "GIFT",
+        Title = "Admin Gift!",
+        Body = "You received " .. itemsGiven .. "x " .. item.Name .. " from an admin!",
+        ImageId = item.RobloxId
+      }
+      notificationEvent:FireClient(targetPlayer, playerNotification)
     else
       giveItemEvent:FireClient(adminPlayer, false, "Failed to give stock items!")
     end
   end
+end)
+
+-- ═══════════════════════════════════════════════════
+-- DELETE ITEM HANDLER
+-- ═══════════════════════════════════════════════════
+
+-- Handle delete item requests
+deleteItemEvent.OnServerEvent:Connect(function(adminPlayer, deleteItemId)
+  -- Verify player is admin
+  if not AdminConfig:IsAdmin(adminPlayer) then
+    warn("⚠️ Non-admin " .. adminPlayer.Name .. " attempted to delete item!")
+    deleteItemEvent:FireClient(adminPlayer, false, "You are not an admin!")
+    return
+  end
+
+  -- Validate inputs
+  if not deleteItemId or type(deleteItemId) ~= "number" then
+    deleteItemEvent:FireClient(adminPlayer, false, "Invalid item ID!")
+    return
+  end
+
+  -- Get the item from database
+  local item = ItemDatabase:GetItemByRobloxId(deleteItemId)
+  if not item then
+    deleteItemEvent:FireClient(adminPlayer, false, "Item with ID " .. deleteItemId .. " does not exist!")
+    return
+  end
+
+  -- Store item data for rollback if needed
+  local itemBackup = table.clone(item)
+
+  -- Delete item from database
+  local success, message, deletedItemData = ItemDatabase:DeleteItem(deleteItemId)
+
+  if not success then
+    warn("❌ Failed to delete item: " .. message)
+    deleteItemEvent:FireClient(adminPlayer, false, message)
+    return
+  end
+
+  -- ═══════════════════════════════════════════════════
+  -- Remove item from all ONLINE players' inventories
+  -- (Offline players will be cleaned up when they load their data)
+  -- ═══════════════════════════════════════════════════
+  local playersUpdated = 0
+  local itemsRemoved = 0
+  local cleanupSuccess = true
+
+  for _, player in ipairs(Players:GetPlayers()) do
+    local playerSuccess, playerError = pcall(function()
+      local playerData = DataStoreAPI:GetPlayerData(player)
+      if playerData and playerData.Inventory then
+        local indicesToRemove = {}
+
+        -- Find all instances of this item in player's inventory
+        for i, invItem in ipairs(playerData.Inventory) do
+          if invItem.RobloxId == deleteItemId then
+            table.insert(indicesToRemove, i)
+          end
+        end
+
+        -- Remove items in reverse order to maintain indices
+        for i = #indicesToRemove, 1, -1 do
+          table.remove(playerData.Inventory, indicesToRemove[i])
+          itemsRemoved = itemsRemoved + 1
+        end
+
+        if #indicesToRemove > 0 then
+          playersUpdated = playersUpdated + 1
+
+          -- Update inventory value
+          DataStoreAPI:UpdateInventoryValue(player)
+
+          -- Unequip the item if equipped
+          if playerData.EquippedItems then
+            for i = #playerData.EquippedItems, 1, -1 do
+              if playerData.EquippedItems[i] == deleteItemId then
+                table.remove(playerData.EquippedItems, i)
+              end
+            end
+          end
+
+          -- Unequip from character
+          local character = player.Character
+          if character then
+            for _, child in ipairs(character:GetChildren()) do
+              if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
+                local storedId = child:FindFirstChild("OriginalRobloxId")
+                if storedId and storedId.Value == deleteItemId then
+                  child:Destroy()
+                end
+              end
+            end
+          end
+
+          -- Send notification to player
+          local playerNotification = {
+            Type = "ERROR",
+            Title = "Item Removed",
+            Body = deletedItemData.Name .. " was deleted from the game by an admin"
+          }
+          notificationEvent:FireClient(player, playerNotification)
+        end
+      end
+    end)
+
+    if not playerSuccess then
+      warn("⚠️ Failed to cleanup item for player " .. player.Name .. ": " .. tostring(playerError))
+      -- Continue with other players even if one fails
+    end
+  end
+
+  print("🗑️ Admin " .. adminPlayer.Name .. " deleted item: " .. deletedItemData.Name)
+  print("   📊 Removed from " .. playersUpdated .. " online players (" .. itemsRemoved .. " total items)")
+  print("   ℹ️ Offline players will be cleaned up when they rejoin")
+
+  -- Send success notification to admin
+  deleteItemEvent:FireClient(adminPlayer, true, "Deleted " .. deletedItemData.Name .. " from game and " .. playersUpdated .. " online players")
+
+  local adminNotification = {
+    Type = "VICTORY",
+    Title = "Item Deleted!",
+    Body = "Deleted " .. deletedItemData.Name .. " from " .. playersUpdated .. " online players",
+    ImageId = deletedItemData.RobloxId
+  }
+  notificationEvent:FireClient(adminPlayer, adminNotification)
 end)
 
 -- Global admin console commands
