@@ -61,7 +61,14 @@ Players.PlayerAdded:Connect(function(player)
 
   -- Calculate initial inventory value
   task.defer(function()
-    DataStoreAPI:UpdateInventoryValue(player)
+    local totalValue = 0
+    for _, item in ipairs(data.Inventory) do
+      local itemValue = item.Value or 0
+      local amount = item.Amount or 1
+      totalValue += (itemValue * amount)
+    end
+    data.InvValue = totalValue
+    invValue.Value = totalValue
   end)
 
   print("✅ Data loaded for " .. player.Name)
