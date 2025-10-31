@@ -1,0 +1,118 @@
+  16:36:39.974  📚 Loaded 14 items from database  -  Server - ItemDatabase:72
+  16:36:39.974  🎮 Setting up player: 2kwpid  -  Server - PlayerDataHandler:17
+  16:36:39.975  ✅ GetInventoryFunction already exists  -  Server - PlayerDataHandler:159
+  16:36:39.975  ✅ GetInventoryFunction.OnServerInvoke is now set!  -  Server - PlayerDataHandler:193
+  16:36:39.975  ✅ PlayerDataHandler initialized!  -  Server - PlayerDataHandler:200
+  16:36:39.975  ✅ Admin Item Handler initialized!  -  Server - AdminItemHandler:129
+  16:36:39.975  💡 Admin Console Commands:  -  Server - AdminItemHandler:130
+  16:36:39.975     - CheckDatabase() - View all items  -  Server - AdminItemHandler:131
+  16:36:39.975     - CheckRarities() - View item count by rarity  -  Server - AdminItemHandler:132
+  16:36:39.975  ✅ Crates Server loaded!  -  Server - CratesServer:203
+  16:36:39.975  💰 Roll cost: FREE  -  Server - CratesServer:204
+  16:36:40.252  Requiring asset 512742721.
+Callstack:
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 29
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 28
+  -  Server
+  16:36:40.254  Animation Spoofer cannot run while game is running  -  Server
+  16:36:40.395  Requiring asset 518094091.
+Callstack:
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 30
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 28
+  -  Server
+  16:36:40.486  Animation Spoofer cannot run while game is running  -  Client
+  16:36:40.629  📂 Loaded existing data for 2kwpid  -  Server - DataStoreManager:55
+  16:36:40.629  ✅ Data loaded for 2kwpid (Cash: 0, Cases: 31, Inventory: 15 items)  -  Server - PlayerDataHandler:81
+  16:36:40.789  ✅ Crates Client loaded!  -  Client - CratesClient:336
+  16:36:40.789  📋 Inventory System starting initialization...  -  Client - InventorySytem:13
+  16:36:40.790  ✓ Found Handler  -  Client - InventorySytem:21
+  16:36:40.790  ✓ Found Sample template  -  Client - InventorySytem:28
+  16:36:40.790  ✓ Found Frame  -  Client - InventorySytem:35
+  16:36:40.790  ✓ Found SearchBar  -  Client - InventorySytem:39
+  16:36:40.790  ⚠️ Selected was wrong type (ObjectValue), replacing with StringValue  -  Client - InventorySytem:53
+  16:36:40.790  ✓ Created new Selected StringValue  -  Client - InventorySytem:58
+  16:36:40.790  ⏳ Waiting for RemoteEvents...  -  Client - InventorySytem:64
+  16:36:40.790  ✓ Found RemoteEvents  -  Client - InventorySytem:70
+  16:36:40.790  ✓ Found GetInventoryFunction  -  Client - InventorySytem:78
+  16:36:40.790  ⏳ Waiting 1 second for DataStore to load...  -  Client - InventorySytem:312
+  16:36:40.899  ✅ Admin panel available  -  Client - AdminGUI:35
+  16:36:40.899  ✅ Admin GUI script loaded  -  Client - AdminGUI:136
+  16:36:41.807  🚀 Starting initial inventory refresh...  -  Client - InventorySytem:314
+  16:36:41.808  🔄 Starting inventory refresh...  -  Client - InventorySytem:102
+  16:36:41.808  📡 Calling GetInventoryFunction:InvokeServer()...  -  Client - InventorySytem:105
+  16:36:41.823  🔔 OnServerInvoke CALLED!  -  Server - PlayerDataHandler:164
+  16:36:41.823  📥 GetInventory request from: 2kwpid  -  Server - PlayerDataHandler:165
+  16:36:41.823  🔍 GetInventory called for: 2kwpid  -  Server - DataStoreAPI:135
+  16:36:41.823  📋 Player has 15 items in data  -  Server - DataStoreAPI:143
+  16:36:41.824    Processing item 1: Eggmunition  -  Server - DataStoreAPI:148
+  16:36:41.824    Processing item 2: Eggcient Woolly Mammoth  -  Server - DataStoreAPI:148
+  16:36:41.824    Processing item 3: Cake Topper  -  Server - DataStoreAPI:148
+  16:36:41.824    Processing item 4: gt  -  Server - DataStoreAPI:148
+  16:36:41.824    Processing item 5: gt  -  Server - DataStoreAPI:148
+  16:36:41.824    Processing item 6: Supersonic Egg  -  Server - DataStoreAPI:148
+  16:36:41.824    Processing item 7: Sugar Shades  -  Server - DataStoreAPI:148
+  16:36:41.824    Processing item 8: Tallaheggsee, Zombie Slayer  -  Server - DataStoreAPI:148
+  16:36:41.824    Processing item 9: gt  -  Server - DataStoreAPI:148
+  16:36:41.824    Processing item 10: Deteggctive W. Wolf  -  Server - DataStoreAPI:148
+  16:36:41.824    Processing item 11: Supersonic Egg  -  Server - DataStoreAPI:148
+  16:36:41.825    Processing item 12: Cannonical Egg  -  Server - DataStoreAPI:148
+  16:36:41.825    Processing item 13: gt  -  Server - DataStoreAPI:148
+  16:36:41.825    Processing item 14: gt  -  Server - DataStoreAPI:148
+  16:36:41.825    Processing item 15: Supersonic Egg  -  Server - DataStoreAPI:148
+  16:36:41.825  ✅ Returning 15 items to client  -  Server - DataStoreAPI:185
+  16:36:41.825  📤 Sending inventory to 2kwpid: 15 items  -  Server - PlayerDataHandler:189
+  16:36:41.857  ✓ InvokeServer completed successfully  -  Client - InventorySytem:118
+  16:36:41.857  📦 Refreshing inventory: 15 items  -  Client - InventorySytem:130
+  16:36:41.857  🔨 Creating button for item 1: Supersonic Egg  -  Client - InventorySytem:148
+  16:36:41.858  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.858  ✓ Item button fully configured: Supersonic Egg  -  Client - InventorySytem:260
+  16:36:41.858  🔨 Creating button for item 2: Supersonic Egg  -  Client - InventorySytem:148
+  16:36:41.858  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.859  ✓ Item button fully configured: Supersonic Egg  -  Client - InventorySytem:260
+  16:36:41.859  🔨 Creating button for item 3: Supersonic Egg  -  Client - InventorySytem:148
+  16:36:41.859  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.859  ✓ Item button fully configured: Supersonic Egg  -  Client - InventorySytem:260
+  16:36:41.859  🔨 Creating button for item 4: Cake Topper  -  Client - InventorySytem:148
+  16:36:41.860  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.860  ✓ Item button fully configured: Cake Topper  -  Client - InventorySytem:260
+  16:36:41.860  🔨 Creating button for item 5: Sugar Shades  -  Client - InventorySytem:148
+  16:36:41.860  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.860  ✓ Item button fully configured: Sugar Shades  -  Client - InventorySytem:260
+  16:36:41.861  🔨 Creating button for item 6: Eggmunition  -  Client - InventorySytem:148
+  16:36:41.861  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.861  ✓ Item button fully configured: Eggmunition  -  Client - InventorySytem:260
+  16:36:41.861  🔨 Creating button for item 7: Cannonical Egg  -  Client - InventorySytem:148
+  16:36:41.861  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.862  ✓ Item button fully configured: Cannonical Egg  -  Client - InventorySytem:260
+  16:36:41.862  🔨 Creating button for item 8: Tallaheggsee, Zombie Slayer  -  Client - InventorySytem:148
+  16:36:41.862  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.862  ✓ Item button fully configured: Tallaheggsee, Zombie Slayer  -  Client - InventorySytem:260
+  16:36:41.862  🔨 Creating button for item 9: Eggcient Woolly Mammoth  -  Client - InventorySytem:148
+  16:36:41.863  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.863  ✓ Item button fully configured: Eggcient Woolly Mammoth  -  Client - InventorySytem:260
+  16:36:41.863  🔨 Creating button for item 10: Deteggctive W. Wolf  -  Client - InventorySytem:148
+  16:36:41.863  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.863  ✓ Item button fully configured: Deteggctive W. Wolf  -  Client - InventorySytem:260
+  16:36:41.863  🔨 Creating button for item 11: gt  -  Client - InventorySytem:148
+  16:36:41.864  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.864  ✓ Item button fully configured: gt  -  Client - InventorySytem:260
+  16:36:41.864  🔨 Creating button for item 12: gt  -  Client - InventorySytem:148
+  16:36:41.864  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.864  ✓ Item button fully configured: gt  -  Client - InventorySytem:260
+  16:36:41.864  🔨 Creating button for item 13: gt  -  Client - InventorySytem:148
+  16:36:41.865  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.865  ✓ Item button fully configured: gt  -  Client - InventorySytem:260
+  16:36:41.865  🔨 Creating button for item 14: gt  -  Client - InventorySytem:148
+  16:36:41.865  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.865  ✓ Item button fully configured: gt  -  Client - InventorySytem:260
+  16:36:41.865  🔨 Creating button for item 15: gt  -  Client - InventorySytem:148
+  16:36:41.866  ✓ Button created and parented to Handler  -  Client - InventorySytem:156
+  16:36:41.866  ✓ Item button fully configured: gt  -  Client - InventorySytem:260
+  16:36:41.866  ✅ Inventory refresh complete! 15 buttons created  -  Client - InventorySytem:297
+  16:36:41.866  ✅ Initial inventory refresh completed successfully  -  Client - InventorySytem:320
+  16:36:41.866  ✓ Found InventoryUpdatedEvent, connecting listener  -  Client - InventorySytem:326
+  16:36:41.866  ✅ Inventory System fully loaded and ready!  -  Client - InventorySytem:338
+  16:36:44.179  Disconnect from 127.0.0.1|51024  -  Studio
+  16:36:44.184  👋 Player leaving: 2kwpid  -  Server - PlayerDataHandler:98
+  16:36:44.185  🔴 Server shutting down, saving all data...  -  Server - PlayerDataHandler:127
+  16:36:44.491  ✅ Successfully saved data for 2kwpid  -  Server - DataStoreManager:31
