@@ -2,7 +2,9 @@
 -- Manages player data when they join/leave
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreManager = require(script.Parent.DataStoreManager)
+local DataStoreAPI = require(script.Parent.DataStoreAPI)
 
 -- Table to store active player data in memory
 local PlayerData = {}
@@ -57,6 +59,11 @@ Players.PlayerAdded:Connect(function(player)
     end
   end)
 
+  -- Calculate initial inventory value
+  task.defer(function()
+    DataStoreAPI:UpdateInventoryValue(player)
+  end)
+
   print("✅ Data loaded for " .. player.Name)
 end)
 
@@ -106,5 +113,28 @@ end)
 
 -- Expose PlayerData table for other scripts to access
 _G.PlayerData = PlayerData
+
+-- Create RemoteEvents folder if it doesn't exist
+local remoteEventsFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+if not remoteEventsFolder then
+  remoteEventsFolder = Instance.new("Folder")
+  remoteEventsFolder.Name = "RemoteEvents"
+  remoteEventsFolder.Parent = ReplicatedStorage
+end
+
+-- Create RemoteFunction for getting inventory
+local getInventoryFunction = Instance.new("RemoteFunction")
+getInventoryFunction.Name = "GetInventoryFunction"
+getInventoryFunction.Parent = remoteEventsFolder
+
+-- Handle inventory requests
+getInventoryFunction.OnServerInvoke = function(player)
+  return DataStoreAPI:GetInventory(player)
+end
+
+-- Create RemoteEvent for inventory updates
+local inventoryUpdatedEvent = Instance.new("RemoteEvent")
+inventoryUpdatedEvent.Name = "InventoryUpdatedEvent"
+inventoryUpdatedEvent.Parent = remoteEventsFolder
 
 print("✅ PlayerDataHandler initialized!")

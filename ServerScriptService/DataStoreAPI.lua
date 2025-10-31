@@ -182,6 +182,16 @@ function DataStoreAPI:UpdateInventoryValue(player)
     end
   end
 
+  -- Notify client that inventory was updated
+  local ReplicatedStorage = game:GetService("ReplicatedStorage")
+  local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+  if remoteEvents then
+    local inventoryUpdatedEvent = remoteEvents:FindFirstChild("InventoryUpdatedEvent")
+    if inventoryUpdatedEvent then
+      inventoryUpdatedEvent:FireClient(player)
+    end
+  end
+
   return true
 end
 
