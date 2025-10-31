@@ -33,6 +33,11 @@ Players.PlayerAdded:Connect(function(player)
   casesOpened.Value = data.CasesOpened
   casesOpened.Parent = leaderstats
 
+  local invValue = Instance.new("IntValue")
+  invValue.Name = "InvValue"
+  invValue.Value = data.InvValue or 0
+  invValue.Parent = leaderstats
+
   -- Listen for changes to update data
   cash.Changed:Connect(function(newValue)
     if PlayerData[player.UserId] then
@@ -43,6 +48,12 @@ Players.PlayerAdded:Connect(function(player)
   casesOpened.Changed:Connect(function(newValue)
     if PlayerData[player.UserId] then
       PlayerData[player.UserId].CasesOpened = newValue
+    end
+  end)
+
+  invValue.Changed:Connect(function(newValue)
+    if PlayerData[player.UserId] then
+      PlayerData[player.UserId].InvValue = newValue
     end
   end)
 
