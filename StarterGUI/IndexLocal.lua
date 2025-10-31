@@ -101,6 +101,9 @@ function refresh()
     return
   end
 
+  -- Store the currently selected item ID to re-select it after refresh
+  local currentlySelectedId = selectedItemData and selectedItemData.RobloxId or nil
+
   for _, button in pairs(buttons) do
     button:Destroy()
   end
@@ -224,78 +227,93 @@ function refresh()
 
     -- Click handler to show item details
     button.MouseButton1Click:Connect(function()
-      selectedItemData = item
-      selected.Value = item.Name
+      updateItemDetails(item)
+    end)
+  end
 
-      -- Update frame details
-      local itemNameText = frame:FindFirstChild("ItemName")
-      local totalOwnersText = frame:FindFirstChild("TotalOwners")
-      local valueText = frame:FindFirstChild("Value")
-      local ownerList = frame:FindFirstChild("OwnerList")
-
-      if itemNameText then
-        itemNameText.Text = item.Name
+  -- If an item was previously selected, re-select it with fresh data
+  if currentlySelectedId then
+    for _, item in ipairs(allItems) do
+      if item.RobloxId == currentlySelectedId then
+        updateItemDetails(item)
+        break
       end
+    end
+  end
+end
 
-      if totalOwnersText then
-        totalOwnersText.Text = "Owners: " .. formatNumber(item.Owners or 0)
-      end
+-- Helper function to update item details panel
+function updateItemDetails(item)
+  selectedItemData = item
+  selected.Value = item.Name
 
-      if valueText then
-        valueText.Text = "R$ " .. formatNumber(item.Value)
-      end
+  -- Update frame details
+  local itemNameText = frame:FindFirstChild("ItemName")
+  local totalOwnersText = frame:FindFirstChild("TotalOwners")
+  local valueText = frame:FindFirstChild("Value")
+  local ownerList = frame:FindFirstChild("OwnerList")
 
-      -- Show/hide OwnerList based on if it's a stock item
-      if ownerList then
-        local isStockItem = item.Stock and item.Stock > 0
-        ownerList.Visible = isStockItem
+  if itemNameText then
+    itemNameText.Text = item.Name
+  end
 
-        if isStockItem then
-          -- Clear previous owner entries
-          for _, child in ipairs(ownerList:GetChildren()) do
-            if child:IsA("Frame") or child:IsA("TextButton") then
-              child:Destroy()
-            end
-          end
+  if totalOwnersText then
+    totalOwnersText.Text = "Owners: " .. formatNumber(item.Owners or 0)
+  end
 
-          -- Get owners from server
-          local success, owners = pcall(function()
-            return getItemOwnersFunction:InvokeServer(item.RobloxId)
-          end)
+  if valueText then
+    valueText.Text = "R$ " .. formatNumber(item.Value)
+  end
 
-          if success and owners and type(owners) == "table" then
-            -- Create owner entries (already sorted by serial number from server)
-            for i, owner in ipairs(owners) do
-              local ownerEntry = userTemplate:Clone()
-              ownerEntry.Name = "Owner_" .. i
-              ownerEntry.LayoutOrder = i
-              ownerEntry.Visible = true
-              ownerEntry.Parent = ownerList
+  -- Show/hide OwnerList based on if it's a stock item
+  if ownerList then
+    local isStockItem = item.Stock and item.Stock > 0
+    ownerList.Visible = isStockItem
 
-              -- Set username with @ prefix
-              local usernameLabel = ownerEntry:FindFirstChild("Username")
-              if usernameLabel then
-                usernameLabel.Text = "@" .. owner.Username
-              end
-
-              -- Set serial with # prefix
-              local serialLabel = ownerEntry:FindFirstChild("Serial")
-              if serialLabel then
-                serialLabel.Text = "#" .. owner.SerialNumber
-              end
-
-              -- Set player avatar (PFP)
-              local pfpImage = ownerEntry:FindFirstChild("PlayerPFP")
-              if pfpImage and pfpImage:IsA("ImageLabel") then
-                pfpImage.Image = "rbxthumb://type=AvatarHeadShot&id=" .. owner.UserId .. "&w=150&h=150"
-              end
-            end
-          else
-            warn("❌ Failed to get item owners: " .. tostring(owners))
-          end
+    if isStockItem then
+      -- Clear previous owner entries
+      for _, child in ipairs(ownerList:GetChildren()) do
+        if child:IsA("Frame") or child:IsA("TextButton") then
+          child:Destroy()
         end
       end
-    end)
+
+      -- Get fresh owners data from server (always fetch latest)
+      local success, owners = pcall(function()
+        return getItemOwnersFunction:InvokeServer(item.RobloxId)
+      end)
+
+      if success and owners and type(owners) == "table" then
+        -- Create owner entries (already sorted by serial number from server)
+        for i, owner in ipairs(owners) do
+          local ownerEntry = userTemplate:Clone()
+          ownerEntry.Name = "Owner_" .. i
+          ownerEntry.LayoutOrder = i
+          ownerEntry.Visible = true
+          ownerEntry.Parent = ownerList
+
+          -- Set username with @ prefix
+          local usernameLabel = ownerEntry:FindFirstChild("Username")
+          if usernameLabel then
+            usernameLabel.Text = "@" .. owner.Username
+          end
+
+          -- Set serial with # prefix
+          local serialLabel = ownerEntry:FindFirstChild("Serial")
+          if serialLabel then
+            serialLabel.Text = "#" .. owner.SerialNumber
+          end
+
+          -- Set player avatar (PFP)
+          local pfpImage = ownerEntry:FindFirstChild("PlayerPFP")
+          if pfpImage and pfpImage:IsA("ImageLabel") then
+            pfpImage.Image = "rbxthumb://type=AvatarHeadShot&id=" .. owner.UserId .. "&w=150&h=150"
+          end
+        end
+      else
+        warn("❌ Failed to get item owners: " .. tostring(owners))
+      end
+    end
   end
 end
 
@@ -312,6 +330,16 @@ end
 
 task.wait(1)
 pcall(refresh)
+
+-- Auto-refresh every 3 minutes
+task.spawn(function()
+  while true do
+    task.wait(180) -- 3 minutes
+    if screenGui and screenGui.Enabled then
+      pcall(refresh)
+    end
+  end
+end)
 
 -- Listen for when the GUI is opened (Enabled property changes to true)
 if screenGui then

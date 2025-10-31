@@ -3,6 +3,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
 
 local ItemDatabase = require(script.Parent.ItemDatabase)
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
@@ -35,7 +36,9 @@ local playersRolling = {}
 
 -- Configuration
 local ROLL_COST = 0 -- Free rolls
-local ROLL_TIME = 5 -- Fixed roll time in seconds
+local ROLL_TIME = 5 -- Normal roll time in seconds
+local FAST_ROLL_TIME = 2 -- Fast roll time (2.5x faster)
+local FAST_ROLL_GAMEPASS_ID = 1242040274 -- Old game's fast roll gamepass
 
 -- Helper function to pick random item based on value (inverse probability)
 function pickRandomItem(items)
@@ -104,6 +107,18 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
 
   playersRolling[player] = true
 
+  -- Check if player owns fast roll gamepass from old game
+  local hasFastRoll = false
+  local success, result = pcall(function()
+    return MarketplaceService:UserOwnsGamePassAsync(player.UserId, FAST_ROLL_GAMEPASS_ID)
+  end)
+  
+  if success then
+    hasFastRoll = result
+  else
+    warn("⚠️ Failed to check gamepass ownership: " .. tostring(result))
+  end
+
   -- Get all rollable items from database (excludes sold out stock items)
   local allItems = ItemDatabase:GetRollableItems()
 
@@ -126,8 +141,8 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
   local numAnimationItems = rnd:NextInteger(30, 60)
   local animationItems = generateAnimationItems(chosenItem, numAnimationItems)
 
-  -- Use fixed roll time
-  local unboxTime = ROLL_TIME
+  -- Use fast roll time if player has gamepass, otherwise normal time
+  local unboxTime = hasFastRoll and FAST_ROLL_TIME or ROLL_TIME
 
   -- Send to client for animation (will send serial number later after claiming stock)
   crateOpenedEvent:FireClient(player, animationItems, chosenItem, unboxTime, nil)

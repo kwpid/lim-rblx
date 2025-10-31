@@ -46,36 +46,14 @@ local autoRollButton = mainUI:WaitForChild("AutoRoll")
 -- Auto-roll variables
 local isAutoRolling = false
 local isCurrentlyRolling = false
-local lastPlayerPosition = nil
 local currentChosenItem = nil
-
--- Helper functions
-local function hasPlayerMoved()
-  if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-    return false
-  end
-
-  local currentPosition = player.Character.HumanoidRootPart.Position
-  if lastPlayerPosition then
-    local distance = (currentPosition - lastPlayerPosition).Magnitude
-    return distance > 1 -- Movement threshold
-  end
-
-  lastPlayerPosition = currentPosition
-  return false
-end
-
-local function updatePlayerPosition()
-  if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-    lastPlayerPosition = player.Character.HumanoidRootPart.Position
-  end
-end
+local shouldStopAutoRoll = false -- Flag to stop after current roll finishes
 
 local function stopAutoRoll()
-  if isAutoRolling then
-    isAutoRolling = false
-    autoRollButton.Text = "[AUTOROLL: OFF]"
-  end
+  isAutoRolling = false
+  shouldStopAutoRoll = false
+  autoRollButton.Text = "[AUTOROLL: OFF]"
+  autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red when off
 end
 
 -- Helper functions
@@ -100,11 +78,9 @@ closeOpenedBtn.MouseButton1Click:Connect(function()
     end
   end
 
-  -- Show buttons again if not auto-rolling
-  if not isAutoRolling then
-    rollButton.Visible = true
-    autoRollButton.Visible = true
-  end
+  -- Always show buttons again
+  rollButton.Visible = true
+  autoRollButton.Visible = true
 end)
 
 -- Roll button click
@@ -116,36 +92,41 @@ rollButton.MouseButton1Click:Connect(function()
 
   isCurrentlyRolling = true
 
-  -- Hide both buttons during roll
+  -- Hide roll button but keep autoroll button visible
   rollButton.Visible = false
-  autoRollButton.Visible = false
 
   -- Fire server to request roll
   rollCrateEvent:FireServer()
 end)
 
--- Auto-roll button click
+-- Auto-roll button click (toggle on/off)
 autoRollButton.MouseButton1Click:Connect(function()
-  if isCurrentlyRolling then
-    return
-  end
-
+  -- Toggle autoroll state
   isAutoRolling = not isAutoRolling
 
   if isAutoRolling then
+    -- Turn ON autoroll
     autoRollButton.Text = "[AUTOROLL: ON]"
-    autoRollButton.TextColor3 = Color3.fromRGB(0, 170, 0)
+    autoRollButton.TextColor3 = Color3.fromRGB(0, 255, 0) -- Green when on
+    shouldStopAutoRoll = false
 
-    -- Update initial position
-    updatePlayerPosition()
-
-    -- Start first roll
-    isCurrentlyRolling = true
-    rollButton.Visible = false
-    autoRollButton.Visible = false
-    rollCrateEvent:FireServer()
+    -- Start first roll if not already rolling
+    if not isCurrentlyRolling then
+      isCurrentlyRolling = true
+      rollButton.Visible = false
+      rollCrateEvent:FireServer()
+    end
   else
-    stopAutoRoll()
+    -- Turn OFF autoroll (will stop after current roll finishes)
+    if isCurrentlyRolling then
+      -- Mark to stop after current roll completes
+      shouldStopAutoRoll = true
+      autoRollButton.Text = "[AUTOROLL: OFF]"
+      autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red when off
+    else
+      -- Not rolling, stop immediately
+      stopAutoRoll()
+    end
   end
 end)
 
@@ -268,47 +249,34 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   -- Mark rolling as complete
   isCurrentlyRolling = false
 
-  -- Show buttons again
+  -- Show roll button again
   rollButton.Visible = true
-  autoRollButton.Visible = true
 
   -- Handle auto-roll
-  if isAutoRolling then
-    -- Check if player moved
-    if hasPlayerMoved() then
-      stopAutoRoll()
+  if isAutoRolling and not shouldStopAutoRoll then
+    -- Continue auto-rolling
+    -- Wait a moment before next roll
+    task.delay(1.5, function()
+      if isAutoRolling and not isCurrentlyRolling and not shouldStopAutoRoll then
+        -- Hide the crate result and start next roll
+        openedFrame.Visible = false
 
-      -- Show continue button since autoroll stopped
-      closeOpenedBtn.Visible = true
-    else
-      -- Wait a moment before next roll
-      task.delay(1.5, function()
-        if isAutoRolling and not isCurrentlyRolling then
-          -- Check again if player moved during delay
-          if hasPlayerMoved() then
-            stopAutoRoll()
-            -- Show continue button since autoroll stopped
-            closeOpenedBtn.Visible = true
-          else
-            -- Hide the crate result and start next roll
-            openedFrame.Visible = false
-
-            -- Clear items for next animation
-            for _, child in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do
-              if child:IsA("Frame") or child:IsA("ImageLabel") then
-                child:Destroy()
-              end
-            end
-
-            -- Start next roll
-            isCurrentlyRolling = true
-            rollButton.Visible = false
-            autoRollButton.Visible = false
-            rollCrateEvent:FireServer()
+        -- Clear items for next animation
+        for _, child in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do
+          if child:IsA("Frame") or child:IsA("ImageLabel") then
+            child:Destroy()
           end
         end
-      end)
-    end
+
+        -- Start next roll
+        isCurrentlyRolling = true
+        rollButton.Visible = false
+        rollCrateEvent:FireServer()
+      end
+    end)
+  elseif shouldStopAutoRoll then
+    -- User requested to stop, turn off autoroll
+    stopAutoRoll()
   end
 end)
 
@@ -321,13 +289,7 @@ updateResultEvent.OnClientEvent:Connect(function(serialNumber)
   end
 end)
 
--- Monitor player movement during auto-roll
-RunService.Heartbeat:Connect(function()
-  if isAutoRolling and not isCurrentlyRolling then
-    if hasPlayerMoved() then
-      stopAutoRoll()
-    end
-  end
-end)
+-- Initialize autoroll button color to red (off state)
+autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0)
 
 print("Crates Client loaded!")
