@@ -22,6 +22,9 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - Weighted random selection based on item value
 - Stock item protection with automatic reroll
 - Visual scrolling animation with item previews
+- Item names color-coded by rarity in animation
+- Serial numbers displayed when winning stock items (e.g., "You won: Egg (#1)")
+- Continue button always shows after every roll
 
 ### Admin Tools
 - Whitelisted admin system (User ID: 1547280148)
@@ -36,10 +39,13 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - Inventory value (InvValue) - auto-calculated total value
 - Auto-save every 2 minutes
 - DataStore versions: ItemDatabase_v1, PlayerData_v1
+- Data version system: Change DATA_VERSION in DataStoreManager.lua to wipe all player data (e.g., "DataVersion.10" → "DataVersion.11")
 
 ### Inventory Display
 - Shows all owned items with thumbnails and rarity colors
 - Serial numbers for stock items
+- Displays "copies: X / Y exist" for stock items (X = unique owners, Y = total stock)
+- Displays "copies: X" for regular items (X = unique owners)
 - Search/filter functionality
 - Click to view detailed item info
 
@@ -72,6 +78,12 @@ Before testing in Roblox Studio, you **must** enable DataStore access:
 The scripts now include detailed error messages to help diagnose this issue.
 
 ## Recent Changes
+- **2025-10-31**: Added new features and improvements
+  - Added data version system for wiping player data (change DATA_VERSION in DataStoreManager.lua)
+  - Continue button now shows after every roll (including auto-rolls)
+  - Inventory now displays "copies: X / Y exist" for stock items (X = owners, Y = total stock)
+  - Serial numbers now displayed when rolling stock items (e.g., "You won: Egg (#1)")
+  - Item names in rolling animation are color-coded by rarity
 - **2025-10-31**: Fixed crate animation issues
   - Animation now lands on the correct item (searches for chosen item in array)
   - Fixed animation speed to be consistent (pow = 4 instead of random 2-10)
