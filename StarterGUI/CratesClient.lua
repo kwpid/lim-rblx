@@ -33,6 +33,42 @@ local rnd = Random.new()
 -- Roll button (in MainUI)
 local mainUI = player.PlayerGui:WaitForChild("MainUI")
 local rollButton = mainUI:WaitForChild("Roll")
+local autoRollButton = mainUI:WaitForChild("AutoRoll")
+
+-- Auto-roll variables
+local isAutoRolling = false
+local isCurrentlyRolling = false
+local lastPlayerPosition = nil
+
+-- Helper functions
+local function hasPlayerMoved()
+  if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+    return false
+  end
+  
+  local currentPosition = player.Character.HumanoidRootPart.Position
+  if lastPlayerPosition then
+    local distance = (currentPosition - lastPlayerPosition).Magnitude
+    return distance > 1 -- Movement threshold
+  end
+  
+  lastPlayerPosition = currentPosition
+  return false
+end
+
+local function updatePlayerPosition()
+  if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+    lastPlayerPosition = player.Character.HumanoidRootPart.Position
+  end
+end
+
+local function stopAutoRoll()
+  if isAutoRolling then
+    isAutoRolling = false
+    autoRollButton.Text = "[AUTOROLL: OFF]"
+    print("🛑 Auto-roll stopped")
+  end
+end
 
 -- Helper functions
 function lerp(a, b, t)
@@ -56,24 +92,53 @@ closeOpenedBtn.MouseButton1Click:Connect(function()
     end
   end
 
-  -- Re-enable roll button (in case it wasn't already)
-  rollButton.Text = "[ROLL]"
-  rollButton.Active = true
+  -- Show buttons again if not auto-rolling
+  if not isAutoRolling then
+    rollButton.Visible = true
+    autoRollButton.Visible = true
+  end
 end)
 
 -- Roll button click
 rollButton.MouseButton1Click:Connect(function()
   -- Check if already opening
-  if openedFrame.Visible == true then
+  if isCurrentlyRolling then
     return
   end
 
-  -- Disable button and change text
-  rollButton.Text = "[ROLLING]"
-  rollButton.Active = false
+  isCurrentlyRolling = true
+  
+  -- Hide both buttons during roll
+  rollButton.Visible = false
+  autoRollButton.Visible = false
 
   -- Fire server to request roll
   rollCrateEvent:FireServer()
+end)
+
+-- Auto-roll button click
+autoRollButton.MouseButton1Click:Connect(function()
+  if isCurrentlyRolling then
+    return
+  end
+  
+  isAutoRolling = not isAutoRolling
+  
+  if isAutoRolling then
+    autoRollButton.Text = "[AUTOROLL: ON]"
+    print("✅ Auto-roll enabled")
+    
+    -- Update initial position
+    updatePlayerPosition()
+    
+    -- Start first roll
+    isCurrentlyRolling = true
+    rollButton.Visible = false
+    autoRollButton.Visible = false
+    rollCrateEvent:FireServer()
+  else
+    stopAutoRoll()
+  end
 end)
 
 -- Handle crate opening animation
@@ -182,9 +247,47 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   openedFrame.CrateName.Text = "You won: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")!"
   closeOpenedBtn.Visible = true
 
-  -- Re-enable roll button
-  rollButton.Text = "[ROLL]"
-  rollButton.Active = true
+  -- Mark rolling as complete
+  isCurrentlyRolling = false
+  
+  -- Show buttons again
+  rollButton.Visible = true
+  autoRollButton.Visible = true
+  
+  -- Handle auto-roll
+  if isAutoRolling then
+    -- Check if player moved
+    if hasPlayerMoved() then
+      stopAutoRoll()
+      print("🚶 Player moved - auto-roll stopped")
+    else
+      -- Wait a moment before next roll
+      task.delay(0.5, function()
+        if isAutoRolling and not isCurrentlyRolling then
+          -- Check again if player moved during delay
+          if hasPlayerMoved() then
+            stopAutoRoll()
+            print("🚶 Player moved - auto-roll stopped")
+          else
+            -- Start next roll
+            isCurrentlyRolling = true
+            rollButton.Visible = false
+            autoRollButton.Visible = false
+            rollCrateEvent:FireServer()
+          end
+        end
+      end)
+    end
+  end
+end)
+
+-- Monitor player movement during auto-roll
+RunService.Heartbeat:Connect(function()
+  if isAutoRolling and not isCurrentlyRolling then
+    if hasPlayerMoved() then
+      stopAutoRoll()
+    end
+  end
 end)
 
 print("✅ Crates Client loaded!")
