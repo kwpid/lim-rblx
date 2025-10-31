@@ -56,6 +56,7 @@ Items are automatically assigned rarity based on their value:
   - Inventory (all owned items)
   - Cases Opened count
   - Cash (currently unused but tracked)
+  - InvValue (total inventory value, automatically calculated)
 - **Item Database:**
   - All available items stored globally
   - Shared across all players
@@ -76,6 +77,11 @@ Items are automatically assigned rarity based on their value:
 - **Item Stacking:**
   - Regular items stack (shows "3x", "5x", etc.)
   - Stock items never stack (each has unique serial number)
+- **Inventory Value Tracking:**
+  - Automatically calculates total inventory value
+  - Includes stacked items (Value × Amount)
+  - Updates in real-time when items are added/removed
+  - Displayed in leaderstats as "InvValue"
 
 ## 🗂️ File Structure Explained
 
@@ -124,9 +130,12 @@ Client-side UI scripts:
 ### Inventory Update Flow:
 1. Server adds item to player data (DataStoreAPI.lua)
 2. Item either stacks (regular) or adds unique entry (stock)
-3. Client requests inventory via GetInventoryFunction
-4. Server returns player's inventory array
-5. Client displays items with thumbnails and info
+3. Server recalculates total inventory value automatically
+4. Server updates leaderstats InvValue
+5. Server fires InventoryUpdatedEvent to notify client
+6. Client requests inventory via GetInventoryFunction
+7. Server returns player's inventory array
+8. Client displays items with thumbnails and info
 
 ## 📊 Data Structures
 
@@ -140,7 +149,8 @@ Client-side UI scripts:
     {RobloxId = 67890, Name = "Rare Item", Value = 50000, Rarity = "Ultra Rare", SerialNumber = 5, ObtainedAt = timestamp}
   },
   CasesOpened = 10,
-  Cash = 0
+  Cash = 0,
+  InvValue = 53000  -- Auto-calculated: (1000 × 3) + (50000 × 1)
 }
 ```
 

@@ -33,6 +33,7 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - Player inventory with automatic stacking
 - Cases opened counter
 - Cash system (tracked but not currently used)
+- Inventory value (InvValue) - auto-calculated total value
 - Auto-save every 2 minutes
 - DataStore versions: ItemDatabase_v1, PlayerData_v1
 
@@ -64,6 +65,11 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 ## Recent Changes
 - **2025-10-31**: Initial project setup with all core Lua scripts added
 - **2025-10-31**: Created comprehensive PROJECT_DOCUMENTATION.md file
+- **2025-10-31**: Added inventory value tracking system (InvValue)
+  - Automatically calculates total inventory value including stacked items
+  - Updates in real-time when items are added/removed
+  - Displayed in leaderstats for UI access
+  - Fixed inventory UI loading by adding GetInventoryFunction RemoteFunction
 
 ## User Preferences
 - User will test the game in Roblox and provide feedback
@@ -84,6 +90,9 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - Regular items (stock = 0) stack in inventory
 - Admin panel and inventory UIs require specific ScreenGui structure in Roblox
 - DataStore is used for both player data and global item database
+- Inventory value is automatically recalculated whenever items are added/removed
+- GetInventoryFunction RemoteFunction allows clients to fetch inventory data
+- InventoryUpdatedEvent notifies clients when inventory changes
 
 ## Current Project Status
 ✅ Core mechanics implemented
