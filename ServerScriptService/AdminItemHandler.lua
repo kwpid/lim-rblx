@@ -2,6 +2,7 @@
 -- Handles admin item creation requests from the client
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 local AdminConfig = require(script.Parent.AdminConfig)
 local ItemDatabase = require(script.Parent.ItemDatabase)
 
@@ -22,6 +23,14 @@ createItemEvent.Parent = remoteEventsFolder
 local checkAdminFunction = Instance.new("RemoteFunction")
 checkAdminFunction.Name = "CheckAdminFunction"
 checkAdminFunction.Parent = remoteEventsFolder
+
+-- Get or create notification RemoteEvent
+local notificationEvent = remoteEventsFolder:FindFirstChild("CreateNotification")
+if not notificationEvent then
+  notificationEvent = Instance.new("RemoteEvent")
+  notificationEvent.Name = "CreateNotification"
+  notificationEvent.Parent = remoteEventsFolder
+end
 
 -- Handle admin check requests
 checkAdminFunction.OnServerInvoke = function(player)
@@ -45,8 +54,18 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
   if success then
     local stockText = itemStock > 0 and " [Stock: " .. itemStock .. "]" or ""
     print("✅ Admin " .. player.Name .. " created item: " .. itemName .. stockText)
+    
     -- Send success back to client
     createItemEvent:FireClient(player, true, "Item created successfully!", result)
+    
+    -- Send notification to all players about the new item
+    local notificationData = {
+      Type = "GIFT",
+      Title = "New Item",
+      Body = itemName .. " is now available!"
+    }
+    notificationEvent:FireAllClients(notificationData)
+    print("📢 Sent new item notification to all players: " .. itemName)
   else
     warn("❌ Failed to create item: " .. result)
     -- Send error back to client

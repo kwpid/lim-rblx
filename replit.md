@@ -30,6 +30,7 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - Whitelisted admin system (User ID: 1547280148)
 - Admin panel GUI for creating items
 - Live item preview using Roblox thumbnails
+- Notification system: All players receive "New Item" notification when admin creates an item
 - Console commands: `CheckDatabase()` and `CheckRarities()`
 
 ### Data Persistence
@@ -84,6 +85,7 @@ The scripts now include detailed error messages to help diagnose this issue.
   - Inventory now displays "copies: X / Y exist" for stock items (X = owners, Y = total stock)
   - Serial numbers now displayed when rolling stock items (e.g., "You won: Egg (#1)")
   - Item names in rolling animation are color-coded by rarity
+  - Added notification system: All players get notified when new items are created by admins
 - **2025-10-31**: Fixed crate animation issues
   - Animation now lands on the correct item (searches for chosen item in array)
   - Fixed animation speed to be consistent (pow = 4 instead of random 2-10)
