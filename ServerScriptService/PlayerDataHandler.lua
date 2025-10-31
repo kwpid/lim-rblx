@@ -12,9 +12,9 @@ local PlayerData = {}
 -- Auto-save interval (in seconds)
 local AUTO_SAVE_INTERVAL = 120  -- Save every 2 minutes
 
--- When a player joins
-Players.PlayerAdded:Connect(function(player)
-  print("🎮 Player joined: " .. player.Name)
+-- Function to setup a player (used for both PlayerAdded and existing players)
+local function setupPlayer(player)
+  print("🎮 Setting up player: " .. player.Name)
 
   -- Load their data
   local data = DataStoreManager:LoadData(player)
@@ -79,7 +79,19 @@ Players.PlayerAdded:Connect(function(player)
   invValue.Value = totalValue
 
   print("✅ Data loaded for " .. player.Name .. " (Cash: " .. data.Cash .. ", Cases: " .. data.CasesOpened .. ", Inventory: " .. #data.Inventory .. " items)")
+end
+
+-- When a player joins
+Players.PlayerAdded:Connect(function(player)
+  setupPlayer(player)
 end)
+
+-- Handle players who joined before the script loaded
+for _, player in pairs(Players:GetPlayers()) do
+  task.spawn(function()
+    setupPlayer(player)
+  end)
+end
 
 -- When a player leaves
 Players.PlayerRemoving:Connect(function(player)

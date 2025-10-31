@@ -1,0 +1,31 @@
+  14:55:49.932  Requiring asset 512742721.
+Callstack:
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 29
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 28
+  -  Server
+  14:55:49.933  Animation Spoofer cannot run while game is running  -  Server
+  14:55:50.084  Requiring asset 518094091.
+Callstack:
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 30
+cloud_8428896693.archimedesTwo.initiatePlugin.MainModule, line 28
+  -  Server
+  14:55:50.195  Animation Spoofer cannot run while game is running  -  Client
+  14:55:50.329  📚 Loaded 7 items from database  -  Server - ItemDatabase:33
+  14:55:50.329  ✅ Admin Item Handler initialized!  -  Server - AdminItemHandler:109
+  14:55:50.329  💡 Admin Console Commands:  -  Server - AdminItemHandler:110
+  14:55:50.329     - CheckDatabase() - View all items  -  Server - AdminItemHandler:111
+  14:55:50.329     - CheckRarities() - View item count by rarity  -  Server - AdminItemHandler:112
+  14:55:50.329  ✅ PlayerDataHandler initialized!  -  Server - PlayerDataHandler:154
+  14:55:50.329  ✅ Crates Server loaded!  -  Server - CratesServer:194
+  14:55:50.329  💰 Roll cost: FREE  -  Server - CratesServer:195
+  14:55:50.449  ✅ Crates Client loaded!  -  Client - CratesClient:177
+  14:55:50.616  ✅ Admin panel available  -  Client - AdminGUI:35
+  14:55:50.616  ✅ Admin GUI script loaded  -  Client - AdminGUI:136
+  14:55:55.463  Infinite yield possible on 'Players.2kwpid:WaitForChild("leaderstats")'  -  Studio
+  14:55:55.463  Stack Begin  -  Studio
+  14:55:55.463  Script 'Players.2kwpid.PlayerGui.Inventory Gui.Frame.InvValue.LocalScript', Line 2  -  Studio - LocalScript:2
+  14:55:55.463  Stack End  -  Studio
+  14:55:59.438  Disconnect from 127.0.0.1|59623  -  Studio
+  14:55:59.442  👋 Player leaving: 2kwpid  -  Server - PlayerDataHandler:86
+  14:55:59.443  🔴 Server shutting down, saving all data...  -  Server - PlayerDataHandler:115
+  14:56:09.267  Failed to parse secrets: Can't parse JSON  -  Edit
