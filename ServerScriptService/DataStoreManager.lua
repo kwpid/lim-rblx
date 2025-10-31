@@ -5,7 +5,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
 
 -- 🔑 DATA VERSION - Change this to wipe all player data (e.g., "DataVersion.11")
-local DATA_VERSION = "DataVersion.13"
+local DATA_VERSION = "DataVersion.14"
 
 local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
 

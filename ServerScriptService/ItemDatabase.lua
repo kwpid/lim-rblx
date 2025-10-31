@@ -8,7 +8,7 @@ local ItemDataStore = DataStoreService:GetDataStore("ItemDatabase_v1")
 local ItemRarityModule = require(game.ReplicatedStorage.ItemRarityModule)
 
 -- 🔑 DATA VERSION - Must match DataStoreManager.lua to keep data in sync
-local DATA_VERSION = "DataVersion.13"
+local DATA_VERSION = "DataVersion.14"
 
 local ItemDatabase = {}
 ItemDatabase.Items = {}
@@ -137,9 +137,9 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
     Name = itemName,
     Value = itemValue,
     Rarity = rarity,
-    Stock = stock,    -- 0 = regular, 1-100 = stock item
+    Stock = stock,   -- 0 = regular, 1-100 = stock item
     CurrentStock = 0, -- How many have been rolled (starts at 0)
-    Owners = 0,       -- How many players own this item
+    Owners = 0,      -- How many players own this item
     SerialOwners = {}, -- Array of {UserId, SerialNumber, Username} for stock items
     CreatedAt = os.time()
   }
@@ -332,7 +332,7 @@ function ItemDatabase:IncreaseStockLimit(robloxId, userId, username)
     -- Increase stock limit by 1
     item.Stock = stock + 1
     item.CurrentStock = (item.CurrentStock or 0) + 1
-    
+
     -- Record the owner of this new serial
     if userId and username then
       if not item.SerialOwners then
@@ -344,7 +344,7 @@ function ItemDatabase:IncreaseStockLimit(robloxId, userId, username)
         Username = username
       })
     end
-    
+
     self:SaveItems()
     print("📈 Increased stock limit for " .. item.Name .. " from " .. stock .. " to " .. item.Stock)
     return item.CurrentStock -- Return the new serial number
@@ -390,7 +390,7 @@ function ItemDatabase:RecordSerialOwner(robloxId, userId, username, serialNumber
     SerialNumber = serialNumber,
     Username = username
   })
-  
+
   self:SaveItems()
   return true
 end
@@ -424,7 +424,7 @@ function ItemDatabase:GetSerialOwners(robloxId)
       Username = owner.Username
     })
   end
-  
+
   table.sort(sorted, function(a, b)
     return a.SerialNumber < b.SerialNumber
   end)
