@@ -54,10 +54,10 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
   if success then
     local stockText = itemStock > 0 and " [Stock: " .. itemStock .. "]" or ""
     print("✅ Admin " .. player.Name .. " created item: " .. itemName .. stockText)
-    
+
     -- Send success back to client
     createItemEvent:FireClient(player, true, "Item created successfully!", result)
-    
+
     -- Send notification to all players about the new item
     local notificationData = {
       Type = "GIFT",
@@ -122,11 +122,6 @@ _G.CheckRarities = function()
       print("  " .. rarity .. ": " .. count)
     end
   end
-  print("")
-  print("Total: " .. #items .. " items")
+
 end
 
-print("✅ Admin Item Handler initialized!")
-print("💡 Admin Console Commands:")
-print("   - CheckDatabase() - View all items")
-print("   - CheckRarities() - View item count by rarity")

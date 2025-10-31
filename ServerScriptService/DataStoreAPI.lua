@@ -33,8 +33,7 @@ function DataStoreAPI:AddItem(player, itemData)
       SerialNumber = itemData.SerialNumber,
       ObtainedAt = os.time()
     })
-    isNewOwner = true  -- Stock items always count as new owner
-    print("➕ Added stock item to " .. player.Name .. "'s inventory: " .. itemData.Name .. " #" .. itemData.SerialNumber)
+    isNewOwner = true -- Stock items always count as new owner
   else
     -- Regular item - check if already exists and stack
     local found = false
@@ -44,7 +43,7 @@ function DataStoreAPI:AddItem(player, itemData)
         -- Stack it
         invItem.Amount = (invItem.Amount or 1) + 1
         found = true
-        print("➕ Stacked item for " .. player.Name .. ": " .. itemData.Name .. " (Amount: " .. invItem.Amount .. ")")
+
         break
       end
     end
@@ -59,8 +58,7 @@ function DataStoreAPI:AddItem(player, itemData)
         Amount = 1,
         ObtainedAt = os.time()
       })
-      isNewOwner = true  -- First time getting this regular item
-      print("➕ Added new item to " .. player.Name .. "'s inventory: " .. itemData.Name)
+      isNewOwner = true -- First time getting this regular item
     end
   end
 
@@ -71,9 +69,9 @@ function DataStoreAPI:AddItem(player, itemData)
   if isNewOwner then
     local newOwnerCount = ItemDatabase:IncrementOwners(itemData.RobloxId)
     if not newOwnerCount then
-      warn("⚠️ Failed to increment owners for item: " .. itemData.Name .. " (RobloxId: " .. tostring(itemData.RobloxId) .. ")")
+      warn("⚠️ Failed to increment owners for item: " ..
+      itemData.Name .. " (RobloxId: " .. tostring(itemData.RobloxId) .. ")")
     else
-      print("📊 Item " .. itemData.Name .. " now has " .. newOwnerCount .. " unique owners")
     end
   end
 
@@ -86,7 +84,6 @@ function DataStoreAPI:RemoveItem(player, inventoryIndex)
   if data then
     local success = DataStoreManager:RemoveItemFromInventory(data, inventoryIndex)
     if success then
-      print("➖ Removed item from " .. player.Name .. "'s inventory")
       -- Update inventory value
       self:UpdateInventoryValue(player)
     end
@@ -109,7 +106,7 @@ function DataStoreAPI:AddCash(player, amount)
       end
     end
 
-    print("💰 Added " .. amount .. " cash to " .. player.Name)
+
     return true
   end
   return false
@@ -129,7 +126,7 @@ function DataStoreAPI:IncrementCasesOpened(player)
       end
     end
 
-    print("📦 " .. player.Name .. " opened a case! Total: " .. data.CasesOpened)
+
     return true
   end
   return false
@@ -137,25 +134,21 @@ end
 
 -- Get player's inventory (with Owners count added to each item)
 function DataStoreAPI:GetInventory(player)
-  print("🔍 GetInventory called for: " .. player.Name)
-  
   local data = self:GetPlayerData(player)
   if not data then
     warn("⚠️ No player data found for " .. player.Name)
     return {}
   end
-  
-  print("📋 Player has " .. #data.Inventory .. " items in data")
-  
+
+
+
   -- Add Owners count and Stock info to each item from ItemDatabase
   local inventoryWithOwners = {}
   for i, item in ipairs(data.Inventory) do
-    print("  Processing item " .. i .. ": " .. (item.Name or "Unknown"))
-    
     local success, itemCopy = pcall(function()
       return table.clone(item)
     end)
-    
+
     if not success then
       warn("❌ Failed to clone item " .. i .. ": " .. tostring(itemCopy))
       -- Create a manual copy instead
@@ -169,12 +162,12 @@ function DataStoreAPI:GetInventory(player)
         ObtainedAt = item.ObtainedAt
       }
     end
-    
+
     -- Get item from database to retrieve owners and stock info
     local dbItemSuccess, dbItem = pcall(function()
       return ItemDatabase:GetItemByRobloxId(item.RobloxId)
     end)
-    
+
     if dbItemSuccess and dbItem then
       itemCopy.Owners = dbItem.Owners or 0
       itemCopy.Stock = dbItem.Stock or 0
@@ -183,11 +176,11 @@ function DataStoreAPI:GetInventory(player)
       itemCopy.Owners = 0
       itemCopy.Stock = 0
     end
-    
+
     table.insert(inventoryWithOwners, itemCopy)
   end
-  
-  print("✅ Returning " .. #inventoryWithOwners .. " items to client")
+
+
   return inventoryWithOwners
 end
 

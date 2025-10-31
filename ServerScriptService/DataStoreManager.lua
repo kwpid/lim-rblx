@@ -13,11 +13,11 @@ local DataStoreManager = {}
 
 -- Default data structure for new players
 local DEFAULT_DATA = {
-  Inventory = {},  -- Will store item data as table
+  Inventory = {}, -- Will store item data as table
   CasesOpened = 0,
   Cash = 0,
-  InvValue = 0,  -- Total inventory value
-  EquippedItems = {},  -- Array of RobloxIds of equipped items
+  InvValue = 0,       -- Total inventory value
+  EquippedItems = {}, -- Array of RobloxIds of equipped items
   DataVersion = DATA_VERSION
 }
 
@@ -29,7 +29,7 @@ function DataStoreManager:SaveData(player, data)
   end)
 
   if success then
-    print("✅ Successfully saved data for " .. player.Name)
+    print("Successfully saved data for " .. player.Name)
     return true
   else
     warn("❌ Failed to save data for " .. player.Name .. ": " .. errorMessage)
@@ -49,16 +49,12 @@ function DataStoreManager:LoadData(player)
 
       -- Check if data version matches current version
       if data.DataVersion ~= DATA_VERSION then
-        print("🔄 Data version mismatch for " .. player.Name .. " (Old: " .. tostring(data.DataVersion) .. ", New: " .. DATA_VERSION .. ")")
-        print("🗑️ Wiping old data and creating fresh save...")
         data = self:GetDefaultData()
       else
-        print("📂 Loaded existing data for " .. player.Name)
       end
     else
       -- New player, use default data
       data = self:GetDefaultData()
-      print("🆕 Created new data for " .. player.Name)
     end
   end)
 

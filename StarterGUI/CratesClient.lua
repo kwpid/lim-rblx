@@ -75,7 +75,6 @@ local function stopAutoRoll()
   if isAutoRolling then
     isAutoRolling = false
     autoRollButton.Text = "[AUTOROLL: OFF]"
-    print("🛑 Auto-roll stopped")
   end
 end
 
@@ -135,7 +134,7 @@ autoRollButton.MouseButton1Click:Connect(function()
 
   if isAutoRolling then
     autoRollButton.Text = "[AUTOROLL: ON]"
-    print("✅ Auto-roll enabled")
+    autoRollButton.TextColor3 = Color3.fromRGB(0, 170, 0)
 
     -- Update initial position
     updatePlayerPosition()
@@ -155,8 +154,6 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   -- allItems is an array of items for the animation
   -- chosenItem is the actual item the player won
 
-  print("🎰 Starting crate animation")
-  print("🎯 Chosen item: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")")
 
   -- Clear any existing items from previous roll
   for _, child in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do
@@ -175,7 +172,6 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
     if i == chosenPosition then
       -- This position gets the actual chosen item
       itemData = chosenItem
-      print("✓ Placed chosen item at position " .. i)
     else
       -- All other positions get random items from allItems
       local randomIndex = rnd:NextInteger(1, #allItems)
@@ -192,9 +188,6 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
       local rarityColor = ItemRarityModule:GetRarityColor(itemData.Value)
       newItemFrame.ItemName.TextColor3 = rarityColor
       -- Debug log to verify coloring
-      if i == chosenPosition then
-        print("🎨 Chosen item name color set to: " .. itemData.Rarity .. " (" .. tostring(rarityColor) .. ")")
-      end
     end
 
     -- Set item image using Roblox thumbnail
@@ -265,7 +258,7 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
 
   -- Store chosen item for serial number update
   currentChosenItem = chosenItem
-  
+
   -- Show won item (serial number will be added later if it's a stock item)
   openedFrame.CrateName.Text = "You won: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")!"
 
@@ -284,7 +277,7 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
     -- Check if player moved
     if hasPlayerMoved() then
       stopAutoRoll()
-      print("🚶 Player moved - auto-roll stopped")
+
       -- Show continue button since autoroll stopped
       closeOpenedBtn.Visible = true
     else
@@ -294,7 +287,6 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
           -- Check again if player moved during delay
           if hasPlayerMoved() then
             stopAutoRoll()
-            print("🚶 Player moved - auto-roll stopped")
             -- Show continue button since autoroll stopped
             closeOpenedBtn.Visible = true
           else
@@ -324,8 +316,8 @@ end)
 updateResultEvent.OnClientEvent:Connect(function(serialNumber)
   if currentChosenItem and serialNumber then
     -- Update the display to show serial number
-    openedFrame.CrateName.Text = "You won: " .. currentChosenItem.Name .. " (#" .. serialNumber .. ") (" .. currentChosenItem.Rarity .. ")!"
-    print("🎯 Updated display with serial number: #" .. serialNumber)
+    openedFrame.CrateName.Text = "You won: " ..
+        currentChosenItem.Name .. " (#" .. serialNumber .. ") (" .. currentChosenItem.Rarity .. ")!"
   end
 end)
 
@@ -338,4 +330,4 @@ RunService.Heartbeat:Connect(function()
   end
 end)
 
-print("✅ Crates Client loaded!")
+print("Crates Client loaded!")

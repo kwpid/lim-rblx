@@ -5,14 +5,14 @@ local ItemRarityModule = {}
 
 -- Rarity tiers with value ranges
 ItemRarityModule.RarityTiers = {
-  {Name = "Common", Min = 1, Max = 2499, Color = Color3.fromRGB(170, 170, 170)},
-  {Name = "Uncommon", Min = 2500, Max = 9999, Color = Color3.fromRGB(85, 170, 85)},
-  {Name = "Rare", Min = 10000, Max = 49999, Color = Color3.fromRGB(85, 85, 255)},
-  {Name = "Ultra Rare", Min = 50000, Max = 250999, Color = Color3.fromRGB(170, 85, 255)},
-  {Name = "Epic", Min = 250000, Max = 750000, Color = Color3.fromRGB(255, 170, 0)},
-  {Name = "Ultra Epic", Min = 750000, Max = 2500000, Color = Color3.fromRGB(255, 85, 0)},
-  {Name = "Mythic", Min = 2500000, Max = 9999999, Color = Color3.fromRGB(255, 0, 0)},
-  {Name = "Insane", Min = 10000000, Max = math.huge, Color = Color3.fromRGB(255, 0, 255)}
+  { Name = "Common",     Min = 1,        Max = 2499,      Color = Color3.fromRGB(170, 170, 170) },
+  { Name = "Uncommon",   Min = 2500,     Max = 9999,      Color = Color3.fromRGB(85, 170, 85) },
+  { Name = "Rare",       Min = 10000,    Max = 49999,     Color = Color3.fromRGB(85, 85, 255) },
+  { Name = "Ultra Rare", Min = 50000,    Max = 250999,    Color = Color3.fromRGB(170, 85, 255) },
+  { Name = "Epic",       Min = 250000,   Max = 750000,    Color = Color3.fromRGB(255, 170, 0) },
+  { Name = "Ultra Epic", Min = 750000,   Max = 2500000,   Color = Color3.fromRGB(255, 85, 0) },
+  { Name = "Mythic",     Min = 2500000,  Max = 9999999,   Color = Color3.fromRGB(255, 0, 0) },
+  { Name = "Insane",     Min = 10000000, Max = math.huge, Color = Color3.fromRGB(255, 0, 255) }
 }
 
 -- Get rarity name from value

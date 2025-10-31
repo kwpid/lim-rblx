@@ -34,8 +34,8 @@ local rnd = Random.new()
 local playersRolling = {}
 
 -- Configuration
-local ROLL_COST = 0  -- Free rolls
-local ROLL_TIME = 5  -- Fixed roll time in seconds
+local ROLL_COST = 0 -- Free rolls
+local ROLL_TIME = 5 -- Fixed roll time in seconds
 
 -- Helper function to pick random item based on value (inverse probability)
 function pickRandomItem(items)
@@ -70,7 +70,7 @@ function generateAnimationItems(chosenItem, numItems)
 
   if #allItems == 0 then
     warn("⚠️ No items in database! Cannot generate animation.")
-    return {chosenItem}
+    return { chosenItem }
   end
 
   local animationItems = {}
@@ -96,7 +96,6 @@ end
 
 -- Handle roll request
 rollCrateEvent.OnServerEvent:Connect(function(player)
-
   -- Check if player is already rolling
   if playersRolling[player] then
     return
@@ -132,7 +131,6 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
   -- Send to client for animation (will send serial number later after claiming stock)
   crateOpenedEvent:FireClient(player, animationItems, chosenItem, unboxTime, nil)
 
-  print("🎲 " .. player.Name .. " is rolling for an item...")
 
   -- Wait for animation to finish
   task.wait(unboxTime)
@@ -180,8 +178,8 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
 
   if serialNumber then
     itemToAdd.SerialNumber = serialNumber
-    print("✅ " .. player.Name .. " won stock item: " .. chosenItem.Name .. " #" .. serialNumber .. "/" .. chosenItem.Stock .. " (" .. chosenItem.Rarity .. ")")
-    
+
+
     -- Send serial number to client for display
     local updateResultEvent = remoteEvents:FindFirstChild("UpdateCrateResult")
     if not updateResultEvent then
@@ -190,8 +188,6 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
       updateResultEvent.Parent = remoteEvents
     end
     updateResultEvent:FireClient(player, serialNumber)
-  else
-    print("✅ " .. player.Name .. " won: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")")
   end
 
   DataStoreAPI:AddItem(player, itemToAdd)
@@ -199,6 +195,3 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
 
   playersRolling[player] = nil
 end)
-
-print("✅ Crates Server loaded!")
-print("💰 Roll cost: FREE")

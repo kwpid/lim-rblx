@@ -10,12 +10,13 @@ local function equipItemToCharacter(player, robloxId)
   if not character then
     return false, "No character"
   end
-  
+
   local success, result = pcall(function()
     local model = InsertService:LoadAsset(robloxId)
     if model then
-      local item = model:FindFirstChildOfClass("Accessory") or model:FindFirstChildOfClass("Tool") or model:FindFirstChildOfClass("Hat")
-      
+      local item = model:FindFirstChildOfClass("Accessory") or model:FindFirstChildOfClass("Tool") or
+      model:FindFirstChildOfClass("Hat")
+
       if item then
         local itemClone = item:Clone()
         local idValue = Instance.new("IntValue")
@@ -39,7 +40,7 @@ local function equipItemToCharacter(player, robloxId)
       model:Destroy()
     end
   end)
-  
+
   return success, result
 end
 
@@ -48,7 +49,7 @@ local function unequipItemFromCharacter(player, robloxId)
   if not character then
     return 0
   end
-  
+
   local itemsRemoved = 0
   for _, child in ipairs(character:GetChildren()) do
     if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
@@ -59,7 +60,7 @@ local function unequipItemFromCharacter(player, robloxId)
       end
     end
   end
-  
+
   return itemsRemoved
 end
 
@@ -117,7 +118,7 @@ equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
   if not robloxId or type(robloxId) ~= "number" then
     return
   end
-  
+
   local inventory = DataStoreAPI:GetInventory(player)
   local ownsItem = false
   local itemName = "Item"
@@ -128,29 +129,29 @@ equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
       break
     end
   end
-  
+
   if not ownsItem then
     return
   end
-  
+
   local data = DataStoreAPI:GetPlayerData(player)
   if not data then
     return
   end
-  
+
   if not data.EquippedItems then
     data.EquippedItems = {}
   end
-  
+
   if shouldUnequip then
     unequipItemFromCharacter(player, robloxId)
-    
+
     for i = #data.EquippedItems, 1, -1 do
       if data.EquippedItems[i] == robloxId then
         table.remove(data.EquippedItems, i)
       end
     end
-    
+
     local notificationData = {
       Type = "UNEQUIP",
       Title = "Item Unequipped",
@@ -160,7 +161,7 @@ equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
     notificationEvent:FireClient(player, notificationData)
   else
     local success, result = equipItemToCharacter(player, robloxId)
-    
+
     if success then
       local alreadyEquipped = false
       for _, equippedId in ipairs(data.EquippedItems) do
@@ -169,11 +170,11 @@ equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
           break
         end
       end
-      
+
       if not alreadyEquipped then
         table.insert(data.EquippedItems, robloxId)
       end
-      
+
       local notificationData = {
         Type = "EQUIP",
         Title = "Item Equipped!",
@@ -189,12 +190,12 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
   if not robloxId or type(robloxId) ~= "number" then
     return
   end
-  
+
   local data = DataStoreAPI:GetPlayerData(player)
   if not data then
     return
   end
-  
+
   local itemIndex = nil
   local item = nil
   for i, invItem in ipairs(data.Inventory) do
@@ -214,18 +215,18 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
       end
     end
   end
-  
+
   if not item then
     return
   end
-  
+
   local sellValue = math.floor(item.Value * 0.8)
   local isStockItem = item.SerialNumber ~= nil
-  
+
   if isStockItem then
     table.remove(data.Inventory, itemIndex)
     ItemDatabase:DecrementStock(item.RobloxId)
-    
+
     local stillOwnsItem = false
     for _, invItem in ipairs(data.Inventory) do
       if invItem.RobloxId == item.RobloxId then
@@ -233,7 +234,7 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
         break
       end
     end
-    
+
     if not stillOwnsItem then
       ItemDatabase:DecrementOwners(item.RobloxId)
     end
@@ -246,7 +247,7 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
       ItemDatabase:DecrementOwners(item.RobloxId)
     end
   end
-  
+
   local stillOwnsItem = false
   for _, invItem in ipairs(data.Inventory) do
     if invItem.RobloxId == robloxId then
@@ -254,10 +255,10 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
       break
     end
   end
-  
+
   if not stillOwnsItem then
     unequipItemFromCharacter(player, robloxId)
-    
+
     if data.EquippedItems then
       for i = #data.EquippedItems, 1, -1 do
         if data.EquippedItems[i] == robloxId then
@@ -266,10 +267,10 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
       end
     end
   end
-  
+
   DataStoreAPI:AddCash(player, sellValue)
   DataStoreAPI:UpdateInventoryValue(player)
-  
+
   local notificationData = {
     Type = "SELL",
     Title = "Item Sold!",
@@ -283,55 +284,55 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
   if not robloxId or type(robloxId) ~= "number" then
     return
   end
-  
+
   local data = DataStoreAPI:GetPlayerData(player)
   if not data then
     return
   end
-  
+
   local totalSellValue = 0
   local itemsToRemove = {}
   local itemsSold = 0
   local firstItem = nil
   local hasStockItems = false
-  
+
   for i, invItem in ipairs(data.Inventory) do
     if invItem.RobloxId == robloxId then
       if not firstItem then
         firstItem = invItem
       end
-      
+
       local isStockItem = invItem.SerialNumber ~= nil
       local amount = invItem.Amount or 1
-      
+
       if isStockItem then
         hasStockItems = true
       end
-      
+
       local sellValue = math.floor(invItem.Value * 0.8 * amount)
       totalSellValue = totalSellValue + sellValue
-      
-      table.insert(itemsToRemove, {index = i, item = invItem, isStock = isStockItem, amount = amount})
+
+      table.insert(itemsToRemove, { index = i, item = invItem, isStock = isStockItem, amount = amount })
       itemsSold = itemsSold + amount
     end
   end
-  
+
   if #itemsToRemove == 0 then
     return
   end
-  
+
   table.sort(itemsToRemove, function(a, b) return a.index > b.index end)
-  
+
   for _, entry in ipairs(itemsToRemove) do
     if entry.isStock then
       ItemDatabase:DecrementStock(entry.item.RobloxId)
     end
     table.remove(data.Inventory, entry.index)
   end
-  
+
   ItemDatabase:DecrementOwners(firstItem.RobloxId)
   unequipItemFromCharacter(player, robloxId)
-  
+
   if data.EquippedItems then
     for i = #data.EquippedItems, 1, -1 do
       if data.EquippedItems[i] == robloxId then
@@ -339,10 +340,10 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
       end
     end
   end
-  
+
   DataStoreAPI:AddCash(player, totalSellValue)
   DataStoreAPI:UpdateInventoryValue(player)
-  
+
   local notificationData = {
     Type = "SELL",
     Title = "Items Sold!",
@@ -354,18 +355,18 @@ end)
 
 local function autoEquipItems(player)
   task.wait(0.5)
-  
+
   local data = DataStoreAPI:GetPlayerData(player)
   if not data or not data.EquippedItems then
     return
   end
-  
+
   local inventory = DataStoreAPI:GetInventory(player)
   local ownedRobloxIds = {}
   for _, item in ipairs(inventory) do
     ownedRobloxIds[item.RobloxId] = true
   end
-  
+
   local itemsToRemove = {}
   for i, robloxId in ipairs(data.EquippedItems) do
     if ownedRobloxIds[robloxId] then
@@ -374,7 +375,7 @@ local function autoEquipItems(player)
       table.insert(itemsToRemove, i)
     end
   end
-  
+
   for i = #itemsToRemove, 1, -1 do
     table.remove(data.EquippedItems, itemsToRemove[i])
   end
@@ -384,7 +385,7 @@ Players.PlayerAdded:Connect(function(player)
   player.CharacterAdded:Connect(function(character)
     autoEquipItems(player)
   end)
-  
+
   if player.Character then
     autoEquipItems(player)
   end
@@ -394,7 +395,7 @@ for _, player in pairs(Players:GetPlayers()) do
   player.CharacterAdded:Connect(function(character)
     autoEquipItems(player)
   end)
-  
+
   if player.Character then
     autoEquipItems(player)
   end

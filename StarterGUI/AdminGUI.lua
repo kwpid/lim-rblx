@@ -32,10 +32,9 @@ local isAdmin = checkAdminFunction:InvokeServer()
 
 if isAdmin then
   openAdminButton.Visible = true
-  print("✅ Admin panel available")
 else
   openAdminButton.Visible = false
-  gui.Enabled = false  -- Disable entire GUI for non-admins
+  gui.Enabled = false -- Disable entire GUI for non-admins
   return
 end
 
@@ -76,7 +75,7 @@ createButton.MouseButton1Click:Connect(function()
   local itemId = tonumber(itemIdBox.Text)
   local itemName = itemNameBox.Text
   local itemValue = tonumber(itemValueBox.Text)
-  local itemStock = tonumber(itemStockBox.Text) or 0  -- Default to 0 if empty
+  local itemStock = tonumber(itemStockBox.Text) or 0 -- Default to 0 if empty
 
   -- Validate inputs
   if not itemId then
@@ -111,9 +110,6 @@ end)
 -- Handle server response
 createItemEvent.OnClientEvent:Connect(function(success, message, itemData)
   if success then
-    print("✅ " .. message)
-    print("Item created:", itemData.Name, "-", itemData.Rarity)
-
     -- Clear fields
     itemIdBox.Text = ""
     itemNameBox.Text = ""
@@ -132,5 +128,3 @@ createItemEvent.OnClientEvent:Connect(function(success, message, itemData)
   createButton.Text = "CreateItem"
   createButton.Active = true
 end)
-
-print("✅ Admin GUI script loaded")

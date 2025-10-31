@@ -39,9 +39,6 @@ function ItemDatabase:LoadItems()
 
       -- Check if data version matches
       if savedVersion ~= DATA_VERSION then
-        print("🔄 Item database version mismatch (Old: " .. tostring(savedVersion) .. ", New: " .. DATA_VERSION .. ")")
-        print("🗑️ Resetting all stock counts and owner counts...")
-
         -- Reset stock and owners for all items
         for _, item in ipairs(self.Items) do
           item.CurrentStock = 0
@@ -51,7 +48,6 @@ function ItemDatabase:LoadItems()
         -- Save with new version
         self.DataVersion = DATA_VERSION
         self:SaveItems()
-        print("✅ Item database reset complete!")
       else
         self.DataVersion = savedVersion
       end
@@ -68,12 +64,9 @@ function ItemDatabase:LoadItems()
           item.Owners = 0
         end
       end
-
-      print("📚 Loaded " .. #self.Items .. " items from database")
     else
       self.Items = {}
       self.DataVersion = DATA_VERSION
-      print("📚 No items found, starting with empty database")
     end
   end)
 
@@ -97,7 +90,6 @@ function ItemDatabase:SaveItems()
   end)
 
   if success then
-    print("✅ Saved " .. #self.Items .. " items to database")
     return true
   else
     warn("❌ Failed to save items: " .. errorMessage)
@@ -142,9 +134,9 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
     Name = itemName,
     Value = itemValue,
     Rarity = rarity,
-    Stock = stock,  -- 0 = regular, 1-100 = stock item
-    CurrentStock = 0,  -- How many have been rolled (starts at 0)
-    Owners = 0,  -- How many players own this item
+    Stock = stock,    -- 0 = regular, 1-100 = stock item
+    CurrentStock = 0, -- How many have been rolled (starts at 0)
+    Owners = 0,       -- How many players own this item
     CreatedAt = os.time()
   }
 
@@ -155,7 +147,7 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
 
   if saveSuccess then
     local stockText = stock > 0 and " [Stock: " .. stock .. "]" or ""
-    print("✨ Added new item: " .. itemName .. " (" .. rarity .. ")" .. stockText)
+
     return true, newItem
   else
     -- Remove from memory if save failed
@@ -195,7 +187,7 @@ function ItemDatabase:IncrementStock(item)
   if stock > 0 and currentStock < stock then
     item.CurrentStock = currentStock + 1
     self:SaveItems()
-    return item.CurrentStock  -- Return the serial number
+    return item.CurrentStock -- Return the serial number
   end
   return nil
 end
@@ -240,10 +232,8 @@ function ItemDatabase:IncrementOwners(robloxId)
     local oldOwners = item.Owners or 0
     item.Owners = oldOwners + 1
     self:SaveItems()
-    print("✅ Incremented owners for item " .. item.Name .. " (RobloxId: " .. numericId .. "): " .. oldOwners .. " → " .. item.Owners)
     return item.Owners
   else
-    warn("❌ ItemDatabase:IncrementOwners - Item not found for RobloxId: " .. numericId)
     return nil
   end
 end
@@ -276,9 +266,9 @@ function ItemDatabase:DecrementOwners(robloxId)
   local item = self:GetItemByRobloxId(numericId)
   if item then
     local oldOwners = item.Owners or 0
-    item.Owners = math.max(0, oldOwners - 1)  -- Don't go below 0
+    item.Owners = math.max(0, oldOwners - 1) -- Don't go below 0
     self:SaveItems()
-    print("✅ Decremented owners for item " .. item.Name .. " (RobloxId: " .. numericId .. "): " .. oldOwners .. " → " .. item.Owners)
+
     return item.Owners
   else
     warn("❌ ItemDatabase:DecrementOwners - Item not found for RobloxId: " .. numericId)
@@ -309,7 +299,6 @@ function ItemDatabase:DecrementStock(robloxId)
   if stock > 0 and currentStock > 0 then
     item.CurrentStock = currentStock - 1
     self:SaveItems()
-    print("📉 Decremented stock for " .. item.Name .. ": " .. currentStock .. " → " .. item.CurrentStock .. " (can be rolled again!)")
     return true
   end
 
@@ -328,7 +317,6 @@ if not remoteEventsFolder then
   remoteEventsFolder = Instance.new("Folder")
   remoteEventsFolder.Name = "RemoteEvents"
   remoteEventsFolder.Parent = ReplicatedStorage
-  print("✅ Created RemoteEvents folder")
 end
 
 -- Create RemoteFunction if it doesn't exist
@@ -337,12 +325,10 @@ if not getAllItemsFunction then
   getAllItemsFunction = Instance.new("RemoteFunction")
   getAllItemsFunction.Name = "GetAllItemsFunction"
   getAllItemsFunction.Parent = remoteEventsFolder
-  print("✅ Created GetAllItemsFunction")
 end
 
 -- Set up the function to return all items to clients
 getAllItemsFunction.OnServerInvoke = function(player)
-  print("📡 Player " .. player.Name .. " requested all items from database")
   -- Return a copy of all items
   local itemsCopy = {}
   for i, item in ipairs(ItemDatabase.Items) do
@@ -357,10 +343,10 @@ getAllItemsFunction.OnServerInvoke = function(player)
       CreatedAt = item.CreatedAt
     }
   end
-  print("✅ Sending " .. #itemsCopy .. " items to " .. player.Name)
+
   return itemsCopy
 end
 
-print("✅ GetAllItemsFunction ready to serve item data")
+
 
 return ItemDatabase

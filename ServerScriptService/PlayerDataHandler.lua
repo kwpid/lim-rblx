@@ -22,7 +22,7 @@ end
 
 local function setupPlayer(player)
   local data = DataStoreManager:LoadData(player)
-  
+
   local dataLoadFailed = false
   if not data then
     warn("❌ Failed to load data for " .. player.Name)
@@ -30,7 +30,7 @@ local function setupPlayer(player)
     data = DataStoreManager:GetDefaultData()
     dataLoadFailed = true
   end
-  
+
   PlayerData[player.UserId] = data
 
   local leaderstats = Instance.new("Folder")
@@ -80,7 +80,7 @@ local function setupPlayer(player)
   end
   data.InvValue = totalValue
   invValue.Value = totalValue
-  
+
   task.delay(2, function()
     if dataLoadFailed then
       local notificationData = {
@@ -155,20 +155,20 @@ getInventoryFunction.OnServerInvoke = function(player)
     attempts = attempts + 1
     task.wait(0.1)
   end
-  
+
   local success, result = pcall(function()
     return DataStoreAPI:GetInventory(player)
   end)
-  
+
   if not success then
     warn("❌ GetInventory failed for " .. player.Name)
     return {}
   end
-  
+
   if not result then
     return {}
   end
-  
+
   return result
 end
 
