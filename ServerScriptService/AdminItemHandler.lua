@@ -63,10 +63,10 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
       Type = "GIFT",
       Title = "New Item",
       Body = itemName .. " is now available!",
-      Image = "rbxassetid://" .. robloxId
+      ImageId = robloxId  -- Pass just the number, handler will convert to rbxassetid://
     }
     notificationEvent:FireAllClients(notificationData)
-    print("📢 Sent new item notification to all players: " .. itemName .. " (Image: " .. robloxId .. ")")
+    print("📢 Sent new item notification to all players: " .. itemName .. " (ImageId: " .. robloxId .. ")")
   else
     warn("❌ Failed to create item: " .. result)
     -- Send error back to client
