@@ -131,6 +131,31 @@ Items are automatically assigned rarity based on their value:
   - 2-second delay on data load notifications to ensure client is ready
   - Queued system handles multiple notifications gracefully
 
+### 11. Index System (All Items Catalog)
+- **Display All Game Items:**
+  - Shows every item in the game database (not just player's inventory)
+  - Sorted by value (highest first), then rarity, then name
+  - Displays item thumbnail, name, value, rarity, and owner count
+  - Search/filter functionality to find specific items
+- **Item Detail Panel:**
+  - ItemName: Display name of the selected item
+  - TotalOwners: Shows how many unique players own this item
+  - Value: Robux value of the item
+- **Owner List (Stock Items Only):**
+  - Shows scrolling list of all players who own each serial number
+  - Each entry displays:
+    - PlayerPFP: Player's avatar headshot
+    - @Username: Player's username prefixed with @
+    - #SerialNumber: Serial number prefixed with #
+  - Sorted by serial number (lowest first: #1, #2, #3, etc.)
+  - Works even when players are offline (data stored in ItemDatabase)
+- **Serial Owner Tracking:**
+  - SerialOwners array in ItemDatabase tracks {UserId, SerialNumber, Username}
+  - Automatically recorded when stock items are rolled or admin-given
+  - GetItemOwnersFunction RemoteFunction provides data to client
+  - RecordSerialOwner() called by DataStoreAPI when adding stock items
+  - Data persists across sessions in DataStore
+
 ## 🗂️ File Structure Explained
 
 ### ReplicatedStorage/

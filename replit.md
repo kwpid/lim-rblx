@@ -19,6 +19,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays stock item counts ("copies: X / Y exist") and regular item counts ("copies: X"). Includes search/filter functionality and detailed item info on click.
 -   **Equipping Items**: Players can equip/unequip items from their inventory, which are then visible to all players. Uses Roblox asset IDs to load and attach items (accessories, hats, tools) to the character, with equipped items persisting across sessions.
 -   **Selling Items**: Players can sell regular items for 80% of their value. Features a confirmation step and options to sell single items or all copies of an item. Selling stock items is prevented. Cash is added to the player's wallet, and inventory value updates automatically.
+-   **Index System**: Displays all items in the game database with detailed information. Shows item name, total owners, and value. For stock items, displays an owner list with player avatars, @usernames, and #serial numbers, sorted by serial number. Owner data persists in the database (SerialOwners array) so it works even when players are offline.
 
 ### UI/UX Decisions
 -   Item names are color-coded by rarity in the crate animation.
