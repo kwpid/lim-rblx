@@ -5,7 +5,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
 
 -- 🔑 DATA VERSION - Change this to wipe all player data (e.g., "DataVersion.11")
-local DATA_VERSION = "DataVersion.10"
+local DATA_VERSION = "DataVersion.13"
 
 local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
 
@@ -46,7 +46,7 @@ function DataStoreManager:LoadData(player)
     if jsonData then
       -- Decode JSON string back to table
       data = HttpService:JSONDecode(jsonData)
-      
+
       -- Check if data version matches current version
       if data.DataVersion ~= DATA_VERSION then
         print("🔄 Data version mismatch for " .. player.Name .. " (Old: " .. tostring(data.DataVersion) .. ", New: " .. DATA_VERSION .. ")")
@@ -69,13 +69,13 @@ function DataStoreManager:LoadData(player)
     -- Return default data on error to prevent data loss
     return self:GetDefaultData()
   end
-  
+
   -- Validate data structure
   if not data or type(data) ~= "table" then
     warn("❌ Invalid data structure loaded for " .. player.Name)
     return self:GetDefaultData()
   end
-  
+
   -- Ensure all required fields exist
   if not data.Inventory then data.Inventory = {} end
   if not data.CasesOpened then data.CasesOpened = 0 end
@@ -83,7 +83,7 @@ function DataStoreManager:LoadData(player)
   if not data.InvValue then data.InvValue = 0 end
   if not data.EquippedItems then data.EquippedItems = {} end
   if not data.DataVersion then data.DataVersion = DATA_VERSION end
-  
+
   return data
 end
 
