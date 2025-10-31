@@ -66,6 +66,10 @@ local selectedItemData = nil
 -- Track equipped items by RobloxId
 local equippedItems = {}
 
+-- Track sell confirmation states
+local sellConfirmation = false
+local sellAllConfirmation = false
+
 -- Wait for RemoteEvents
 print("⏳ Waiting for RemoteEvents...")
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents", 10)
@@ -337,6 +341,10 @@ function refresh()
       previewImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
       previewImg.Parent = imgFrame
       
+      -- Reset confirmation states when selecting a new item
+      sellConfirmation = false
+      sellAllConfirmation = false
+      
       -- Update Equip button text based on whether item is equipped
       local equipButton = frame:FindFirstChild("Equip")
       if equipButton then
@@ -345,6 +353,26 @@ function refresh()
         else
           equipButton.Text = "Equip"
         end
+      end
+      
+      -- Reset sell button texts
+      local sellButton = frame:FindFirstChild("Sell")
+      local sellAllButton = frame:FindFirstChild("SellAll")
+      
+      if sellButton then
+        sellButton.Text = "Sell"
+      end
+      if sellAllButton then
+        sellAllButton.Text = "Sell All"
+      end
+      
+      -- Hide sell buttons for stock items
+      local isStockItem = item.Stock and item.Stock > 0
+      if sellButton then
+        sellButton.Visible = not isStockItem
+      end
+      if sellAllButton then
+        sellAllButton.Visible = not isStockItem
       end
     end)
   end
@@ -419,14 +447,31 @@ else
   warn("⚠️ Equip button not found in Frame")
 end
 
--- Set up Sell button
+-- Set up Sell button with confirmation
 local sellButton = frame:FindFirstChild("Sell")
 if sellButton and sellItemEvent then
   sellButton.MouseButton1Click:Connect(function()
     if selectedItemData and selectedItemData.RobloxId then
-      print("💵 Attempting to sell: " .. selectedItemData.Name)
-      -- Send RobloxId and SerialNumber (if it exists) for precise targeting
-      sellItemEvent:FireServer(selectedItemData.RobloxId, selectedItemData.SerialNumber)
+      if not sellConfirmation then
+        -- First click: Ask for confirmation
+        sellConfirmation = true
+        sellButton.Text = "Are you sure?"
+        print("⚠️ Sell confirmation requested for: " .. selectedItemData.Name)
+        
+        -- Reset after 3 seconds if they don't click again
+        task.delay(3, function()
+          if sellConfirmation then
+            sellConfirmation = false
+            sellButton.Text = "Sell"
+          end
+        end)
+      else
+        -- Second click: Confirm and sell
+        print("💵 Confirmed! Selling: " .. selectedItemData.Name)
+        sellItemEvent:FireServer(selectedItemData.RobloxId, selectedItemData.SerialNumber)
+        sellConfirmation = false
+        sellButton.Text = "Sell"
+      end
     else
       warn("⚠️ No item selected or missing RobloxId")
     end
@@ -436,14 +481,31 @@ else
   warn("⚠️ Sell button not found in Frame")
 end
 
--- Set up SellAll button
+-- Set up SellAll button with confirmation
 local sellAllButton = frame:FindFirstChild("SellAll")
 if sellAllButton and sellAllItemEvent then
   sellAllButton.MouseButton1Click:Connect(function()
     if selectedItemData and selectedItemData.RobloxId then
-      print("💵💵 Attempting to sell all: " .. selectedItemData.Name)
-      -- Send RobloxId to sell all items with this ID
-      sellAllItemEvent:FireServer(selectedItemData.RobloxId)
+      if not sellAllConfirmation then
+        -- First click: Ask for confirmation
+        sellAllConfirmation = true
+        sellAllButton.Text = "Are you sure?"
+        print("⚠️ Sell All confirmation requested for: " .. selectedItemData.Name)
+        
+        -- Reset after 3 seconds if they don't click again
+        task.delay(3, function()
+          if sellAllConfirmation then
+            sellAllConfirmation = false
+            sellAllButton.Text = "Sell All"
+          end
+        end)
+      else
+        -- Second click: Confirm and sell all
+        print("💵💵 Confirmed! Selling all: " .. selectedItemData.Name)
+        sellAllItemEvent:FireServer(selectedItemData.RobloxId)
+        sellAllConfirmation = false
+        sellAllButton.Text = "Sell All"
+      end
     else
       warn("⚠️ No item selected or missing RobloxId")
     end

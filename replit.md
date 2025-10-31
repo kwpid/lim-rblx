@@ -61,14 +61,17 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - Items are tagged with OriginalRobloxId for precise unequipping
 
 ### Selling Items
-- **Sell**: Sell a single copy of an item for 80% of its value
+- **Sell buttons hidden for stock items** (to prevent breaking limited items)
+- **Confirmation required**: Button shows "Are you sure?" on first click
+  - Click again within 3 seconds to confirm
+  - Automatically resets if not confirmed
+  - Resets when selecting a different item
+- **Sell**: Sell a single copy of an item for 80% of its value (regular items only)
   - Regular items: Decreases stack count, or removes if only 1 left
-  - Stock items: Removes the item and decrements CurrentStock (makes it rollable again)
   - Players who sell all copies have their owner count decremented
-- **Sell All**: Sell all copies of an item at once
+- **Sell All**: Sell all copies of an item at once (regular items only)
   - Calculates total value of all copies and gives 80% cash back
   - Removes all matching items from inventory
-  - Stock items sold this way restore their stock availability
 - Cash is added to player's wallet after selling
 - Inventory value updates automatically after selling
 
@@ -110,10 +113,12 @@ The scripts now include detailed error messages to help diagnose this issue.
     - Server-side equipping so other players can see equipped items
     - Uses InsertService to load and attach accessories/tools to character
     - Items tagged with OriginalRobloxId for precise unequipping
-  - **Sell System**: Players can sell items for 80% of their value
-    - Sell button: Sells one copy of the selected item
-    - SellAll button: Sells all copies of the selected item at once
-    - Selling stock items decrements CurrentStock in ItemDatabase (makes them rollable again)
+  - **Sell System**: Players can sell regular items for 80% of their value
+    - Confirmation required: Button text changes to "Are you sure?" on first click
+    - Must click again within 3 seconds to confirm sale
+    - Sell buttons hidden for stock items (prevents breaking limited items)
+    - Sell button: Sells one copy of the selected item (regular items only)
+    - SellAll button: Sells all copies of the selected item at once (regular items only)
     - Owner counts are decremented when players sell all their copies
     - Cash is automatically added to player's wallet
   - Created EquipSellHandler.lua server script with RemoteEvents:
