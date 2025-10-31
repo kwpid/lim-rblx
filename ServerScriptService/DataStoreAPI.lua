@@ -142,4 +142,42 @@ function DataStoreAPI:GetCasesOpened(player)
   return 0
 end
 
+-- Calculate total inventory value
+function DataStoreAPI:CalculateInventoryValue(player)
+  local data = self:GetPlayerData(player)
+  if not data then
+    return 0
+  end
+
+  local totalValue = 0
+  for _, item in ipairs(data.Inventory) do
+    local itemValue = item.Value or 0
+    local amount = item.Amount or 1
+    totalValue += (itemValue * amount)
+  end
+
+  return totalValue
+end
+
+-- Update player's inventory value (recalculate and update leaderstats)
+function DataStoreAPI:UpdateInventoryValue(player)
+  local data = self:GetPlayerData(player)
+  if not data then
+    return false
+  end
+
+  local totalValue = self:CalculateInventoryValue(player)
+  DataStoreManager:SetInvValue(data, totalValue)
+
+  -- Update leaderstats
+  if player:FindFirstChild("leaderstats") then
+    local invValue = player.leaderstats:FindFirstChild("InvValue")
+    if invValue then
+      invValue.Value = totalValue
+    end
+  end
+
+  return true
+end
+
 return DataStoreAPI
