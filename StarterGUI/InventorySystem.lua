@@ -209,12 +209,20 @@ function refresh()
       t1Label.Visible = false
     end
 
-    -- Display copies (owners count)
+    -- Display copies (owners count) with stock info for stock items
     local copiesLabel = button:FindFirstChild("copies")
     if copiesLabel then
       local ownersCount = item.Owners or 0
+      local stockCount = item.Stock or 0
+      
       if ownersCount > 0 then
-        copiesLabel.Text = "copies: " .. ownersCount
+        if stockCount > 0 then
+          -- Stock item: show "copies: X / Y exist"
+          copiesLabel.Text = "copies: " .. ownersCount .. " / " .. stockCount .. " exist"
+        else
+          -- Regular item: show "copies: X"
+          copiesLabel.Text = "copies: " .. ownersCount
+        end
         copiesLabel.Visible = true
       else
         copiesLabel.Visible = false

@@ -12,6 +12,14 @@ local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local rollCrateEvent = remoteEvents:WaitForChild("RollCrateEvent")
 local crateOpenedEvent = remoteEvents:WaitForChild("CrateOpenedEvent")
 
+-- Wait for or create UpdateCrateResult event
+local updateResultEvent = remoteEvents:FindFirstChild("UpdateCrateResult")
+if not updateResultEvent then
+  updateResultEvent = Instance.new("RemoteEvent")
+  updateResultEvent.Name = "UpdateCrateResult"
+  updateResultEvent.Parent = remoteEvents
+end
+
 -- Get ItemRarityModule
 local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
 
@@ -39,6 +47,7 @@ local autoRollButton = mainUI:WaitForChild("AutoRoll")
 local isAutoRolling = false
 local isCurrentlyRolling = false
 local lastPlayerPosition = nil
+local currentChosenItem = nil
 
 -- Helper functions
 local function hasPlayerMoved()
@@ -249,13 +258,14 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
     RunService.Heartbeat:Wait()
   end
 
-  -- Show won item
+  -- Store chosen item for serial number update
+  currentChosenItem = chosenItem
+  
+  -- Show won item (serial number will be added later if it's a stock item)
   openedFrame.CrateName.Text = "You won: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")!"
 
-  -- Only show continue button if NOT auto-rolling
-  if not isAutoRolling then
-    closeOpenedBtn.Visible = true
-  end
+  -- Always show continue button after every roll
+  closeOpenedBtn.Visible = true
 
   -- Mark rolling as complete
   isCurrentlyRolling = false
@@ -302,6 +312,15 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
         end
       end)
     end
+  end
+end)
+
+-- Handle serial number update from server (for stock items)
+updateResultEvent.OnClientEvent:Connect(function(serialNumber)
+  if currentChosenItem and serialNumber then
+    -- Update the display to show serial number
+    openedFrame.CrateName.Text = "You won: " .. currentChosenItem.Name .. " (#" .. serialNumber .. ") (" .. currentChosenItem.Rarity .. ")!"
+    print("🎯 Updated display with serial number: #" .. serialNumber)
   end
 end)
 

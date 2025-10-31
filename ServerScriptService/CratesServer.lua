@@ -129,8 +129,8 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
   -- Use fixed roll time
   local unboxTime = ROLL_TIME
 
-  -- Send to client for animation
-  crateOpenedEvent:FireClient(player, animationItems, chosenItem, unboxTime)
+  -- Send to client for animation (will send serial number later after claiming stock)
+  crateOpenedEvent:FireClient(player, animationItems, chosenItem, unboxTime, nil)
 
   print("🎲 " .. player.Name .. " is rolling for an item...")
 
@@ -181,6 +181,15 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
   if serialNumber then
     itemToAdd.SerialNumber = serialNumber
     print("✅ " .. player.Name .. " won stock item: " .. chosenItem.Name .. " #" .. serialNumber .. "/" .. chosenItem.Stock .. " (" .. chosenItem.Rarity .. ")")
+    
+    -- Send serial number to client for display
+    local updateResultEvent = remoteEvents:FindFirstChild("UpdateCrateResult")
+    if not updateResultEvent then
+      updateResultEvent = Instance.new("RemoteEvent")
+      updateResultEvent.Name = "UpdateCrateResult"
+      updateResultEvent.Parent = remoteEvents
+    end
+    updateResultEvent:FireClient(player, serialNumber)
   else
     print("✅ " .. player.Name .. " won: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")")
   end

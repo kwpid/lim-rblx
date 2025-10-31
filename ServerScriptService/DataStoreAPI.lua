@@ -142,7 +142,7 @@ function DataStoreAPI:GetInventory(player)
   
   print("📋 Player has " .. #data.Inventory .. " items in data")
   
-  -- Add Owners count to each item from ItemDatabase
+  -- Add Owners count and Stock info to each item from ItemDatabase
   local inventoryWithOwners = {}
   for i, item in ipairs(data.Inventory) do
     print("  Processing item " .. i .. ": " .. (item.Name or "Unknown"))
@@ -165,16 +165,18 @@ function DataStoreAPI:GetInventory(player)
       }
     end
     
-    -- Get owners count
-    local ownersSuccess, owners = pcall(function()
-      return ItemDatabase:GetOwners(item.RobloxId)
+    -- Get item from database to retrieve owners and stock info
+    local dbItemSuccess, dbItem = pcall(function()
+      return ItemDatabase:GetItemByRobloxId(item.RobloxId)
     end)
     
-    if ownersSuccess then
-      itemCopy.Owners = owners
+    if dbItemSuccess and dbItem then
+      itemCopy.Owners = dbItem.Owners or 0
+      itemCopy.Stock = dbItem.Stock or 0
     else
-      warn("⚠️ Failed to get owners for " .. (item.Name or "item") .. ": " .. tostring(owners))
+      warn("⚠️ Failed to get database item for " .. (item.Name or "item"))
       itemCopy.Owners = 0
+      itemCopy.Stock = 0
     end
     
     table.insert(inventoryWithOwners, itemCopy)
