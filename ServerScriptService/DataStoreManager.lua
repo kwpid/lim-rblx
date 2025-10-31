@@ -4,6 +4,9 @@
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
 
+-- 🔑 DATA VERSION - Change this to wipe all player data (e.g., "DataVersion.11")
+local DATA_VERSION = "DataVersion.10"
+
 local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
 
 local DataStoreManager = {}
@@ -13,7 +16,8 @@ local DEFAULT_DATA = {
   Inventory = {},  -- Will store item data as table
   CasesOpened = 0,
   Cash = 0,
-  InvValue = 0  -- Total inventory value
+  InvValue = 0,  -- Total inventory value
+  DataVersion = DATA_VERSION
 }
 
 -- Save player data
@@ -41,7 +45,15 @@ function DataStoreManager:LoadData(player)
     if jsonData then
       -- Decode JSON string back to table
       data = HttpService:JSONDecode(jsonData)
-      print("📂 Loaded existing data for " .. player.Name)
+      
+      -- Check if data version matches current version
+      if data.DataVersion ~= DATA_VERSION then
+        print("🔄 Data version mismatch for " .. player.Name .. " (Old: " .. tostring(data.DataVersion) .. ", New: " .. DATA_VERSION .. ")")
+        print("🗑️ Wiping old data and creating fresh save...")
+        data = self:GetDefaultData()
+      else
+        print("📂 Loaded existing data for " .. player.Name)
+      end
     else
       -- New player, use default data
       data = self:GetDefaultData()
@@ -68,6 +80,7 @@ function DataStoreManager:LoadData(player)
   if not data.CasesOpened then data.CasesOpened = 0 end
   if not data.Cash then data.Cash = 0 end
   if not data.InvValue then data.InvValue = 0 end
+  if not data.DataVersion then data.DataVersion = DATA_VERSION end
   
   return data
 end
@@ -78,7 +91,8 @@ function DataStoreManager:GetDefaultData()
     Inventory = {},
     CasesOpened = 0,
     Cash = 0,
-    InvValue = 0
+    InvValue = 0,
+    DataVersion = DATA_VERSION
   }
   return defaultCopy
 end
