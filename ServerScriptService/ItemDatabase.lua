@@ -8,7 +8,7 @@ local ItemDataStore = DataStoreService:GetDataStore("ItemDatabase_v1")
 local ItemRarityModule = require(game.ReplicatedStorage.ItemRarityModule)
 
 -- 🔑 DATA VERSION - Must match DataStoreManager.lua to keep data in sync
-local DATA_VERSION = "DataVersion.14"
+local DATA_VERSION = "DataVersion.15"
 
 local ItemDatabase = {}
 ItemDatabase.Items = {}
@@ -137,9 +137,9 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
     Name = itemName,
     Value = itemValue,
     Rarity = rarity,
-    Stock = stock,   -- 0 = regular, 1-100 = stock item
-    CurrentStock = 0, -- How many have been rolled (starts at 0)
-    Owners = 0,      -- How many players own this item
+    Stock = stock,     -- 0 = regular, 1-100 = stock item
+    CurrentStock = 0,  -- How many have been rolled (starts at 0)
+    Owners = 0,        -- How many players own this item
     SerialOwners = {}, -- Array of {UserId, SerialNumber, Username} for stock items
     CreatedAt = os.time()
   }
