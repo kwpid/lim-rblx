@@ -185,11 +185,16 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
     local newItemFrame = openingCrateItemTemplate:Clone()
     newItemFrame.Name = "Item_" .. i
 
-    -- Set item name
+    -- Set item name with rarity color
     if newItemFrame:FindFirstChild("ItemName") then
       newItemFrame.ItemName.Text = itemData.Name
+      -- Get rarity color based on value
       local rarityColor = ItemRarityModule:GetRarityColor(itemData.Value)
       newItemFrame.ItemName.TextColor3 = rarityColor
+      -- Debug log to verify coloring
+      if i == chosenPosition then
+        print("🎨 Chosen item name color set to: " .. itemData.Rarity .. " (" .. tostring(rarityColor) .. ")")
+      end
     end
 
     -- Set item image using Roblox thumbnail

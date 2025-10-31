@@ -217,32 +217,10 @@ function refresh()
       end
     end
     
-    -- Clear existing image
-    for _, child in ipairs(button:GetChildren()) do
-      if child:IsA("ImageLabel") and child.Name ~= "RareText" then
-        child:Destroy()
-      end
-    end
-    
-    -- Create Roblox thumbnail
-    local img = Instance.new("ImageLabel")
-    img.Name = "ItemImage"
-    img.Size = UDim2.new(1, 0, 1, 0)
-    img.BackgroundTransparency = 1
-    img.BorderSizePixel = 0
-    img.ZIndex = 1
-    img.Parent = button
-    
-    -- Get thumbnail using Roblox asset ID
-    local success, thumbnailUrl = pcall(function()
-      return MarketplaceService:GetProductInfo(item.RobloxId).IconImageAssetId
-    end)
-    
-    if success and thumbnailUrl then
-      img.Image = "rbxassetid://" .. thumbnailUrl
-    else
-      -- Fallback to direct asset thumbnail
-      img.Image = "rbxassetid://" .. item.RobloxId
+    -- Set item image using existing Image element in Sample
+    local img = button:FindFirstChild("Image")
+    if img and img:IsA("ImageLabel") then
+      img.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
     end
     
     table.insert(buttons, button)

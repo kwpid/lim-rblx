@@ -228,6 +228,19 @@ function refresh()
         copiesLabel.Visible = false
       end
     end
+    
+    -- Also update o2 label (Sample.Content.o2) for owner count
+    local o2Label = contentFrame and contentFrame:FindFirstChild("o2")
+    if o2Label then
+      local ownersCount = item.Owners or 0
+      if item.Stock and item.Stock > 0 then
+        -- Stock items show "owners/stock" format
+        o2Label.Text = formatNumber(ownersCount) .. "/" .. formatNumber(item.Stock)
+      else
+        -- Regular items show just owners count
+        o2Label.Text = formatNumber(ownersCount)
+      end
+    end
 
     -- Display value
     local valueLabel = contentFrame and contentFrame:FindFirstChild("Value")
