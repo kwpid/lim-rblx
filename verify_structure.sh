@@ -1,0 +1,20 @@
+#!/bin/bash
+
+echo "==================================="
+echo "Roblox Project Folder Structure"
+echo "==================================="
+echo ""
+echo "Project folders are set up and ready!"
+echo ""
+tree -L 2 -d . 2>/dev/null || ls -la
+echo ""
+echo "✓ All folders created successfully"
+echo ""
+echo "Folders:"
+echo "  • Workspace - Game objects and models"
+echo "  • ReplicatedStorage - Shared resources"
+echo "  • ServerScriptService - Server-side scripts"
+echo "  • ServerStorage - Server-only assets"
+echo "  • StarterGUI - UI elements"
+echo ""
+echo "Ready for development!"

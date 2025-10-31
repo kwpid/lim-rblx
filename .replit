@@ -1,0 +1,25 @@
+[agent]
+expertMode = true
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "verify-structure"
+
+[[workflows.workflow]]
+name = "verify-structure"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash verify_structure.sh"
+
+[workflows.workflow.metadata]
+outputType = "console"
