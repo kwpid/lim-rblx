@@ -22,7 +22,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
     - Give items to players (by User ID or username) with notifications for both admin and recipient
     - Delete items with confirmation dialog (double-click required), removes from all players' inventories with automatic cleanup for offline players
     - Global "New Item" notification system and console commands for database checks
--   **Data Persistence**: Utilizes Roblox DataStore Service for player inventories (with auto-stacking), cash, and inventory value. Auto-saves every 2 minutes. Includes a data version system to manage wipes and resets. Features automatic cleanup of deleted items when offline players rejoin.
+-   **Data Persistence**: Utilizes Roblox DataStore Service for player inventories (with auto-stacking), rolls, cash, and inventory value. Auto-saves every 2 minutes. Includes a data version system to manage wipes and resets. Features automatic cleanup of deleted items when offline players rejoin.
 -   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays stock item counts ("copies: X / Y exist") and regular item counts ("copies: X"). Includes search/filter functionality and detailed item info on click.
 -   **Equipping Items**: Players can equip/unequip items from their inventory, which are then visible to all players. Uses Roblox asset IDs to load and attach items (accessories, hats, tools) to the character, with equipped items persisting across sessions.
 -   **Selling Items**: Players can sell regular items for 80% of their value. Features a confirmation step and options to sell single items or all copies of an item. Selling stock items is prevented. Cash is added to the player's wallet, and inventory value updates automatically.
@@ -57,4 +57,4 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **AutoRoll Enhancement**: Changed autoroll to toggle button that no longer stops on player movement. Button stays visible during rolls with green (ON) and red (OFF) color coding
 -   **Index Auto-Refresh**: Index now automatically refreshes every 3 minutes when open to show current owner counts and stock levels
 -   **Index Bug Fix**: Fixed owners list showing old data - now always fetches fresh owner data from server and updates when index refreshes
--   **Stat Cleanup**: Removed "Cases Opened" stat from player leaderstats as it was not needed. Player data now only tracks Inventory, Cash, InvValue, and EquippedItems
+-   **Leaderstats Update**: Renamed "Cases Opened" to "Rolls" and reordered leaderstats to: InvValue, Rolls, Cash
