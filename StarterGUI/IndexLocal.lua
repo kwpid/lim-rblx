@@ -5,6 +5,12 @@ local player = Players.LocalPlayer
 local gui = script.Parent
 local buttons = {}
 
+-- Get the actual ScreenGui (parent of the frame the script is in)
+local screenGui = gui
+while screenGui and not screenGui:IsA("ScreenGui") do
+  screenGui = screenGui.Parent
+end
+
 local handler = gui:WaitForChild("Handler", 5)
 if not handler then
   warn("❌ Handler not found in Index GUI")
@@ -308,12 +314,14 @@ task.wait(1)
 pcall(refresh)
 
 -- Listen for when the GUI is opened (Enabled property changes to true)
-gui:GetPropertyChangedSignal("Enabled"):Connect(function()
-  if gui.Enabled then
-    -- Refresh data whenever the index is opened
-    pcall(refresh)
-  end
-end)
+if screenGui then
+  screenGui:GetPropertyChangedSignal("Enabled"):Connect(function()
+    if screenGui.Enabled then
+      -- Refresh data whenever the index is opened
+      pcall(refresh)
+    end
+  end)
+end
 
 -- Listen for item database updates (when new items are created)
 local createItemEvent = remoteEvents:FindFirstChild("CreateItemEvent")
