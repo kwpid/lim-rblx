@@ -56,7 +56,7 @@ closeOpenedBtn.MouseButton1Click:Connect(function()
     end
   end
 
-  -- Re-enable roll button
+  -- Re-enable roll button (in case it wasn't already)
   rollButton.Text = "[ROLL]"
   rollButton.Active = true
 end)
@@ -78,27 +78,34 @@ end)
 
 -- Handle crate opening animation
 crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
+
+  -- allItems is an array of items for the animation
+  -- chosenItem is the actual item the player won
   
-  print("🎰 Starting crate animation")
+  print("🎰 Starting crate animation with " .. #allItems .. " items")
   print("🎯 Chosen item: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")")
 
-  -- Create consistent scroll with chosen item in center
-  local numItems = 100  -- Total items in scroll
-  local chosenPosition = 25  -- Position where chosen item will be (center-ish)
+  local numItems = #allItems
+  
+  -- Find the chosen item in the array and place it at a specific position
+  local chosenPosition = nil
+  for i, item in ipairs(allItems) do
+    if item.Name == chosenItem.Name and item.RobloxId == chosenItem.RobloxId then
+      chosenPosition = i
+      print("✓ Found chosen item at position " .. i)
+      break
+    end
+  end
+  
+  -- If not found (shouldn't happen), place it in the middle
+  if not chosenPosition then
+    warn("⚠️ Chosen item not found in animation array, placing at center")
+    chosenPosition = math.floor(numItems / 2)
+  end
 
   -- Create item frames for animation
   for i = 1, numItems do
-    local itemData
-    
-    if i == chosenPosition then
-      -- This is the chosen item position
-      itemData = chosenItem
-      print("✓ Placed chosen item at position " .. i)
-    else
-      -- Random item from the allItems array for filler
-      local randomIndex = rnd:NextInteger(1, #allItems)
-      itemData = allItems[randomIndex]
-    end
+    local itemData = allItems[i]
 
     local newItemFrame = openingCrateItemTemplate:Clone()
     newItemFrame.Name = "Item_" .. i
@@ -135,21 +142,21 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   local padding = openedItemsFrame.ItemsContainer.UIListLayout.Padding.Scale
   local pos1 = 0.5 - cellSize / 2
   local nextOffset = -cellSize - padding
-  
-  -- Calculate final position to land on chosen item
+
   local posFinal = pos1 + (chosenPosition - 1) * nextOffset
-  local rndOffset = 0  -- No random offset for consistent landing
-  
+  local rndOffset = rnd:NextNumber(-cellSize / 2, cellSize / 2)
+  posFinal += rndOffset
+
   local timeOpened = tick()
-  
+
   -- Show opening frame
   openedFrame.CrateName.Text = "Opening Case..."
   closeOpenedBtn.Visible = false
   openedFrame.Visible = true
   openedGui.Enabled = true
 
-  -- Fixed animation speed (easing power)
-  local pow = 2.5
+  -- Use consistent animation speed (easing power)
+  local pow = 4  -- Fixed easing for consistent animation speed
   local lastSlot = 0
 
   -- Animation loop
@@ -184,8 +191,6 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   -- Re-enable roll button
   rollButton.Text = "[ROLL]"
   rollButton.Active = true
-  
-  print("✅ Crate animation complete!")
 end)
 
 print("✅ Crates Client loaded!")
