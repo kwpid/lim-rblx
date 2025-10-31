@@ -8,7 +8,7 @@ local ItemDataStore = DataStoreService:GetDataStore("ItemDatabase_v1")
 local ItemRarityModule = require(game.ReplicatedStorage.ItemRarityModule)
 
 -- 🔑 DATA VERSION - Must match DataStoreManager.lua to keep data in sync
-local DATA_VERSION = "DataVersion.10"
+local DATA_VERSION = "DataVersion.13"
 
 local ItemDatabase = {}
 ItemDatabase.Items = {}
@@ -20,11 +20,11 @@ function ItemDatabase:LoadItems()
     local jsonData = ItemDataStore:GetAsync("AllItems")
     if jsonData then
       local data = HttpService:JSONDecode(jsonData)
-      
+
       -- Check if this is old format (just array) or new format (with version)
       local items
       local savedVersion
-      
+
       if data.Items then
         -- New format with version
         items = data.Items
@@ -34,20 +34,20 @@ function ItemDatabase:LoadItems()
         items = data
         savedVersion = nil
       end
-      
+
       self.Items = items
-      
+
       -- Check if data version matches
       if savedVersion ~= DATA_VERSION then
         print("🔄 Item database version mismatch (Old: " .. tostring(savedVersion) .. ", New: " .. DATA_VERSION .. ")")
         print("🗑️ Resetting all stock counts and owner counts...")
-        
+
         -- Reset stock and owners for all items
         for _, item in ipairs(self.Items) do
           item.CurrentStock = 0
           item.Owners = 0
         end
-        
+
         -- Save with new version
         self.DataVersion = DATA_VERSION
         self:SaveItems()
@@ -215,13 +215,13 @@ function ItemDatabase:GetItemByRobloxId(robloxId)
     warn("❌ ItemDatabase:GetItemByRobloxId - Invalid RobloxId: " .. tostring(robloxId))
     return nil
   end
-  
+
   for _, item in ipairs(self.Items) do
     if item.RobloxId == numericId then
       return item
     end
   end
-  
+
   warn("⚠️ ItemDatabase:GetItemByRobloxId - No item found with RobloxId: " .. numericId)
   return nil
 end
@@ -234,7 +234,7 @@ function ItemDatabase:IncrementOwners(robloxId)
     warn("❌ ItemDatabase:IncrementOwners - Invalid RobloxId: " .. tostring(robloxId))
     return nil
   end
-  
+
   local item = self:GetItemByRobloxId(numericId)
   if item then
     local oldOwners = item.Owners or 0
@@ -256,7 +256,7 @@ function ItemDatabase:GetOwners(robloxId)
     warn("❌ ItemDatabase:GetOwners - Invalid RobloxId: " .. tostring(robloxId))
     return 0
   end
-  
+
   local item = self:GetItemByRobloxId(numericId)
   if item then
     return item.Owners or 0
@@ -272,7 +272,7 @@ function ItemDatabase:DecrementOwners(robloxId)
     warn("❌ ItemDatabase:DecrementOwners - Invalid RobloxId: " .. tostring(robloxId))
     return nil
   end
-  
+
   local item = self:GetItemByRobloxId(numericId)
   if item then
     local oldOwners = item.Owners or 0
@@ -295,24 +295,24 @@ function ItemDatabase:DecrementStock(robloxId)
     warn("❌ ItemDatabase:DecrementStock - Invalid RobloxId: " .. tostring(robloxId))
     return nil
   end
-  
+
   local item = self:GetItemByRobloxId(numericId)
   if not item then
     warn("❌ ItemDatabase:DecrementStock - Item not found for RobloxId: " .. numericId)
     return nil
   end
-  
+
   -- Default to 0 if nil (legacy data)
   local stock = item.Stock or 0
   local currentStock = item.CurrentStock or 0
-  
+
   if stock > 0 and currentStock > 0 then
     item.CurrentStock = currentStock - 1
     self:SaveItems()
     print("📉 Decremented stock for " .. item.Name .. ": " .. currentStock .. " → " .. item.CurrentStock .. " (can be rolled again!)")
     return true
   end
-  
+
   return nil
 end
 
