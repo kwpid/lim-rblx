@@ -29,6 +29,12 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 ### Admin Tools
 - Whitelisted admin system (User ID: 1547280148)
 - Admin panel GUI for creating items
+- Admin panel GUI for giving items to players
+  - Give items by entering Roblox ID, amount, and player ID/username
+  - Supports both player User ID and username (case-insensitive)
+  - Regular items: Adds to player inventory and increments owner count
+  - Stock items not at max: Gives next available serial number
+  - Stock items at max: Increases stock limit by 1 and gives new serial to player
 - Live item preview using Roblox thumbnails
 - Notification system: All players receive "New Item" notification when admin creates an item
 - Console commands: `CheckDatabase()` and `CheckRarities()`
@@ -106,6 +112,16 @@ Before testing in Roblox Studio, you **must** enable DataStore access:
 The scripts now include detailed error messages to help diagnose this issue.
 
 ## Recent Changes
+- **2025-10-31**: Added admin give item functionality
+  - **Give Item System**: Admins can give items to players using the admin panel
+    - New GUI elements: Give_Item_Id, Give_Item_Amount, Player_Id, GiveItem button
+    - Supports player lookup by User ID or username (case-insensitive)
+    - Regular items: Gives specified amount and properly increments owner count
+    - Stock items not at max: Gives next available serial number (as if player rolled it)
+    - Stock items at max: Automatically increases stock limit by 1 and gives new serial
+    - GiveItemEvent RemoteEvent for client-server communication
+    - ItemDatabase:IncreaseStockLimit() function for expanding stock limits
+    - Smart player finding with support for exact username, user ID, and case-insensitive search
 - **2025-10-31**: Added equipped item persistence and notifications
   - **Equipped Items Persistence**: Equipped items now save to player data and auto-equip on rejoin
     - EquippedItems array added to player data structure (DataStoreManager.lua)

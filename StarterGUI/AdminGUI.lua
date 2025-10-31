@@ -14,7 +14,7 @@ local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local checkAdminFunction = remoteEvents:WaitForChild("CheckAdminFunction")
 local createItemEvent = remoteEvents:WaitForChild("CreateItemEvent")
 
--- GUI Elements
+-- GUI Elements - Create Item Section
 local openAdminButton = gui:WaitForChild("Open_Admin")
 local uiFrame = gui:WaitForChild("UIFrame")
 local itemPreview = uiFrame:WaitForChild("ItemPreview"):WaitForChild("ActualPreview")
@@ -23,6 +23,12 @@ local itemNameBox = uiFrame:WaitForChild("Item_Name")
 local itemValueBox = uiFrame:WaitForChild("Item_Value")
 local itemStockBox = uiFrame:WaitForChild("Item_Stock_Optional")
 local createButton = uiFrame:WaitForChild("CreateItem")
+
+-- GUI Elements - Give Item Section
+local giveItemIdBox = uiFrame:WaitForChild("Give_Item_Id")
+local giveItemAmountBox = uiFrame:WaitForChild("Give_Item_Amount")
+local playerIdBox = uiFrame:WaitForChild("Player_Id")
+local giveItemButton = uiFrame:WaitForChild("GiveItem")
 
 -- Start with frame hidden
 uiFrame.Visible = false
@@ -127,4 +133,61 @@ createItemEvent.OnClientEvent:Connect(function(success, message, itemData)
   task.wait(2)
   createButton.Text = "CreateItem"
   createButton.Active = true
+end)
+
+-- ═══════════════════════════════════════════════════
+-- GIVE ITEM FUNCTIONALITY
+-- ═══════════════════════════════════════════════════
+
+-- Wait for GiveItemEvent
+local giveItemEvent = remoteEvents:WaitForChild("GiveItemEvent")
+
+-- Give item button
+giveItemButton.MouseButton1Click:Connect(function()
+  local giveItemId = tonumber(giveItemIdBox.Text)
+  local giveAmount = tonumber(giveItemAmountBox.Text) or 1
+  local playerIdentifier = playerIdBox.Text
+
+  -- Validate inputs
+  if not giveItemId then
+    warn("❌ Give Item ID must be a number!")
+    return
+  end
+
+  if not giveAmount or giveAmount < 1 then
+    warn("❌ Give Amount must be at least 1!")
+    return
+  end
+
+  if playerIdentifier == "" then
+    warn("❌ Player ID/Username cannot be empty!")
+    return
+  end
+
+  -- Disable button while processing
+  giveItemButton.Text = "Giving..."
+  giveItemButton.Active = false
+
+  -- Send to server
+  giveItemEvent:FireServer(giveItemId, giveAmount, playerIdentifier)
+end)
+
+-- Handle give item response
+giveItemEvent.OnClientEvent:Connect(function(success, message)
+  if success then
+    -- Clear fields
+    giveItemIdBox.Text = ""
+    giveItemAmountBox.Text = ""
+    playerIdBox.Text = ""
+
+    giveItemButton.Text = "✅ Given!"
+  else
+    warn("❌ " .. message)
+    giveItemButton.Text = "❌ Failed"
+  end
+
+  -- Reset button after delay
+  task.wait(2)
+  giveItemButton.Text = "GiveItem"
+  giveItemButton.Active = true
 end)

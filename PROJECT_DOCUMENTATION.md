@@ -43,10 +43,17 @@ Items are automatically assigned rarity based on their value:
 - **Whitelisted Admins**: Defined by User ID in AdminConfig.lua
   - Current Admin ID: 1547280148
 - **Admin Panel Features:**
-  - Create new items with Roblox ID, name, value, and optional stock
-  - Live preview of item thumbnail
-  - Auto-fills item name from Roblox marketplace
-  - Input validation for all fields
+  - **Create Items**: Create new items with Roblox ID, name, value, and optional stock
+    - Live preview of item thumbnail
+    - Auto-fills item name from Roblox marketplace
+    - Input validation for all fields
+  - **Give Items to Players**: Give items directly to players
+    - Enter item Roblox ID, amount to give, and player ID/username
+    - Supports both User ID (number) and username (case-insensitive)
+    - Regular items: Gives specified amount, properly increments owner count
+    - Stock items not at max: Gives next available serial number (as if rolled)
+    - Stock items at max: Automatically increases stock limit by 1, gives new serial
+    - Only works for players currently in the game
 - **Console Commands:**
   - `CheckDatabase()` - View all items sorted by value
   - `CheckRarities()` - View item count by rarity tier
@@ -318,11 +325,17 @@ For the game to work properly in Roblox, you need:
    - Open_Admin button
    - UIFrame (panel)
    - ItemPreview with ActualPreview ImageLabel
-   - Item_Id TextBox
-   - Item_Name TextBox
-   - Item_Value TextBox
-   - Item_Stock_Optional TextBox
-   - CreateItem button
+   - **Create Item Section:**
+     - Item_Id TextBox
+     - Item_Name TextBox
+     - Item_Value TextBox
+     - Item_Stock_Optional TextBox
+     - CreateItem button
+   - **Give Item Section:**
+     - Give_Item_Id TextBox
+     - Give_Item_Amount TextBox
+     - Player_Id TextBox
+     - GiveItem button
 
 2. **OpenedCrateGui ScreenGui** with structure:
    - CrateFrame

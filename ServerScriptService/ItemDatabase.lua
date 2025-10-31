@@ -305,6 +305,37 @@ function ItemDatabase:DecrementStock(robloxId)
   return nil
 end
 
+-- Increase stock limit for an item (when admin gives a sold-out stock item)
+-- Increases both Stock and CurrentStock by 1, returns the new serial number
+function ItemDatabase:IncreaseStockLimit(robloxId)
+  -- Convert to number to ensure proper lookup
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    warn("❌ ItemDatabase:IncreaseStockLimit - Invalid RobloxId: " .. tostring(robloxId))
+    return nil
+  end
+
+  local item = self:GetItemByRobloxId(numericId)
+  if not item then
+    warn("❌ ItemDatabase:IncreaseStockLimit - Item not found for RobloxId: " .. numericId)
+    return nil
+  end
+
+  -- Default to 0 if nil (legacy data)
+  local stock = item.Stock or 0
+
+  if stock > 0 then
+    -- Increase stock limit by 1
+    item.Stock = stock + 1
+    item.CurrentStock = (item.CurrentStock or 0) + 1
+    self:SaveItems()
+    print("📈 Increased stock limit for " .. item.Name .. " from " .. stock .. " to " .. item.Stock)
+    return item.CurrentStock -- Return the new serial number
+  end
+
+  return nil
+end
+
 -- Initialize database
 ItemDatabase:LoadItems()
 
