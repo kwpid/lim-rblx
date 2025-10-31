@@ -82,30 +82,25 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   -- allItems is an array of items for the animation
   -- chosenItem is the actual item the player won
   
-  print("🎰 Starting crate animation with " .. #allItems .. " items")
+  print("🎰 Starting crate animation")
   print("🎯 Chosen item: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")")
 
-  local numItems = #allItems
-  
-  -- Find the chosen item in the array and place it at a specific position
-  local chosenPosition = nil
-  for i, item in ipairs(allItems) do
-    if item.Name == chosenItem.Name and item.RobloxId == chosenItem.RobloxId then
-      chosenPosition = i
-      print("✓ Found chosen item at position " .. i)
-      break
-    end
-  end
-  
-  -- If not found (shouldn't happen), place it in the middle
-  if not chosenPosition then
-    warn("⚠️ Chosen item not found in animation array, placing at center")
-    chosenPosition = math.floor(numItems / 2)
-  end
+  local numItems = 100  -- Fixed number for consistent scroll
+  local chosenPosition = 25  -- Position where chosen item will appear
 
   -- Create item frames for animation
   for i = 1, numItems do
-    local itemData = allItems[i]
+    local itemData
+    
+    if i == chosenPosition then
+      -- This position gets the actual chosen item
+      itemData = chosenItem
+      print("✓ Placed chosen item at position " .. i)
+    else
+      -- All other positions get random items from allItems
+      local randomIndex = rnd:NextInteger(1, #allItems)
+      itemData = allItems[randomIndex]
+    end
 
     local newItemFrame = openingCrateItemTemplate:Clone()
     newItemFrame.Name = "Item_" .. i
@@ -144,8 +139,7 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   local nextOffset = -cellSize - padding
 
   local posFinal = pos1 + (chosenPosition - 1) * nextOffset
-  local rndOffset = rnd:NextNumber(-cellSize / 2, cellSize / 2)
-  posFinal += rndOffset
+  local rndOffset = 0  -- No random offset - lands exactly on chosen item
 
   local timeOpened = tick()
 
@@ -156,7 +150,7 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   openedGui.Enabled = true
 
   -- Use consistent animation speed (easing power)
-  local pow = 4  -- Fixed easing for consistent animation speed
+  local pow = 2.5  -- Fixed easing for consistent animation speed
   local lastSlot = 0
 
   -- Animation loop
