@@ -106,25 +106,37 @@ local function setupPlayer(player)
   leaderstats.Name = "leaderstats"
   leaderstats.Parent = player
 
-  local cash = Instance.new("IntValue")
-  cash.Name = "Cash"
-  cash.Value = data.Cash or 0
-  cash.Parent = leaderstats
-
+  -- Order: InvValue, Rolls, Cash
   local invValue = Instance.new("IntValue")
   invValue.Name = "InvValue"
   invValue.Value = data.InvValue or 0
   invValue.Parent = leaderstats
 
-  cash.Changed:Connect(function(newValue)
-    if PlayerData[player.UserId] then
-      PlayerData[player.UserId].Cash = newValue
-    end
-  end)
+  local rolls = Instance.new("IntValue")
+  rolls.Name = "Rolls"
+  rolls.Value = data.Rolls or 0
+  rolls.Parent = leaderstats
+
+  local cash = Instance.new("IntValue")
+  cash.Name = "Cash"
+  cash.Value = data.Cash or 0
+  cash.Parent = leaderstats
 
   invValue.Changed:Connect(function(newValue)
     if PlayerData[player.UserId] then
       PlayerData[player.UserId].InvValue = newValue
+    end
+  end)
+
+  rolls.Changed:Connect(function(newValue)
+    if PlayerData[player.UserId] then
+      PlayerData[player.UserId].Rolls = newValue
+    end
+  end)
+
+  cash.Changed:Connect(function(newValue)
+    if PlayerData[player.UserId] then
+      PlayerData[player.UserId].Cash = newValue
     end
   end)
 

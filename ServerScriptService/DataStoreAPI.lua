@@ -120,6 +120,25 @@ function DataStoreAPI:AddCash(player, amount)
   return false
 end
 
+-- Increment rolls
+function DataStoreAPI:IncrementRolls(player)
+  local data = self:GetPlayerData(player)
+  if data then
+    DataStoreManager:IncrementRolls(data)
+
+    -- Update leaderstats
+    if player:FindFirstChild("leaderstats") then
+      local rolls = player.leaderstats:FindFirstChild("Rolls")
+      if rolls then
+        rolls.Value = data.Rolls
+      end
+    end
+
+    return true
+  end
+  return false
+end
+
 -- Get player's inventory (with Owners count added to each item)
 function DataStoreAPI:GetInventory(player)
   local data = self:GetPlayerData(player)
