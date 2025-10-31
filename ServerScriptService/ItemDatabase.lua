@@ -242,7 +242,15 @@ ItemDatabase:LoadItems()
 
 -- Set up RemoteFunction for clients to get all items
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local remoteEventsFolder = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+-- Create RemoteEvents folder if it doesn't exist
+local remoteEventsFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+if not remoteEventsFolder then
+  remoteEventsFolder = Instance.new("Folder")
+  remoteEventsFolder.Name = "RemoteEvents"
+  remoteEventsFolder.Parent = ReplicatedStorage
+  print("✅ Created RemoteEvents folder")
+end
 
 -- Create RemoteFunction if it doesn't exist
 local getAllItemsFunction = remoteEventsFolder:FindFirstChild("GetAllItemsFunction")
@@ -250,6 +258,7 @@ if not getAllItemsFunction then
   getAllItemsFunction = Instance.new("RemoteFunction")
   getAllItemsFunction.Name = "GetAllItemsFunction"
   getAllItemsFunction.Parent = remoteEventsFolder
+  print("✅ Created GetAllItemsFunction")
 end
 
 -- Set up the function to return all items to clients
@@ -272,5 +281,7 @@ getAllItemsFunction.OnServerInvoke = function(player)
   print("✅ Sending " .. #itemsCopy .. " items to " .. player.Name)
   return itemsCopy
 end
+
+print("✅ GetAllItemsFunction ready to serve item data")
 
 return ItemDatabase
