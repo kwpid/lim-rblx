@@ -34,6 +34,14 @@ function DataStoreAPI:AddItem(player, itemData)
       ObtainedAt = os.time()
     })
     isNewOwner = true -- Stock items always count as new owner
+    
+    -- Record the owner of this serial number in the ItemDatabase
+    ItemDatabase:RecordSerialOwner(
+      itemData.RobloxId,
+      player.UserId,
+      player.Name,
+      itemData.SerialNumber
+    )
   else
     -- Regular item - check if already exists and stack
     local found = false

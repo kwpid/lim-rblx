@@ -1,6 +1,5 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local MarketplaceService = game:GetService("MarketplaceService")
 
 local player = Players.LocalPlayer
 local gui = script.Parent
@@ -8,19 +7,25 @@ local buttons = {}
 
 local handler = gui:WaitForChild("Handler", 5)
 if not handler then
-  warn("❌ Handler not found in InventorySystem GUI")
+  warn("❌ Handler not found in Index GUI")
   return
 end
 
-local sample = script:FindFirstChild("Sample")
+local sample = handler:FindFirstChild("Sample")
 if not sample then
-  warn("❌ Sample template not found")
+  warn("❌ Sample template not found in Handler")
+  return
+end
+
+local userTemplate = script:FindFirstChild("UserTemplate")
+if not userTemplate then
+  warn("❌ UserTemplate not found in IndexLocal script")
   return
 end
 
 local frame = gui:WaitForChild("Frame", 5)
 if not frame then
-  warn("❌ Frame not found in InventorySystem GUI")
+  warn("❌ Frame not found in Index GUI")
   return
 end
 
@@ -39,9 +44,6 @@ elseif not selected:IsA("StringValue") then
 end
 
 local selectedItemData = nil
-local equippedItems = {}
-local sellConfirmation = false
-local sellAllConfirmation = false
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents", 10)
 if not remoteEvents then
@@ -49,18 +51,19 @@ if not remoteEvents then
   return
 end
 
-local getInventoryFunction = remoteEvents:WaitForChild("GetInventoryFunction", 10)
-if not getInventoryFunction then
-  warn("❌ GetInventoryFunction not found")
+local getAllItemsFunction = remoteEvents:WaitForChild("GetAllItemsFunction", 10)
+if not getAllItemsFunction then
+  warn("❌ GetAllItemsFunction not found")
   return
 end
 
-local equipItemEvent = remoteEvents:WaitForChild("EquipItemEvent", 10)
-local sellItemEvent = remoteEvents:WaitForChild("SellItemEvent", 10)
-local sellAllItemEvent = remoteEvents:WaitForChild("SellAllItemEvent", 10)
-local getEquippedItemsFunction = remoteEvents:WaitForChild("GetEquippedItemsFunction", 10)
+local getItemOwnersFunction = remoteEvents:WaitForChild("GetItemOwnersFunction", 10)
+if not getItemOwnersFunction then
+  warn("❌ GetItemOwnersFunction not found")
+  return
+end
 
--- Rarity colors matching our 8-tier system (from ItemRarityModule)
+-- Rarity colors matching our 8-tier system
 local rarityColors = {
   ["Common"] = Color3.fromRGB(170, 170, 170),
   ["Uncommon"] = Color3.fromRGB(85, 170, 85),
@@ -82,26 +85,14 @@ function formatNumber(n)
 end
 
 function refresh()
-  local inventory
+  local allItems
   local success, err = pcall(function()
-    inventory = getInventoryFunction:InvokeServer()
+    allItems = getAllItemsFunction:InvokeServer()
   end)
 
-  if not success or not inventory or type(inventory) ~= "table" then
+  if not success or not allItems or type(allItems) ~= "table" then
+    warn("❌ Failed to get all items: " .. tostring(err))
     return
-  end
-
-  if getEquippedItemsFunction then
-    local equippedSuccess, equippedResult = pcall(function()
-      return getEquippedItemsFunction:InvokeServer()
-    end)
-
-    if equippedSuccess and equippedResult then
-      equippedItems = {}
-      for _, robloxId in ipairs(equippedResult) do
-        equippedItems[robloxId] = true
-      end
-    end
   end
 
   for _, button in pairs(buttons) do
@@ -109,11 +100,17 @@ function refresh()
   end
   buttons = {}
 
-  table.sort(inventory, function(a, b)
-    return a.Value > b.Value
+  table.sort(allItems, function(a, b)
+    if a.Value ~= b.Value then
+      return a.Value > b.Value
+    elseif a.Rarity ~= b.Rarity then
+      return a.Rarity > b.Rarity
+    else
+      return a.Name < b.Name
+    end
   end)
 
-  for i, item in ipairs(inventory) do
+  for i, item in ipairs(allItems) do
     local button = sample:Clone()
     button.Name = item.Name or "Item_" .. i
     button.LayoutOrder = i
@@ -133,26 +130,13 @@ function refresh()
       content2Frame.BorderColor3 = rarityColor
     end
 
-    -- Display quantity or serial number
+    -- Display stock info
     local qtyLabel = button:FindFirstChild("Qty")
     if qtyLabel then
-      if item.SerialNumber then
-        qtyLabel.Text = "#" .. item.SerialNumber
-      elseif item.Amount then
-        qtyLabel.Text = item.Amount .. "x"
+      if item.Stock and item.Stock > 0 then
+        qtyLabel.Text = item.CurrentStock .. "/" .. item.Stock
       else
-        qtyLabel.Text = "1x"
-      end
-    end
-
-    -- Display serial number in dedicated label (if stock item)
-    local serialLabel = button:FindFirstChild("Serial")
-    if serialLabel then
-      if item.SerialNumber then
-        serialLabel.Text = "#" .. item.SerialNumber
-        serialLabel.Visible = true
-      else
-        serialLabel.Visible = false
+        qtyLabel.Text = "∞"
       end
     end
 
@@ -168,13 +152,13 @@ function refresh()
       end
     end
 
-    -- Hide t1 label if it doesn't exist on item
+    -- Hide t1 label
     local t1Label = button:FindFirstChild("t1")
     if t1Label then
       t1Label.Visible = false
     end
 
-    -- Display copies (owners count) with stock info for stock items
+    -- Display owners count
     local copiesLabel = button:FindFirstChild("copies")
     if copiesLabel then
       local ownersCount = item.Owners or 0
@@ -182,10 +166,8 @@ function refresh()
 
       if ownersCount > 0 then
         if stockCount > 0 then
-          -- Stock item: show "copies: X / Y exist"
           copiesLabel.Text = "copies: " .. ownersCount .. " / " .. stockCount .. " exist"
         else
-          -- Regular item: show "copies: X"
           copiesLabel.Text = "copies: " .. ownersCount
         end
         copiesLabel.Visible = true
@@ -194,15 +176,13 @@ function refresh()
       end
     end
 
-    -- Also update o2 label (Sample.Content.o2) for owner count
+    -- Also update o2 label
     local o2Label = contentFrame and contentFrame:FindFirstChild("o2")
     if o2Label then
       local ownersCount = item.Owners or 0
       if item.Stock and item.Stock > 0 then
-        -- Stock items show "owners/stock" format
         o2Label.Text = formatNumber(ownersCount) .. "/" .. formatNumber(item.Stock)
       else
-        -- Regular items show just owners count
         o2Label.Text = formatNumber(ownersCount)
       end
     end
@@ -228,7 +208,7 @@ function refresh()
       nameLabel.Text = displayName
     end
 
-    -- Set item image using existing ImageLabel (Sample.Image)
+    -- Set item image
     local img = button:FindFirstChild("Image")
     if img and img:IsA("ImageLabel") then
       img.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
@@ -236,65 +216,78 @@ function refresh()
 
     table.insert(buttons, button)
 
+    -- Click handler to show item details
     button.MouseButton1Click:Connect(function()
-      local itemNameText = frame:WaitForChild("ItemName")
-      local itemValueText = frame:WaitForChild("Value")
-      local totalValueText = frame:FindFirstChild("TotalValue")
-      local imgFrame = frame:WaitForChild("ImageLabel")
-
-      itemNameText.Text = item.Name
-      selected.Value = item.Name
       selectedItemData = item
+      selected.Value = item.Name
 
-      itemValueText.Text = "R$ " .. formatNumber(item.Value)
+      -- Update frame details
+      local itemNameText = frame:FindFirstChild("ItemName")
+      local totalOwnersText = frame:FindFirstChild("TotalOwners")
+      local valueText = frame:FindFirstChild("Value")
+      local ownerList = frame:FindFirstChild("OwnerList")
 
-      -- Calculate total value
-      if totalValueText then
-        local totalValue = item.Value * (item.Amount or 1)
-        totalValueText.Text = "Total: R$ " .. formatNumber(totalValue)
+      if itemNameText then
+        itemNameText.Text = item.Name
       end
 
-      -- Clear previous image
-      for _, child in ipairs(imgFrame:GetChildren()) do
-        child:Destroy()
+      if totalOwnersText then
+        totalOwnersText.Text = "Owners: " .. formatNumber(item.Owners or 0)
       end
 
-      -- Show item preview
-      local previewImg = Instance.new("ImageLabel")
-      previewImg.Size = UDim2.new(1, 0, 1, 0)
-      previewImg.BackgroundTransparency = 1
-      previewImg.BorderSizePixel = 0
-      previewImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
-      previewImg.Parent = imgFrame
+      if valueText then
+        valueText.Text = "R$ " .. formatNumber(item.Value)
+      end
 
-      sellConfirmation = false
-      sellAllConfirmation = false
+      -- Show/hide OwnerList based on if it's a stock item
+      if ownerList then
+        local isStockItem = item.Stock and item.Stock > 0
+        ownerList.Visible = isStockItem
 
-      local equipButton = frame:FindFirstChild("Equip")
-      if equipButton then
-        if equippedItems[item.RobloxId] then
-          equipButton.Text = "Unequip"
-        else
-          equipButton.Text = "Equip"
+        if isStockItem then
+          -- Clear previous owner entries
+          for _, child in ipairs(ownerList:GetChildren()) do
+            if child:IsA("Frame") or child:IsA("TextButton") then
+              child:Destroy()
+            end
+          end
+
+          -- Get owners from server
+          local success, owners = pcall(function()
+            return getItemOwnersFunction:InvokeServer(item.RobloxId)
+          end)
+
+          if success and owners and type(owners) == "table" then
+            -- Create owner entries (already sorted by serial number from server)
+            for i, owner in ipairs(owners) do
+              local ownerEntry = userTemplate:Clone()
+              ownerEntry.Name = "Owner_" .. i
+              ownerEntry.LayoutOrder = i
+              ownerEntry.Visible = true
+              ownerEntry.Parent = ownerList
+
+              -- Set username with @ prefix
+              local usernameLabel = ownerEntry:FindFirstChild("Username")
+              if usernameLabel then
+                usernameLabel.Text = "@" .. owner.Username
+              end
+
+              -- Set serial with # prefix
+              local serialLabel = ownerEntry:FindFirstChild("Serial")
+              if serialLabel then
+                serialLabel.Text = "#" .. owner.SerialNumber
+              end
+
+              -- Set player avatar (PFP)
+              local pfpImage = ownerEntry:FindFirstChild("PlayerPFP")
+              if pfpImage and pfpImage:IsA("ImageLabel") then
+                pfpImage.Image = "rbxthumb://type=AvatarHeadShot&id=" .. owner.UserId .. "&w=150&h=150"
+              end
+            end
+          else
+            warn("❌ Failed to get item owners: " .. tostring(owners))
+          end
         end
-      end
-
-      local sellButton = frame:FindFirstChild("Sell")
-      local sellAllButton = frame:FindFirstChild("SellAll")
-
-      if sellButton then
-        sellButton.Text = "Sell"
-      end
-      if sellAllButton then
-        sellAllButton.Text = "Sell All"
-      end
-
-      local isStockItem = item.Stock and item.Stock > 0
-      if sellButton then
-        sellButton.Visible = not isStockItem
-      end
-      if sellAllButton then
-        sellAllButton.Visible = not isStockItem
       end
     end)
   end
@@ -314,74 +307,11 @@ end
 task.wait(1)
 pcall(refresh)
 
-local inventoryUpdatedEvent = remoteEvents:FindFirstChild("InventoryUpdatedEvent")
-if inventoryUpdatedEvent then
-  inventoryUpdatedEvent.OnClientEvent:Connect(function()
+-- Listen for item database updates (when new items are created)
+local createItemEvent = remoteEvents:FindFirstChild("CreateItemEvent")
+if createItemEvent then
+  createItemEvent.OnClientEvent:Connect(function()
+    task.wait(0.5)
     pcall(refresh)
-  end)
-end
-
-local equipButton = frame:FindFirstChild("Equip")
-if equipButton and equipItemEvent then
-  equipButton.MouseButton1Click:Connect(function()
-    if selectedItemData and selectedItemData.RobloxId then
-      local isEquipped = equippedItems[selectedItemData.RobloxId]
-
-      if isEquipped then
-        equipItemEvent:FireServer(selectedItemData.RobloxId, true)
-        equippedItems[selectedItemData.RobloxId] = nil
-        equipButton.Text = "Equip"
-      else
-        equipItemEvent:FireServer(selectedItemData.RobloxId, false)
-        equippedItems[selectedItemData.RobloxId] = true
-        equipButton.Text = "Unequip"
-      end
-    end
-  end)
-end
-
-local sellButton = frame:FindFirstChild("Sell")
-if sellButton and sellItemEvent then
-  sellButton.MouseButton1Click:Connect(function()
-    if selectedItemData and selectedItemData.RobloxId then
-      if not sellConfirmation then
-        sellConfirmation = true
-        sellButton.Text = "Are you sure?"
-
-        task.delay(3, function()
-          if sellConfirmation then
-            sellConfirmation = false
-            sellButton.Text = "Sell"
-          end
-        end)
-      else
-        sellItemEvent:FireServer(selectedItemData.RobloxId, selectedItemData.SerialNumber)
-        sellConfirmation = false
-        sellButton.Text = "Sell"
-      end
-    end
-  end)
-end
-
-local sellAllButton = frame:FindFirstChild("SellAll")
-if sellAllButton and sellAllItemEvent then
-  sellAllButton.MouseButton1Click:Connect(function()
-    if selectedItemData and selectedItemData.RobloxId then
-      if not sellAllConfirmation then
-        sellAllConfirmation = true
-        sellAllButton.Text = "Are you sure?"
-
-        task.delay(3, function()
-          if sellAllConfirmation then
-            sellAllConfirmation = false
-            sellAllButton.Text = "Sell All"
-          end
-        end)
-      else
-        sellAllItemEvent:FireServer(selectedItemData.RobloxId)
-        sellAllConfirmation = false
-        sellAllButton.Text = "Sell All"
-      end
-    end
   end)
 end

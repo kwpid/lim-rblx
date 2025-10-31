@@ -52,7 +52,7 @@ function ItemDatabase:LoadItems()
         self.DataVersion = savedVersion
       end
 
-      -- Migrate legacy items (add Stock/CurrentStock/Owners if missing)
+      -- Migrate legacy items (add Stock/CurrentStock/Owners/SerialOwners if missing)
       for _, item in ipairs(self.Items) do
         if item.Stock == nil then
           item.Stock = 0
@@ -62,6 +62,9 @@ function ItemDatabase:LoadItems()
         end
         if item.Owners == nil then
           item.Owners = 0
+        end
+        if item.SerialOwners == nil then
+          item.SerialOwners = {}
         end
       end
     else
@@ -137,6 +140,7 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
     Stock = stock,    -- 0 = regular, 1-100 = stock item
     CurrentStock = 0, -- How many have been rolled (starts at 0)
     Owners = 0,       -- How many players own this item
+    SerialOwners = {}, -- Array of {UserId, SerialNumber, Username} for stock items
     CreatedAt = os.time()
   }
 
@@ -307,7 +311,7 @@ end
 
 -- Increase stock limit for an item (when admin gives a sold-out stock item)
 -- Increases both Stock and CurrentStock by 1, returns the new serial number
-function ItemDatabase:IncreaseStockLimit(robloxId)
+function ItemDatabase:IncreaseStockLimit(robloxId, userId, username)
   -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
@@ -328,12 +332,104 @@ function ItemDatabase:IncreaseStockLimit(robloxId)
     -- Increase stock limit by 1
     item.Stock = stock + 1
     item.CurrentStock = (item.CurrentStock or 0) + 1
+    
+    -- Record the owner of this new serial
+    if userId and username then
+      if not item.SerialOwners then
+        item.SerialOwners = {}
+      end
+      table.insert(item.SerialOwners, {
+        UserId = userId,
+        SerialNumber = item.CurrentStock,
+        Username = username
+      })
+    end
+    
     self:SaveItems()
     print("📈 Increased stock limit for " .. item.Name .. " from " .. stock .. " to " .. item.Stock)
     return item.CurrentStock -- Return the new serial number
   end
 
   return nil
+end
+
+-- Record owner for a serial number (when stock item is claimed)
+function ItemDatabase:RecordSerialOwner(robloxId, userId, username, serialNumber)
+  -- Convert to number to ensure proper lookup
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    warn("❌ ItemDatabase:RecordSerialOwner - Invalid RobloxId: " .. tostring(robloxId))
+    return false
+  end
+
+  local item = self:GetItemByRobloxId(numericId)
+  if not item then
+    warn("❌ ItemDatabase:RecordSerialOwner - Item not found for RobloxId: " .. numericId)
+    return false
+  end
+
+  -- Initialize SerialOwners if it doesn't exist
+  if not item.SerialOwners then
+    item.SerialOwners = {}
+  end
+
+  -- Check if this serial number is already recorded
+  for _, owner in ipairs(item.SerialOwners) do
+    if owner.SerialNumber == serialNumber then
+      -- Serial already recorded, update if needed
+      owner.UserId = userId
+      owner.Username = username
+      self:SaveItems()
+      return true
+    end
+  end
+
+  -- Add new serial owner record
+  table.insert(item.SerialOwners, {
+    UserId = userId,
+    SerialNumber = serialNumber,
+    Username = username
+  })
+  
+  self:SaveItems()
+  return true
+end
+
+-- Get all owners of a stock item (sorted by serial number)
+function ItemDatabase:GetSerialOwners(robloxId)
+  -- Convert to number to ensure proper lookup
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    warn("❌ ItemDatabase:GetSerialOwners - Invalid RobloxId: " .. tostring(robloxId))
+    return {}
+  end
+
+  local item = self:GetItemByRobloxId(numericId)
+  if not item then
+    warn("❌ ItemDatabase:GetSerialOwners - Item not found for RobloxId: " .. numericId)
+    return {}
+  end
+
+  -- Return empty if not a stock item or no owners
+  if not item.SerialOwners or #item.SerialOwners == 0 then
+    return {}
+  end
+
+  -- Sort by serial number (lowest first)
+  local sorted = {}
+  for _, owner in ipairs(item.SerialOwners) do
+    table.insert(sorted, {
+      UserId = owner.UserId,
+      SerialNumber = owner.SerialNumber,
+      Username = owner.Username
+    })
+  end
+  
+  table.sort(sorted, function(a, b)
+    return a.SerialNumber < b.SerialNumber
+  end)
+
+  return sorted
 end
 
 -- Initialize database
@@ -378,6 +474,17 @@ getAllItemsFunction.OnServerInvoke = function(player)
   return itemsCopy
 end
 
+-- Create RemoteFunction for getting item owners
+local getItemOwnersFunction = remoteEventsFolder:FindFirstChild("GetItemOwnersFunction")
+if not getItemOwnersFunction then
+  getItemOwnersFunction = Instance.new("RemoteFunction")
+  getItemOwnersFunction.Name = "GetItemOwnersFunction"
+  getItemOwnersFunction.Parent = remoteEventsFolder
+end
 
+-- Set up the function to return item owners to clients
+getItemOwnersFunction.OnServerInvoke = function(player, robloxId)
+  return ItemDatabase:GetSerialOwners(robloxId)
+end
 
 return ItemDatabase

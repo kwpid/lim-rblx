@@ -194,7 +194,7 @@ giveItemEvent.OnServerEvent:Connect(function(adminPlayer, giveItemId, giveAmount
         end
       else
         -- Stock is full - increase limit and claim new serial
-        serialNumber = ItemDatabase:IncreaseStockLimit(giveItemId)
+        serialNumber = ItemDatabase:IncreaseStockLimit(giveItemId, targetPlayer.UserId, targetPlayer.Name)
         if serialNumber then
           stock = stock + 1
           currentStock = currentStock + 1
