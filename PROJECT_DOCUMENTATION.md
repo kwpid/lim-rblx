@@ -61,7 +61,6 @@ Items are automatically assigned rarity based on their value:
 ### 6. Data Persistence (DataStore)
 - **Player Data Saved:**
   - Inventory (all owned items)
-  - Cases Opened count
   - Cash (currently unused but tracked)
   - InvValue (total inventory value, automatically calculated)
 - **Item Database:**
@@ -198,7 +197,6 @@ Client-side UI scripts:
 7. Server waits 5 seconds then awards item
 8. Server checks stock and claims serial number if needed
 9. Server adds item to player inventory via DataStoreAPI
-10. Server increments cases opened counter
 
 ### Inventory Update Flow:
 1. Server adds item to player data (DataStoreAPI.lua)
@@ -221,11 +219,10 @@ Client-side UI scripts:
     -- Stock item (unique):
     {RobloxId = 67890, Name = "Rare Item", Value = 50000, Rarity = "Ultra Rare", SerialNumber = 5, ObtainedAt = timestamp}
   },
-  CasesOpened = 10,
   Cash = 0,
   InvValue = 53000,  -- Auto-calculated: (1000 × 3) + (50000 × 1)
   EquippedItems = {12345, 67890},  -- Array of RobloxIds of equipped items
-  DataVersion = "DataVersion.10"
+  DataVersion = "DataVersion.15"
 }
 ```
 
