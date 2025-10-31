@@ -49,13 +49,27 @@ function DataStoreManager:LoadData(player)
     end
   end)
 
-  if success then
-    return data
-  else
-    warn("❌ Failed to load data for " .. player.Name .. ": " .. errorMessage)
+  if not success then
+    warn("❌ DataStore Error for " .. player.Name .. ": " .. tostring(errorMessage))
+    warn("⚠️ SOLUTION: Enable Studio API Access in Game Settings > Security > Studio Access to API Services")
+    warn("⚠️ Without API access, leaderstats and inventory will not work properly!")
     -- Return default data on error to prevent data loss
     return self:GetDefaultData()
   end
+  
+  -- Validate data structure
+  if not data or type(data) ~= "table" then
+    warn("❌ Invalid data structure loaded for " .. player.Name)
+    return self:GetDefaultData()
+  end
+  
+  -- Ensure all required fields exist
+  if not data.Inventory then data.Inventory = {} end
+  if not data.CasesOpened then data.CasesOpened = 0 end
+  if not data.Cash then data.Cash = 0 end
+  if not data.InvValue then data.InvValue = 0 end
+  
+  return data
 end
 
 -- Get a copy of default data

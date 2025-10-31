@@ -201,6 +201,23 @@ Client-side UI scripts:
 
 ## 🚀 Important Technical Notes
 
+### ⚠️ CRITICAL: Studio API Access Setup
+**Before testing in Roblox Studio, you MUST enable DataStore access:**
+
+1. Open your game in Roblox Studio
+2. Go to **Game Settings** (Home tab → Game Settings)
+3. Navigate to **Security** tab
+4. Enable **"Studio Access to API Services"**
+5. Click **Save**
+
+**Without this setting:**
+- ❌ Leaderstats will not appear on players
+- ❌ Inventory will not load or display items
+- ❌ Player data won't save between sessions
+- ❌ You'll see DataStore error messages in output
+
+**The scripts will now show helpful error messages if this isn't enabled!**
+
 ### RemoteEvents Setup:
 All client-server communication uses RemoteEvents in ReplicatedStorage/RemoteEvents/:
 - `CreateItemEvent` - Admin item creation

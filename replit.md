@@ -62,7 +62,23 @@ This is a **Roblox crate opening/unboxing game** with weighted probability item 
 - **CratesClient.lua** - Crate animation client script
 - **InventorySystem.lua** - Inventory display client script
 
+## Important Setup Requirements
+
+### ⚠️ Studio API Access (REQUIRED)
+Before testing in Roblox Studio, you **must** enable DataStore access:
+1. Game Settings → Security → Enable "Studio Access to API Services"
+2. Without this, leaderstats and inventory will not work
+
+The scripts now include detailed error messages to help diagnose this issue.
+
 ## Recent Changes
+- **2025-10-31**: Fixed leaderstats and inventory loading issues
+  - Added comprehensive error handling for DataStore failures
+  - Added validation for data structure to prevent nil errors
+  - Added helpful error messages pointing to Studio API Access requirement
+  - Improved logging to show player data on join (Cash, Cases, Inventory count)
+  - Fixed inventory refresh with better error handling and pcall protection
+  - Inventory now shows diagnostic messages when data fails to load
 - **2025-10-31**: Initial project setup with all core Lua scripts added
 - **2025-10-31**: Created comprehensive PROJECT_DOCUMENTATION.md file
 - **2025-10-31**: Added inventory value tracking system (InvValue)

@@ -18,6 +18,13 @@ Players.PlayerAdded:Connect(function(player)
 
   -- Load their data
   local data = DataStoreManager:LoadData(player)
+  
+  if not data then
+    warn("❌ CRITICAL: Failed to load data for " .. player.Name)
+    warn("⚠️ Check if Studio API Access is enabled in Game Settings > Security")
+    data = DataStoreManager:GetDefaultData()
+  end
+  
   PlayerData[player.UserId] = data
 
   -- Create leaderstats for display
@@ -27,12 +34,12 @@ Players.PlayerAdded:Connect(function(player)
 
   local cash = Instance.new("IntValue")
   cash.Name = "Cash"
-  cash.Value = data.Cash
+  cash.Value = data.Cash or 0
   cash.Parent = leaderstats
 
   local casesOpened = Instance.new("IntValue")
   casesOpened.Name = "Cases Opened"
-  casesOpened.Value = data.CasesOpened
+  casesOpened.Value = data.CasesOpened or 0
   casesOpened.Parent = leaderstats
 
   local invValue = Instance.new("IntValue")
@@ -60,18 +67,18 @@ Players.PlayerAdded:Connect(function(player)
   end)
 
   -- Calculate initial inventory value
-  task.defer(function()
-    local totalValue = 0
+  local totalValue = 0
+  if data.Inventory then
     for _, item in ipairs(data.Inventory) do
       local itemValue = item.Value or 0
       local amount = item.Amount or 1
       totalValue += (itemValue * amount)
     end
-    data.InvValue = totalValue
-    invValue.Value = totalValue
-  end)
+  end
+  data.InvValue = totalValue
+  invValue.Value = totalValue
 
-  print("✅ Data loaded for " .. player.Name)
+  print("✅ Data loaded for " .. player.Name .. " (Cash: " .. data.Cash .. ", Cases: " .. data.CasesOpened .. ", Inventory: " .. #data.Inventory .. " items)")
 end)
 
 -- When a player leaves

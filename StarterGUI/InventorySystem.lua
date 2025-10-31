@@ -51,12 +51,22 @@ end
 
 function refresh()
   -- Get inventory from server
-  local inventory = getInventoryFunction:InvokeServer()
+  local success, inventory = pcall(function()
+    return getInventoryFunction:InvokeServer()
+  end)
 
-  if not inventory then
-    warn("Failed to get inventory")
+  if not success then
+    warn("❌ Failed to get inventory from server: " .. tostring(inventory))
+    warn("⚠️ Make sure Studio API Access is enabled in Game Settings!")
     return
   end
+
+  if not inventory or type(inventory) ~= "table" then
+    warn("❌ Invalid inventory data received")
+    return
+  end
+  
+  print("📦 Refreshing inventory: " .. #inventory .. " items")
 
   -- Clear existing buttons
   for _, button in pairs(buttons) do
@@ -217,14 +227,20 @@ if searchBar and searchBar:IsA("TextBox") then
 end
 
 -- Initial refresh
-task.wait(0.5)  -- Wait for DataStore to load
-refresh()
+task.wait(1)  -- Wait for DataStore to load
+local success, err = pcall(refresh)
+if not success then
+  warn("❌ Initial inventory refresh failed: " .. tostring(err))
+end
 
 -- Listen for inventory updates from server
 local inventoryUpdatedEvent = remoteEvents:FindFirstChild("InventoryUpdatedEvent")
 if inventoryUpdatedEvent then
   inventoryUpdatedEvent.OnClientEvent:Connect(function()
-    refresh()
+    local refreshSuccess, refreshErr = pcall(refresh)
+    if not refreshSuccess then
+      warn("❌ Inventory update failed: " .. tostring(refreshErr))
+    end
   end)
 end
 
