@@ -298,6 +298,36 @@ function DataStoreAPI:GetHideRolls(player)
   return false
 end
 
+-- Set player Luck multiplier
+function DataStoreAPI:SetLuck(player, luckValue)
+  local data = self:GetPlayerData(player)
+  if not data then
+    return false
+  end
+
+  -- Validate luck value (must be positive number)
+  if type(luckValue) ~= "number" or luckValue <= 0 then
+    warn("❌ Invalid luck value: " .. tostring(luckValue))
+    return false
+  end
+
+  data.Luck = luckValue
+  
+  -- Also update the player attribute for real-time use
+  player:SetAttribute("Luck", luckValue)
+  
+  return true
+end
+
+-- Get player Luck multiplier
+function DataStoreAPI:GetLuck(player)
+  local data = self:GetPlayerData(player)
+  if data then
+    return data.Luck or 1.0
+  end
+  return 1.0
+end
+
 -- Get another player's inventory by UserId (for viewing other players)
 function DataStoreAPI:GetPlayerInventoryByUserId(userId)
   local playerData = _G.PlayerData[userId]

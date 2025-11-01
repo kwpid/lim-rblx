@@ -20,6 +20,7 @@ local DEFAULT_DATA = {
   EquippedItems = {}, -- Array of RobloxIds of equipped items
   AutoRoll = false,   -- AutoRoll state (persists across sessions)
   HideRolls = false,  -- HideRolls state (persists across sessions)
+  Luck = 1.0,         -- Luck multiplier (1.0 = normal, higher = better odds)
   DataVersion = DATA_VERSION
 }
 
@@ -82,6 +83,7 @@ function DataStoreManager:LoadData(player)
   if not data.EquippedItems then data.EquippedItems = {} end
   if data.AutoRoll == nil then data.AutoRoll = false end
   if data.HideRolls == nil then data.HideRolls = false end
+  if data.Luck == nil then data.Luck = 1.0 end
   if not data.DataVersion then data.DataVersion = DATA_VERSION end
 
   return data
@@ -97,6 +99,7 @@ function DataStoreManager:GetDefaultData()
     EquippedItems = {},
     AutoRoll = false,
     HideRolls = false,
+    Luck = 1.0,
     DataVersion = DATA_VERSION
   }
   return defaultCopy

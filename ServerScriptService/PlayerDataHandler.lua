@@ -101,6 +101,10 @@ local function setupPlayer(player)
   end
 
   PlayerData[player.UserId] = data
+  
+  -- Set player Luck attribute (default 1.0 if not in data)
+  local luck = data.Luck or 1.0
+  player:SetAttribute("Luck", luck)
 
   local leaderstats = Instance.new("Folder")
   leaderstats.Name = "leaderstats"

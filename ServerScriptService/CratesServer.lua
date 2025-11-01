@@ -90,12 +90,20 @@ local ROLL_TIME = 5 -- Normal roll time in seconds
 local FAST_ROLL_TIME = 2 -- Fast roll time (2.5x faster)
 local FAST_ROLL_GAMEPASS_ID = 1242040274 -- Old game's fast roll gamepass
 
+-- 🍀 LUCK MULTIPLIER CONFIGURATION
+-- Change this value in Studio to give all players a global luck boost for updates/events
+-- 1.0 = normal luck, 2.0 = double luck (better odds), 0.5 = half luck (worse odds)
+local GLOBAL_LUCK_MULTIPLIER = 1.0
+
 -- Helper function to pick random item based on value (inverse probability)
-function pickRandomItem(items)
+-- luckMultiplier: Player's luck multiplier (1.0 = normal, higher = better odds for rare items)
+function pickRandomItem(items, luckMultiplier)
   if #items == 0 then
     return nil
   end
 
+  luckMultiplier = luckMultiplier or 1.0
+  
   -- Calculate total inverse value using power of 0.75
   local totalInverseValue = 0
   for _, item in ipairs(items) do
@@ -103,7 +111,35 @@ function pickRandomItem(items)
   end
 
   -- Pick random item (weighted by inverse value - higher value = lower chance)
+  -- Luck multiplier shifts probability distribution
   local randomValue = rnd:NextNumber() * totalInverseValue
+  
+  -- Apply luck modifier
+  if luckMultiplier > 1.0 then
+    -- Higher luck: roll multiple times and pick the LOWEST value (favors rare/high-value items)
+    -- Use ceiling to ensure ANY luck > 1.0 has an effect
+    -- luckMultiplier of 1.1 = 2 rolls; 2.0 = 2 rolls; 2.1 = 3 rolls, etc.
+    local numRolls = math.min(math.ceil(luckMultiplier), 10)
+    for i = 2, numRolls do
+      local altValue = rnd:NextNumber() * totalInverseValue
+      if altValue < randomValue then
+        randomValue = altValue
+      end
+    end
+  elseif luckMultiplier < 1.0 then
+    -- Lower luck: roll multiple times and pick the HIGHEST value (favors common/low-value items)
+    -- Use ceiling to ensure ANY luck < 1.0 has an effect
+    -- luckMultiplier of 0.9 = 2 rolls; 0.5 = 2 rolls; 0.33 = 3 rolls; 0.25 = 4 rolls, etc.
+    local numRolls = math.min(math.ceil(1.0 / luckMultiplier), 10)
+    for i = 2, numRolls do
+      local altValue = rnd:NextNumber() * totalInverseValue
+      if altValue > randomValue then
+        randomValue = altValue
+      end
+    end
+  end
+  -- If luckMultiplier == 1.0, use the single randomValue (no modification)
+  
   local cumulative = 0
 
   for _, item in ipairs(items) do
@@ -252,8 +288,14 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
     return
   end
 
-  -- Pick random item (weighted by inverse value)
-  local chosenItem = pickRandomItem(allItems)
+  -- Get player's luck multiplier (from attribute, default 1.0)
+  local playerLuck = player:GetAttribute("Luck") or 1.0
+  
+  -- Apply global luck multiplier
+  local totalLuck = playerLuck * GLOBAL_LUCK_MULTIPLIER
+  
+  -- Pick random item (weighted by inverse value with luck modifier)
+  local chosenItem = pickRandomItem(allItems, totalLuck)
 
   if not chosenItem then
     warn("⚠️ Failed to pick item!")
@@ -289,7 +331,8 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
 
       local newRollableItems = ItemDatabase:GetRollableItems()
       if #newRollableItems > 0 then
-        chosenItem = pickRandomItem(newRollableItems)
+        -- Use same luck multiplier for reroll
+        chosenItem = pickRandomItem(newRollableItems, totalLuck)
 
         -- Try to claim the new item if it's also a stock item
         local newStock = chosenItem.Stock or 0
