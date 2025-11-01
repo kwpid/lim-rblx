@@ -12,6 +12,7 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 ## Recent Changes (November 1, 2025)
 - **Fixed CratesClient Initialization Delay**: Changed ItemDatabase to load asynchronously instead of blocking the require() call. This eliminates the 10-15 second delay before the crate opening UI becomes responsive when players join. RemoteEvents are now created immediately on server startup.
 - **Client Optimization**: Reduced WaitForChild timeouts and improved initialization speed in CratesClient.lua for faster UI responsiveness.
+- **Fixed SerialOwners Tracking**: Added automatic repair system that scans player inventories on join and adds missing SerialOwner records to ItemDatabase. This fixes the issue where stock items appear in inventories but don't show up in the Index owner list (e.g., migrated data from Studio).
 
 ## System Architecture
 
@@ -38,6 +39,7 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 -   `RemoteEvents` and `RemoteFunctions` are used for client-server communication.
 -   ItemDatabase loads asynchronously (non-blocking) to ensure RemoteEvents are created immediately on server startup.
 -   Roll handler includes readiness check with graceful 30-second timeout if ItemDatabase is slow to load.
+-   SerialOwner repair system automatically fixes missing records when players join (handles migrated/legacy data).
 -   Roblox `InsertService` is used for equipping items.
 -   Roblox `MarketplaceService` checks Fast Roll gamepass ownership.
 -   DataStore operations include error logging and validation.
