@@ -56,7 +56,7 @@ local currentChosenItem = nil
 local shouldStopAutoRoll = false -- Flag to stop after current roll finishes
 
 -- HideRolls toggle variable
-local hideRollsEnabled = true -- Default is OFF state which means rolls are hidden
+local hideRollsEnabled = false -- Default is OFF state which means rolls are shown
 
 local function stopAutoRoll()
   isAutoRolling = false
@@ -165,13 +165,13 @@ hideRollsButton.MouseButton1Click:Connect(function()
   hideRollsEnabled = not hideRollsEnabled
   
   if hideRollsEnabled then
-    -- State is OFF - rolls are hidden (darker red, default state)
-    hideRollsButton.Text = "[HIDE ROLLS: OFF]"
-    hideRollsButton.TextColor3 = Color3.fromRGB(170, 0, 0) -- Darker red when off
-  else
-    -- State is ON - rolls are shown (brighter red)
+    -- State is ON - rolls are hidden (brighter red)
     hideRollsButton.Text = "[HIDE ROLLS: ON]"
     hideRollsButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- Brighter red when on
+  else
+    -- State is OFF - rolls are shown (darker red, default state)
+    hideRollsButton.Text = "[HIDE ROLLS: OFF]"
+    hideRollsButton.TextColor3 = Color3.fromRGB(170, 0, 0) -- Darker red when off
   end
 end)
 
