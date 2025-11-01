@@ -77,14 +77,14 @@ local function calculateRollPercentageForValue(itemValue)
     return 0
   end
 
-  -- Calculate total inverse value using power of 0.6
+  -- Calculate total inverse value using power of 0.75
   local totalInverseValue = 0
   for _, item in ipairs(allItems) do
-    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.6))
+    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.75))
   end
 
   -- Add the new item's inverse value
-  totalInverseValue = totalInverseValue + (1 / (itemValue ^ 0.6))
+  totalInverseValue = totalInverseValue + (1 / (itemValue ^ 0.75))
 
   -- Calculate the percentage for this item
   return ItemRarityModule:GetRollPercentage(itemValue, totalInverseValue)

@@ -109,8 +109,16 @@ function refresh()
   end
   buttons = {}
 
+  -- Sort inventory: Equipped first, then by value (high to low)
   table.sort(inventory, function(a, b)
-    return a.Value > b.Value
+    local aEquipped = equippedItems[a.RobloxId] or false
+    local bEquipped = equippedItems[b.RobloxId] or false
+    
+    if aEquipped ~= bEquipped then
+      return aEquipped -- Equipped items come first
+    end
+    
+    return a.Value > b.Value -- Then sort by value (highest to lowest)
   end)
 
   for i, item in ipairs(inventory) do
@@ -194,18 +202,18 @@ function refresh()
       end
     end
     
-    -- Display copies (owners count) with stock info for stock items
+    -- Display copies (stock items) or owners count (regular items)
     local copiesLabel = button:FindFirstChild("copies")
     if copiesLabel then
       local stockCount = item.Stock or 0
       
       if copiesCount > 0 then
         if stockCount > 0 then
-          -- Stock item: show "copies: X / Y exist" using CurrentStock
-          copiesLabel.Text = "copies: " .. copiesCount .. " / " .. stockCount .. " exist"
+          -- Stock item: show "X / Y copies" using CurrentStock
+          copiesLabel.Text = copiesCount .. " / " .. stockCount .. " copies"
         else
-          -- Regular item: show "copies: X" using Owners
-          copiesLabel.Text = "copies: " .. copiesCount
+          -- Regular item: show "X owners" using Owners
+          copiesLabel.Text = copiesCount .. " owners"
         end
         copiesLabel.Visible = true
       else

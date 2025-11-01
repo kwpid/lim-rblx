@@ -47,10 +47,10 @@ function pickRandomItem(items)
     return nil
   end
 
-  -- Calculate total inverse value using power of 0.6
+  -- Calculate total inverse value using power of 0.75
   local totalInverseValue = 0
   for _, item in ipairs(items) do
-    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.6))
+    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.75))
   end
 
   -- Pick random item (weighted by inverse value - higher value = lower chance)
@@ -58,7 +58,7 @@ function pickRandomItem(items)
   local cumulative = 0
 
   for _, item in ipairs(items) do
-    cumulative = cumulative + (1 / (item.Value ^ 0.6))
+    cumulative = cumulative + (1 / (item.Value ^ 0.75))
     if randomValue <= cumulative then
       return item
     end

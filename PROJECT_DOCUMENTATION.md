@@ -28,8 +28,8 @@ Items are automatically assigned rarity based on their value:
 
 ### 3. Probability System
 - Higher value items = lower chance to win
-- Uses inverse probability weighting with power of 0.6
-- Formula: Chance = (1/ItemValue^0.6) / TotalInverseValue
+- Uses inverse probability weighting with power of 0.75
+- Formula: Chance = (1/ItemValue^0.75) / TotalInverseValue
 - Balanced scaling ensures rare items are still obtainable while maintaining rarity
 
 ### 4. Crate Opening Mechanics
@@ -80,10 +80,12 @@ Items are automatically assigned rarity based on their value:
 ### 7. Inventory System
 - **Display Features:**
   - Shows all owned items with thumbnails
+  - **Sorting**: Equipped items first, then highest value to lowest value
   - Color-coded by rarity
   - Shows serial numbers for stock items
   - Shows quantity for stackable items
-  - Shows "copies: X" for owner count (how many players own it)
+  - Stock items: Shows "X / Y copies" (serials claimed / total stock)
+  - Regular items: Shows "X owners" (unique players who own it)
   - Search bar for filtering
   - Click to view detailed item info
 - **Item Stacking:**

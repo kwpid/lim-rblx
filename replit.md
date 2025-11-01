@@ -53,8 +53,10 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Roblox MarketplaceService**: Used to check gamepass ownership for the Fast Roll feature (gamepass ID: 1242040274 from old game).
 
 ## Recent Updates (November 1, 2025)
+-   **Inventory Sorting**: Equipped items now appear first in inventory, followed by highest to lowest value items
+-   **Clearer Labels**: Stock items show "X / Y copies", regular items show "X owners" for accurate tracking
 -   **High-Value Chat Notifications**: When players unbox items worth 250k+ Robux, a colored chat message appears. 5M+ items announce to the entire server. Shows item name, value, serial # (for stock items), and color-coded by rarity.
--   **Balanced Roll Percentages**: Roll chances adjusted using power of 0.6 scaling for balanced distribution between common and rare items
+-   **Balanced Roll Percentages**: Roll chances adjusted using power of 0.75 scaling for lower, more balanced distribution
 -   **Rarity Indicator**: Inventory now shows RareText only for items with less than 25 copies in existence (works for both regular and stock items)
 -   **Accurate Copy Count**: Both inventory and index now show CurrentStock (actual serials claimed) for stock items instead of unique owners
 -   **Roll Percentage Display**: Index shows roll percentage with smart decimal handling - minimum 4 decimals or up to first non-zero digit (e.g., "Uncommon | 0.25%" or "Insane | 0.000004%")
