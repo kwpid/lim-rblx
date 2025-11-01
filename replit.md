@@ -17,6 +17,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
     - **Roll Time**: 5 seconds for normal players, 2 seconds for Fast Roll gamepass owners (2.5x faster)
     - **Fast Roll Gamepass**: Players who own gamepass ID 1242040274 from the old game get faster roll animations
     - **AutoRoll**: Toggle button that continuously rolls crates. Green text when ON, red text when OFF. Can be stopped mid-roll, and the button remains visible during rolls for easy toggling.
+    - **HideRolls**: Toggle button to hide/show the rolling animation. OFF (default, RGB 170,0,0) hides the frame while still awarding items. ON (RGB 255,0,0) shows the rolling animation. Speeds up auto-rolling when hidden.
 -   **Admin Tools**: Whitelisted admin system with a GUI for creating, giving, and deleting items. Features include:
     - Create items with live item previews and auto-fill item names from Roblox marketplace
     - Give items to players (by User ID or username) with notifications for both admin and recipient
@@ -55,6 +56,8 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Roblox MessagingService**: Used for cross-server notifications when ultra-rare items (5M+) are unboxed.
 
 ## Recent Updates (November 1, 2025)
+-   **Hide Rolls Feature**: Added HideRolls toggle button in MainUI (next to Roll and AutoRoll buttons). When OFF (default, darker red RGB 170,0,0), the rolling frame is hidden but items are still awarded. When ON (brighter red RGB 255,0,0), the rolling animation is shown. Speeds up auto-rolling when hidden (0.5s delay vs 1.5s). Players can toggle visibility mid-roll for faster unboxing experience.
+-   **View Player Inventory Fix**: Fixed issue where players could only view one person's inventory. Now properly resets search bar and highlight state when opening/closing, allowing unlimited consecutive player inventory views without requiring page refresh.
 -   **TotalCopies Tracking System**: Changed from tracking unique owners to tracking total copies for regular items. Shows "X copies" instead of "X owners" in inventory and index. Stock items continue using CurrentStock. System automatically increments on roll/give and decrements on sell.
 -   **View Other Players' Inventories**: Added hover detection with yellow glow effect on other players. Click to open a GUI showing their complete inventory with items sorted by value. Features robust error handling with retry logic (waits up to 1 second for data to load) and structured response pattern ({success, inventory/error}) for reliable cross-player viewing. Uses raycast-based detection with camera lifecycle handling for consistent hover/click detection even after respawns.
 -   **Tool Equipping Fix**: Fixed tools not equipping properly - tools now correctly go to the player's Backpack instead of being placed in the character, allowing them to be used normally.
