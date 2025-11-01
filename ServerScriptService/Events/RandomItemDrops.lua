@@ -251,12 +251,12 @@ function RandomItemDrops.Start(onEventEnd)
   -- Wait for ItemDatabase to be ready
   local maxWait = 30
   local waited = 0
-  while not ItemDatabase.IsReady() and waited < maxWait do
+  while not ItemDatabase.IsReady and waited < maxWait do
     task.wait(0.5)
     waited = waited + 0.5
   end
   
-  if not ItemDatabase.IsReady() then
+  if not ItemDatabase.IsReady then
     warn("❌ ItemDatabase not ready! Event cancelled.")
     if onEventEnd then onEventEnd() end
     return

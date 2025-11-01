@@ -13,7 +13,7 @@ TextChatService.MessageReceived:Connect(function(message)
   if not player then return end
   
   -- Check if player is admin
-  if not AdminConfig.IsAdmin(player.UserId) then
+  if not AdminConfig:IsAdmin(player) then
     return
   end
   
