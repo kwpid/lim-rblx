@@ -105,6 +105,11 @@ function WebhookHandler:SendItemRelease(item, rollPercentage)
                 }}
         }
         
+        -- Add ping for high-value items (250k+)
+        if item.Value >= 250000 then
+                payload.content = "<@1381033979502661722>"
+        end
+        
         local success = sendWebhook(ITEM_RELEASE_WEBHOOK, payload)
         
         if success then
