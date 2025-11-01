@@ -534,6 +534,17 @@ function refresh()
         sellAllButton.Visible = not isStockItem
       end
       
+      -- Show/hide SerialOwner text for serial items only
+      local serialOwnerText = popup:FindFirstChild("SerialOwner")
+      if serialOwnerText then
+        if item.SerialNumber and item.OriginalOwner then
+          serialOwnerText.Visible = true
+          serialOwnerText.Text = "Original Owner: @" .. item.OriginalOwner
+        else
+          serialOwnerText.Visible = false
+        end
+      end
+      
       -- Show the popup with animation
       showPopup()
     end)

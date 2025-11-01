@@ -186,12 +186,32 @@ function DataStoreAPI:GetInventory(player)
       itemCopy.TotalCopies = dbItem.TotalCopies or 0
       itemCopy.Stock = dbItem.Stock or 0
       itemCopy.CurrentStock = dbItem.CurrentStock or 0
+      
+      -- If this is a serial item, find the original owner
+      if item.SerialNumber and dbItem.SerialOwners then
+        for _, owner in ipairs(dbItem.SerialOwners) do
+          if owner.SerialNumber == item.SerialNumber then
+            itemCopy.OriginalOwner = owner.Username or "null"
+            break
+          end
+        end
+      end
+      
+      -- If no original owner found for serial item, set to null
+      if item.SerialNumber and not itemCopy.OriginalOwner then
+        itemCopy.OriginalOwner = "null"
+      end
     else
       warn("⚠️ Failed to get database item for " .. (item.Name or "item"))
       itemCopy.Owners = 0
       itemCopy.TotalCopies = 0
       itemCopy.Stock = 0
       itemCopy.CurrentStock = 0
+      
+      -- Set original owner to null if database lookup failed
+      if item.SerialNumber then
+        itemCopy.OriginalOwner = "null"
+      end
     end
 
     table.insert(inventoryWithOwners, itemCopy)
@@ -315,11 +335,31 @@ function DataStoreAPI:GetPlayerInventoryByUserId(userId)
       itemCopy.TotalCopies = dbItem.TotalCopies or 0
       itemCopy.Stock = dbItem.Stock or 0
       itemCopy.CurrentStock = dbItem.CurrentStock or 0
+      
+      -- If this is a serial item, find the original owner
+      if item.SerialNumber and dbItem.SerialOwners then
+        for _, owner in ipairs(dbItem.SerialOwners) do
+          if owner.SerialNumber == item.SerialNumber then
+            itemCopy.OriginalOwner = owner.Username or "null"
+            break
+          end
+        end
+      end
+      
+      -- If no original owner found for serial item, set to null
+      if item.SerialNumber and not itemCopy.OriginalOwner then
+        itemCopy.OriginalOwner = "null"
+      end
     else
       itemCopy.Owners = 0
       itemCopy.TotalCopies = 0
       itemCopy.Stock = 0
       itemCopy.CurrentStock = 0
+      
+      -- Set original owner to null if database lookup failed
+      if item.SerialNumber then
+        itemCopy.OriginalOwner = "null"
+      end
     end
 
     table.insert(inventoryWithOwners, itemCopy)

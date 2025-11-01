@@ -128,7 +128,21 @@ Items are automatically assigned rarity based on their value:
   - Equip button correctly shows "Unequip" for already-equipped items
   - GetEquippedItemsFunction RemoteFunction provides server data to client
 
-### 10. Notification System
+### 10. Serial Item Original Owner Tracking
+- **Original Owner System:**
+  - When a player rolls a serial item (e.g., Serial #1), their username is permanently saved as the original owner
+  - Original owner data is stored in ItemDatabase.SerialOwners array: `{UserId, SerialNumber, Username}`
+  - Data persists across sessions in DataStore
+- **Inventory Display:**
+  - Serial items in the inventory popup show "Original Owner: @username"
+  - Regular items do not show this text (only serial items)
+  - If the original owner can't be found or doesn't exist, displays "@null"
+- **Technical Implementation:**
+  - DataStoreAPI includes OriginalOwner field when sending inventory to client
+  - Client-side popup conditionally shows SerialOwner TextLabel based on item type
+  - SerialOwner text is hidden for non-serial items
+
+### 11. Notification System
 - **Notification Types:**
   - EQUIP: Shows when player equips an item
   - UNEQUIP: Shows when player unequips an item
@@ -143,7 +157,7 @@ Items are automatically assigned rarity based on their value:
   - 2-second delay on data load notifications to ensure client is ready
   - Queued system handles multiple notifications gracefully
 
-### 11. Index System (All Items Catalog)
+### 12. Index System (All Items Catalog)
 - **Display All Game Items:**
   - Shows every item in the game database (not just player's inventory)
   - Sorted by value (highest first), then rarity, then name
@@ -379,10 +393,11 @@ For the game to work properly in Roblox, you need:
 
 3. **InventorySystem ScreenGui** with structure:
    - Handler folder
-   - Popup (previously Frame) with ItemName, Value, TotalValue, ImageLabel, Equip, Sell, SellAll, and Close buttons
+   - Popup (previously Frame) with ItemName, Value, TotalValue, ImageLabel, SerialOwner (TextLabel), Equip, Sell, SellAll, and Close buttons
    - Sample button template
    - SearchBar TextBox
    - **Note:** The Popup should be set to Visible = false by default in the Roblox Studio GUI properties
+   - **SerialOwner TextLabel:** Shows "Original Owner: @username" for serial items only, hidden for regular items
 
 4. **MainUI ScreenGui** with:
    - Roll button

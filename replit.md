@@ -10,6 +10,12 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 1, 2025)
+- **Serial Item Original Owner Tracking**: Serial items now track and display the original owner (first person to roll that specific serial number):
+  - When a serial item is rolled, the player's username is saved as the original owner for that specific serial
+  - In the inventory popup, serial items display "Original Owner: @username"
+  - Regular (non-serial) items don't show this text
+  - If the original owner can't be found, displays "@null"
+  - Data is stored in ItemDatabase.SerialOwners array and persists across sessions
 - **Inventory Popup UI Rework**: Changed inventory item details frame to a popup system with animations:
   - Renamed "Frame" to "Popup" and set to invisible by default
   - Selected items have bigger borders (BorderSizePixel = 3) that return to normal (1) when unselected
