@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
@@ -10,6 +11,12 @@ local buttons = {}
 local currentlyViewingPlayer = nil
 local highlightedPlayer = nil
 local glowEffect = nil
+
+-- Wait for camera to exist and keep reference updated
+local camera = workspace.CurrentCamera or workspace:WaitForChild("Camera", 10)
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+  camera = workspace.CurrentCamera
+end)
 
 -- Get the actual ScreenGui (parent of the frame the script is in)
 local screenGui = gui
@@ -115,15 +122,36 @@ function removeGlowEffect(character)
   end
 end
 
--- Function to get player from mouse target
+-- Function to get player from mouse using raycast
 function getPlayerFromMouse()
-  local target = mouse.Target
-  if not target then return nil end
+  -- Guard against nil camera
+  if not camera then return nil end
   
-  -- Find the character model
-  local character = target
+  -- Create a ray from the camera through the mouse position
+  local mousePos = UserInputService:GetMouseLocation()
+  local viewportPoint = Vector2.new(mousePos.X, mousePos.Y)
+  local unitRay = camera:ViewportPointToRay(viewportPoint.X, viewportPoint.Y)
+  
+  -- Perform raycast
+  local raycastParams = RaycastParams.new()
+  raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+  raycastParams.FilterDescendantsInstances = {player.Character}
+  raycastParams.IgnoreWater = true
+  
+  local raycastResult = workspace:Raycast(unitRay.Origin, unitRay.Direction * 500, raycastParams)
+  
+  if not raycastResult then return nil end
+  
+  -- Find the character model from the hit part
+  local hitPart = raycastResult.Instance
+  local character = hitPart
+  
+  -- Traverse up to find the character model
   while character and not character:FindFirstChild("Humanoid") do
     character = character.Parent
+    if character == workspace then
+      return nil
+    end
   end
   
   if not character then return nil end
@@ -337,35 +365,31 @@ if closeButton then
   end)
 end
 
--- Mouse hover detection (runs continuously)
-task.spawn(function()
-  while true do
-    task.wait(0.1) -- Check every 0.1 seconds
+-- Mouse hover detection (runs every frame for consistency)
+RunService.RenderStepped:Connect(function()
+  -- Only check if GUI is not open
+  if not screenGui.Enabled then
+    local targetPlayer = getPlayerFromMouse()
     
-    -- Only check if GUI is not open
-    if not screenGui.Enabled then
-      local targetPlayer = getPlayerFromMouse()
-      
-      if targetPlayer ~= highlightedPlayer then
-        -- Remove old glow
-        if highlightedPlayer and highlightedPlayer.Character then
-          removeGlowEffect(highlightedPlayer.Character)
-        end
-        
-        -- Add new glow
-        if targetPlayer and targetPlayer.Character then
-          createGlowEffect(targetPlayer.Character)
-        end
-        
-        highlightedPlayer = targetPlayer
-      end
-    else
-      -- GUI is open, remove any highlights
+    if targetPlayer ~= highlightedPlayer then
+      -- Remove old glow
       if highlightedPlayer and highlightedPlayer.Character then
         removeGlowEffect(highlightedPlayer.Character)
       end
-      highlightedPlayer = nil
+      
+      -- Add new glow
+      if targetPlayer and targetPlayer.Character then
+        createGlowEffect(targetPlayer.Character)
+      end
+      
+      highlightedPlayer = targetPlayer
     end
+  else
+    -- GUI is open, remove any highlights
+    if highlightedPlayer and highlightedPlayer.Character then
+      removeGlowEffect(highlightedPlayer.Character)
+    end
+    highlightedPlayer = nil
   end
 end)
 
