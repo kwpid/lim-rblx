@@ -7,6 +7,15 @@ local HttpService = game:GetService("HttpService")
 local ItemDataStore = DataStoreService:GetDataStore("ItemDatabase_v1")
 local ItemRarityModule = require(game.ReplicatedStorage.ItemRarityModule)
 
+-- Lazy load WebhookHandler to avoid circular dependency issues
+local WebhookHandler
+local function getWebhookHandler()
+        if not WebhookHandler then
+                WebhookHandler = require(script.Parent.WebhookHandler)
+        end
+        return WebhookHandler
+end
+
 -- 🔑 DATA VERSION - Must match DataStoreManager.lua to keep data in sync
 local DATA_VERSION = "DataVersion.15"
 
@@ -25,13 +34,13 @@ function ItemDatabase:QueueSave()
   if self._saveQueued then
     return -- Save already queued
   end
-  
+
   self._saveQueued = true
-  
+
   task.delay(SAVE_DEBOUNCE_TIME, function()
     self._saveQueued = false
     local timeSinceLastSave = tick() - self._lastSaveTime
-    
+
     -- Only save if enough time has passed (prevents rapid saves)
     if timeSinceLastSave >= 1 then
       self:SaveItems()
@@ -223,7 +232,21 @@ function ItemDatabase:IncrementStock(item)
 
   if stock > 0 and currentStock < stock then
     item.CurrentStock = currentStock + 1
-    self:QueueSave() -- Use queued save to prevent DataStore overload during rapid rolls
+    self:QueueSave()         -- Use queued save to prevent DataStore overload during rapid rolls
+    
+    -- Check if item just went out of stock
+    if item.CurrentStock >= stock then
+      print(string.format("🔴 Item went out of stock: %s (%d/%d)", item.Name, item.CurrentStock, stock))
+      
+      -- Send Discord webhook notification
+      task.spawn(function()
+        local handler = getWebhookHandler()
+        if handler then
+          handler:SendOutOfStock(item)
+        end
+      end)
+    end
+    
     return item.CurrentStock -- Return the serial number
   end
   return nil
@@ -326,7 +349,7 @@ function ItemDatabase:DecrementOwners(robloxId)
   if item then
     local oldOwners = item.Owners or 0
     item.Owners = math.max(0, oldOwners - 1) -- Don't go below 0
-    self:QueueSave() -- Use queued save to prevent DataStore overload
+    self:QueueSave()                         -- Use queued save to prevent DataStore overload
 
     return item.Owners
   else
@@ -350,7 +373,7 @@ function ItemDatabase:DecrementTotalCopies(robloxId, amount)
   if item then
     local oldCopies = item.TotalCopies or 0
     item.TotalCopies = math.max(0, oldCopies - amount) -- Don't go below 0
-    self:QueueSave() -- Use queued save to prevent DataStore overload
+    self:QueueSave()                                   -- Use queued save to prevent DataStore overload
 
     return item.TotalCopies
   else
@@ -424,7 +447,7 @@ function ItemDatabase:IncreaseStockLimit(robloxId, userId, username)
       })
     end
 
-    self:QueueSave() -- Use queued save to prevent DataStore overload
+    self:QueueSave()         -- Use queued save to prevent DataStore overload
     print("📈 Increased stock limit for " .. item.Name .. " from " .. stock .. " to " .. item.Stock)
     return item.CurrentStock -- Return the new serial number
   end
@@ -570,7 +593,7 @@ end)
 game:BindToClose(function()
   print("🛑 Server shutdown - Force saving ItemDatabase...")
   ItemDatabase._saveQueued = false -- Cancel any pending queued save
-  ItemDatabase:SaveItems() -- Force immediate save
+  ItemDatabase:SaveItems()         -- Force immediate save
   print("✅ ItemDatabase saved on shutdown")
 end)
 

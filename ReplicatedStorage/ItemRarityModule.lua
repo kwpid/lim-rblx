@@ -46,12 +46,12 @@ function ItemRarityModule:GetRarityInfo(value)
 end
 
 -- Calculate roll percentage (higher value = lower chance)
--- Uses power of 0.75 inverse scaling for lower, more balanced percentage distribution
+-- Uses power of 0.9 inverse scaling for steeper rarity curve (makes rare items more rare)
 function ItemRarityModule:GetRollPercentage(value, totalValue)
   if totalValue == 0 then return 0 end
 
-  -- Power of 0.75 inverse relationship: higher value = lower percentage
-  local inverseValue = 1 / (value ^ 0.75)
+  -- Power of 0.9 inverse relationship: higher value = lower percentage
+  local inverseValue = 1 / (value ^ 0.9)
   local percentage = (inverseValue / totalValue) * 100
 
   return percentage
@@ -59,10 +59,10 @@ end
 
 -- Calculate all roll percentages for a list of items
 function ItemRarityModule:CalculateAllRollPercentages(items)
-  -- Calculate total inverse value using power of 0.75
+  -- Calculate total inverse value using power of 0.9
   local totalInverseValue = 0
   for _, item in ipairs(items) do
-    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.75))
+    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
   end
 
   -- Calculate each item's percentage

@@ -88,7 +88,8 @@ function refresh()
   end)
 
   if not success or not inventory or type(inventory) ~= "table" then
-    return
+    warn("⚠️ Failed to load inventory, will retry...")
+    return false -- Return false to indicate failure
   end
   
   if getEquippedItemsFunction then
@@ -334,6 +335,8 @@ function refresh()
       end
     end)
   end
+  
+  return true -- Return true to indicate successful load
 end
 
 -- Search bar functionality
@@ -347,8 +350,31 @@ if searchBar and searchBar:IsA("TextBox") then
   end)
 end
 
-task.wait(1)
-pcall(refresh)
+-- Retry loading inventory with exponential backoff
+local function loadInventoryWithRetry()
+  local maxRetries = 10
+  local retryDelay = 0.5
+  
+  for attempt = 1, maxRetries do
+    task.wait(retryDelay)
+    
+    local success, result = pcall(refresh)
+    -- Check both pcall success AND refresh return value
+    if success and result == true then
+      print("✅ Inventory loaded successfully on attempt " .. attempt)
+      return
+    end
+    
+    -- Exponential backoff: 0.5s, 1s, 2s, 4s, etc. (max 4s)
+    retryDelay = math.min(retryDelay * 2, 4)
+    warn(string.format("⏳ Inventory load attempt %d/%d failed, retrying in %.1fs...", 
+      attempt, maxRetries, retryDelay))
+  end
+  
+  warn("❌ Failed to load inventory after " .. maxRetries .. " attempts")
+end
+
+task.spawn(loadInventoryWithRetry)
 
 local inventoryUpdatedEvent = remoteEvents:FindFirstChild("InventoryUpdatedEvent")
 if inventoryUpdatedEvent then

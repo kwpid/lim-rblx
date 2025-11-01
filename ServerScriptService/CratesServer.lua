@@ -10,6 +10,7 @@ local MessagingService = game:GetService("MessagingService")
 local ItemDatabase = require(script.Parent.ItemDatabase)
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
 local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
+local WebhookHandler = require(script.Parent.WebhookHandler)
 
 -- Create RemoteEvents if they don't exist
 local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
@@ -115,10 +116,10 @@ function pickRandomItem(items, luckMultiplier)
     luckMultiplier = 1.0
   end
   
-  -- Calculate total inverse value using power of 0.75
+  -- Calculate total inverse value using power of 0.9 (steeper curve = rarer items)
   local totalInverseValue = 0
   for _, item in ipairs(items) do
-    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.75))
+    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
   end
   
   -- Helper function to pick a single item from the full list
@@ -126,7 +127,7 @@ function pickRandomItem(items, luckMultiplier)
     local randomValue = rnd:NextNumber() * totalInverseValue
     local cumulative = 0
     for _, item in ipairs(items) do
-      cumulative = cumulative + (1 / (item.Value ^ 0.75))
+      cumulative = cumulative + (1 / (item.Value ^ 0.9))
       if randomValue <= cumulative then
         return item
       end
@@ -458,6 +459,13 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
   elseif chosenItem.Value >= 250000 then
     -- 250k+ = Server-wide notification (current server only)
     sendUnboxChatMessage(player, chosenItem, serialNumber, false)
+  end
+  
+  -- Send Discord webhook for high-value items (250k+)
+  if chosenItem.Value >= 250000 then
+    task.spawn(function()
+      WebhookHandler:SendItemDrop(player, chosenItem, serialNumber)
+    end)
   end
 
   playersRolling[player] = nil

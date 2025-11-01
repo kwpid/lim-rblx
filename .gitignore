@@ -1,0 +1,14 @@
+# Webhook configuration (contains sensitive Discord webhook URLs)
+ServerScriptService/WebhookConfig.lua
+
+# Replit files
+.replit
+.upm
+
+# Cache and temporary files
+.cache/
+.local/
+
+# OS files
+.DS_Store
+Thumbs.db

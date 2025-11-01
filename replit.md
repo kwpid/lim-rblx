@@ -1,7 +1,7 @@
 # Project Memory
 
 ## Overview
-This project is a Roblox crate opening/unboxing game. It allows players to open virtual crates to acquire items of varying rarities and values. Key features include weighted probability rolls, comprehensive admin tools for item management, robust data persistence, an interactive inventory system, and the ability to equip and trade virtual goods. The game aims to deliver an engaging unboxing experience within the Roblox platform.
+This project is a Roblox crate opening/unboxing game. It allows players to open virtual crates to acquire items of varying rarities and values. Key features include weighted probability rolls, comprehensive admin tools for item management, robust data persistence, an interactive inventory system, Discord webhook notifications, and the ability to equip and trade virtual goods. The game aims to deliver an engaging unboxing experience within the Roblox platform.
 
 ## User Preferences
 - User will test the game in Roblox and provide feedback
@@ -10,6 +10,10 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 1, 2025)
+- **Discord Webhook Integration**: Added webhook notifications for new item releases, high-value drops (250k+), and items going out of stock. **IMPORTANT**: You must add your Discord webhook URLs to `ServerScriptService/WebhookConfig.lua` for webhooks to work.
+- **Anti-AFK Movement Detection**: Fixed Anti-AFK system to only rejoin players who haven't moved in 15 minutes (instead of rejoining all players). Tracks player position and only kicks truly inactive players.
+- **Inventory Load Retry Logic**: Fixed inventory not showing when players rejoin. Added exponential backoff retry system that properly retries failed inventory loads up to 10 times.
+- **Lower Item Drop Rates**: Changed probability power from 0.75 to 0.9 to make rare items significantly more rare. This creates a steeper rarity curve making high-value items harder to obtain.
 - **CRITICAL FIX - DataStore Queue Overload**: Implemented debounced/batched save system for ItemDatabase to prevent "DataStore request queue fills" error. Instead of saving on every single roll/owner change (causing 100+ saves per minute with auto-roll), changes are now batched within a 3-second window. This completely eliminates DataStore throttling issues that were preventing players from rolling.
 - **CRITICAL FIX - HideRolls Breaking After 2 Rolls**: Fixed bug where manual rolling with HideRolls enabled would stop working after 2 rolls. The GUI now properly stays disabled when HideRolls is ON (preventing input blocking), and items are properly cleared between rolls even when the animation frame is hidden.
 - **Fixed CratesClient Initialization Delay**: Changed ItemDatabase to load asynchronously instead of blocking the require() call. This eliminates the 10-15 second delay before the crate opening UI becomes responsive when players join. RemoteEvents are now created immediately on server startup.

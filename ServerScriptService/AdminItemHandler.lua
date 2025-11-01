@@ -6,6 +6,8 @@ local Players = game:GetService("Players")
 local AdminConfig = require(script.Parent.AdminConfig)
 local ItemDatabase = require(script.Parent.ItemDatabase)
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
+local WebhookHandler = require(script.Parent.WebhookHandler)
+local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
 
 -- Create RemoteEvents folder if it doesn't exist
 local remoteEventsFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
@@ -78,6 +80,24 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
     }
     notificationEvent:FireAllClients(notificationData)
     print("📢 Sent new item notification to all players: " .. itemName .. " (ImageId: " .. robloxId .. ")")
+    
+    -- Calculate roll percentage and send Discord webhook
+    task.spawn(function()
+      local allItems = ItemDatabase:GetAllItems()
+      local itemsWithPercentages = ItemRarityModule:CalculateAllRollPercentages(allItems)
+      
+      -- Find the newly created item's roll percentage
+      local rollPercentage = 0
+      for _, itemData in ipairs(itemsWithPercentages) do
+        if itemData.RobloxId == robloxId then
+          rollPercentage = itemData.RollPercentage
+          break
+        end
+      end
+      
+      -- Send webhook notification
+      WebhookHandler:SendItemRelease(result, rollPercentage)
+    end)
   else
     warn("❌ Failed to create item: " .. result)
     -- Send error back to client
