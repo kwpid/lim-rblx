@@ -10,6 +10,13 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 1, 2025)
+- **Index Popup UI System**: Updated Index to use a popup system matching the inventory:
+  - Renamed "Frame" to "Popup" and set to invisible by default
+  - Selected items have bigger borders (BorderSizePixel = 3) that return to normal (1) when unselected
+  - Popup appears when an item is selected (no animation, just show/hide)
+  - Added "Close" button that hides popup and deselects the item
+  - TotalOwners text now only displays for serial items (hidden for regular items)
+  - Fixed ImageLabel UICorner preservation - UICorner is no longer destroyed when changing images
 - **Serial Item Original Owner Tracking**: Serial items now track and display the original owner (first person to roll that specific serial number):
   - When a serial item is rolled, the player's username is saved as the original owner for that specific serial
   - In the inventory popup, serial items display "Original Owner: @username"

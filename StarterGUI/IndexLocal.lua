@@ -32,11 +32,15 @@ if not userTemplate then
   return
 end
 
-local frame = gui:WaitForChild("Frame", 5)
-if not frame then
-  warn("❌ Frame not found in Index GUI")
+-- Changed from "Frame" to "Popup"
+local popup = gui:WaitForChild("Popup", 5)
+if not popup then
+  warn("❌ Popup not found in Index GUI")
   return
 end
+
+-- Set popup to invisible by default
+popup.Visible = false
 
 local searchBar = gui:FindFirstChild("SearchBar")
 
@@ -53,6 +57,7 @@ elseif not selected:IsA("StringValue") then
 end
 
 local selectedItemData = nil
+local selectedButton = nil
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents", 10)
 if not remoteEvents then
@@ -91,6 +96,36 @@ function formatNumber(n)
     if k == 0 then break end
   end
   return formatted
+end
+
+function showPopup()
+  popup.Visible = true
+end
+
+function hidePopup()
+  popup.Visible = false
+end
+
+function clearSelection()
+  -- Reset border size of the selected button
+  if selectedButton then
+    local contentFrame = selectedButton:FindFirstChild("Content")
+    local content2Frame = selectedButton:FindFirstChild("content2")
+    
+    -- Restore normal border size
+    if contentFrame then
+      contentFrame.BorderSizePixel = 1
+    end
+    
+    if content2Frame then
+      content2Frame.BorderSizePixel = 1
+    end
+    
+    selectedButton = nil
+  end
+  
+  selectedItemData = nil
+  selected.Value = ""
 end
 
 function refresh()
@@ -286,6 +321,29 @@ function refresh()
 
     -- Click handler to show item details
     button.MouseButton1Click:Connect(function()
+      -- Clear previous selection
+      if selectedButton and selectedButton ~= button then
+        local prevContentFrame = selectedButton:FindFirstChild("Content")
+        local prevContent2Frame = selectedButton:FindFirstChild("content2")
+        
+        -- Reset border size of previous button
+        if prevContentFrame then
+          prevContentFrame.BorderSizePixel = 1
+        end
+        if prevContent2Frame then
+          prevContent2Frame.BorderSizePixel = 1
+        end
+      end
+      
+      -- Make borders bigger on the selected button
+      if contentFrame then
+        contentFrame.BorderSizePixel = 3
+      end
+      if content2Frame then
+        content2Frame.BorderSizePixel = 3
+      end
+      
+      selectedButton = button
       updateItemDetails(item)
     end)
   end
@@ -306,27 +364,72 @@ function updateItemDetails(item)
   selectedItemData = item
   selected.Value = item.Name
 
-  -- Update frame details
-  local itemNameText = frame:FindFirstChild("ItemName")
-  local totalOwnersText = frame:FindFirstChild("TotalOwners")
-  local valueText = frame:FindFirstChild("Value")
-  local ownerList = frame:FindFirstChild("OwnerList")
+  -- Update popup details
+  local itemNameText = popup:FindFirstChild("ItemName")
+  local totalOwnersText = popup:FindFirstChild("TotalOwners")
+  local valueText = popup:FindFirstChild("Value")
+  local ownerList = popup:FindFirstChild("OwnerList")
+  local imgFrame = popup:FindFirstChild("ImageLabel")
 
   if itemNameText then
     itemNameText.Text = item.Name
   end
 
+  -- Show/hide TotalOwners text (only for serial items)
+  local isStockItem = item.Stock and item.Stock > 0
   if totalOwnersText then
-    totalOwnersText.Text = "Owners: " .. formatNumber(item.Owners or 0)
+    if isStockItem then
+      totalOwnersText.Visible = true
+      totalOwnersText.Text = "Total Owners: " .. formatNumber(item.Owners or 0)
+    else
+      totalOwnersText.Visible = false
+    end
   end
 
   if valueText then
     valueText.Text = "R$ " .. formatNumber(item.Value)
   end
 
+  -- Set the ImageLabel to show the selected item's image
+  -- IMPORTANT: Preserve UICorner if it exists
+  if imgFrame and imgFrame:IsA("ImageLabel") then
+    -- If imgFrame itself is an ImageLabel, set its image directly
+    imgFrame.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
+  elseif imgFrame then
+    -- If imgFrame is a Frame containing an ImageLabel
+    local existingImg = imgFrame:FindFirstChildOfClass("ImageLabel")
+    
+    if existingImg then
+      -- Update existing ImageLabel (preserves UICorner)
+      existingImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
+    else
+      -- Create new ImageLabel while preserving UICorner
+      local uiCorner = imgFrame:FindFirstChildOfClass("UICorner")
+      
+      -- Clear previous images only (not UICorner)
+      for _, child in ipairs(imgFrame:GetChildren()) do
+        if child:IsA("ImageLabel") then
+          child:Destroy()
+        end
+      end
+      
+      local previewImg = Instance.new("ImageLabel")
+      previewImg.Size = UDim2.new(1, 0, 1, 0)
+      previewImg.BackgroundTransparency = 1
+      previewImg.BorderSizePixel = 0
+      previewImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
+      previewImg.Parent = imgFrame
+      
+      -- Ensure UICorner exists
+      if not uiCorner then
+        uiCorner = Instance.new("UICorner")
+        uiCorner.Parent = imgFrame
+      end
+    end
+  end
+
   -- Show/hide OwnerList based on if it's a stock item
   if ownerList then
-    local isStockItem = item.Stock and item.Stock > 0
     ownerList.Visible = isStockItem
 
     if isStockItem then
@@ -374,6 +477,9 @@ function updateItemDetails(item)
       end
     end
   end
+  
+  -- Show the popup
+  showPopup()
 end
 
 -- Search bar functionality
@@ -416,5 +522,14 @@ if createItemEvent then
   createItemEvent.OnClientEvent:Connect(function()
     task.wait(0.5)
     pcall(refresh)
+  end)
+end
+
+-- Close button handler
+local closeButton = popup:FindFirstChild("Close")
+if closeButton then
+  closeButton.MouseButton1Click:Connect(function()
+    hidePopup()
+    clearSelection()
   end)
 end

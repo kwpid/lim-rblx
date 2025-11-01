@@ -163,10 +163,14 @@ Items are automatically assigned rarity based on their value:
   - Sorted by value (highest first), then rarity, then name
   - Displays item thumbnail, name, value, rarity, and owner count
   - Search/filter functionality to find specific items
-- **Item Detail Panel:**
+  - Selected items show with bigger borders (BorderSizePixel = 3)
+- **Item Detail Popup:**
+  - Popup is hidden by default, appears when clicking an item
   - ItemName: Display name of the selected item
-  - TotalOwners: Shows how many unique players own this item
+  - TotalOwners: Shows total owners count (only visible for serial/stock items)
   - Value: Robux value of the item
+  - ImageLabel: Displays item thumbnail with UICorner preserved during image changes
+  - Close button: Hides popup and deselects the item
 - **Owner List (Stock Items Only):**
   - Shows scrolling list of all players who own each serial number
   - Each entry displays:
@@ -385,13 +389,23 @@ For the game to work properly in Roblox, you need:
      - Player_Id TextBox
      - GiveItem button
 
-2. **OpenedCrateGui ScreenGui** with structure:
+2. **IndexLocal ScreenGui** with structure:
+   - Handler folder
+   - Popup (previously Frame) with ItemName, Value, TotalOwners (TextLabel), ImageLabel, OwnerList, and Close button
+   - Sample button template
+   - UserTemplate for owner list entries
+   - SearchBar TextBox
+   - **Note:** The Popup should be set to Visible = false by default in the Roblox Studio GUI properties
+   - **TotalOwners TextLabel:** Shows "Total Owners: X" for serial items only, hidden for regular items
+   - **ImageLabel:** Should have a UICorner child that is preserved when changing images
+
+3. **OpenedCrateGui ScreenGui** with structure:
    - CrateFrame
    - ItemsFrame with ItemsContainer
    - ContinueButton
    - OpeningCrateItemFrame template
 
-3. **InventorySystem ScreenGui** with structure:
+4. **InventorySystem ScreenGui** with structure:
    - Handler folder
    - Popup (previously Frame) with ItemName, Value, TotalValue, ImageLabel, SerialOwner (TextLabel), Equip, Sell, SellAll, and Close buttons
    - Sample button template
@@ -399,7 +413,7 @@ For the game to work properly in Roblox, you need:
    - **Note:** The Popup should be set to Visible = false by default in the Roblox Studio GUI properties
    - **SerialOwner TextLabel:** Shows "Original Owner: @username" for serial items only, hidden for regular items
 
-4. **MainUI ScreenGui** with:
+5. **MainUI ScreenGui** with:
    - Roll button
 
 ---
