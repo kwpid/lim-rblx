@@ -278,6 +278,26 @@ function DataStoreAPI:GetAutoRoll(player)
   return false
 end
 
+-- Set HideRolls state
+function DataStoreAPI:SetHideRolls(player, enabled)
+  local data = self:GetPlayerData(player)
+  if not data then
+    return false
+  end
+
+  data.HideRolls = enabled
+  return true
+end
+
+-- Get HideRolls state
+function DataStoreAPI:GetHideRolls(player)
+  local data = self:GetPlayerData(player)
+  if data then
+    return data.HideRolls or false
+  end
+  return false
+end
+
 -- Get another player's inventory by UserId (for viewing other players)
 function DataStoreAPI:GetPlayerInventoryByUserId(userId)
   local playerData = _G.PlayerData[userId]

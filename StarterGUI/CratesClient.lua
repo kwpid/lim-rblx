@@ -25,6 +25,10 @@ local setAutoRollEvent = remoteEvents:WaitForChild("SetAutoRollEvent", 10)
 local getAutoRollFunction = remoteEvents:WaitForChild("GetAutoRollFunction", 10)
 local serverShutdownEvent = remoteEvents:WaitForChild("ServerShutdownEvent", 10)
 
+-- HideRolls remote events
+local setHideRollsEvent = remoteEvents:WaitForChild("SetHideRollsEvent", 10)
+local getHideRollsFunction = remoteEvents:WaitForChild("GetHideRollsFunction", 10)
+
 -- Get ItemRarityModule
 local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
 
@@ -172,6 +176,11 @@ hideRollsButton.MouseButton1Click:Connect(function()
     -- State is OFF - rolls are shown (darker red, default state)
     hideRollsButton.Text = "[HIDE ROLLS: OFF]"
     hideRollsButton.TextColor3 = Color3.fromRGB(170, 0, 0) -- Darker red when off
+  end
+  
+  -- Save HideRolls state to server
+  if setHideRollsEvent then
+    setHideRollsEvent:FireServer(hideRollsEnabled)
   end
 end)
 
@@ -367,10 +376,11 @@ chatNotificationEvent.OnClientEvent:Connect(function(message)
   end
 end)
 
--- Restore AutoRoll state when player loads
+-- Restore AutoRoll and HideRolls state when player loads
 task.spawn(function()
   task.wait(2) -- Wait for data to load
   
+  -- Restore AutoRoll state
   if getAutoRollFunction then
     local success, savedAutoRoll = pcall(function()
       return getAutoRollFunction:InvokeServer()
@@ -387,6 +397,27 @@ task.spawn(function()
         rollButton.Visible = false
         rollCrateEvent:FireServer()
       end
+    end
+  end
+  
+  -- Restore HideRolls state
+  if getHideRollsFunction then
+    local success, savedHideRolls = pcall(function()
+      return getHideRollsFunction:InvokeServer()
+    end)
+    
+    if success and savedHideRolls then
+      -- Restore HideRolls state
+      hideRollsEnabled = true
+      hideRollsButton.Text = "[HIDE ROLLS: ON]"
+      hideRollsButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+      print("✓ Restored HideRolls state: ON")
+    else
+      -- Default state (OFF - showing rolls)
+      hideRollsEnabled = false
+      hideRollsButton.Text = "[HIDE ROLLS: OFF]"
+      hideRollsButton.TextColor3 = Color3.fromRGB(170, 0, 0)
+      print("✓ HideRolls state: OFF (default)")
     end
   end
 end)

@@ -1,5 +1,5 @@
 -- AutoRollHandler.lua
--- Handles AutoRoll state persistence and server shutdown auto-enable
+-- Handles AutoRoll and HideRolls state persistence and server shutdown auto-enable
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -34,6 +34,20 @@ if not serverShutdownEvent then
   serverShutdownEvent.Parent = remoteEventsFolder
 end
 
+local setHideRollsEvent = remoteEventsFolder:FindFirstChild("SetHideRollsEvent")
+if not setHideRollsEvent then
+  setHideRollsEvent = Instance.new("RemoteEvent")
+  setHideRollsEvent.Name = "SetHideRollsEvent"
+  setHideRollsEvent.Parent = remoteEventsFolder
+end
+
+local getHideRollsFunction = remoteEventsFolder:FindFirstChild("GetHideRollsFunction")
+if not getHideRollsFunction then
+  getHideRollsFunction = Instance.new("RemoteFunction")
+  getHideRollsFunction.Name = "GetHideRollsFunction"
+  getHideRollsFunction.Parent = remoteEventsFolder
+end
+
 -- Handle setting AutoRoll state
 setAutoRollEvent.OnServerEvent:Connect(function(player, enabled)
   if type(enabled) ~= "boolean" then
@@ -46,6 +60,20 @@ end)
 -- Handle getting AutoRoll state
 getAutoRollFunction.OnServerInvoke = function(player)
   return DataStoreAPI:GetAutoRoll(player)
+end
+
+-- Handle setting HideRolls state
+setHideRollsEvent.OnServerEvent:Connect(function(player, enabled)
+  if type(enabled) ~= "boolean" then
+    return
+  end
+
+  DataStoreAPI:SetHideRolls(player, enabled)
+end)
+
+-- Handle getting HideRolls state
+getHideRollsFunction.OnServerInvoke = function(player)
+  return DataStoreAPI:GetHideRolls(player)
 end
 
 -- Detect server shutdown and enable AutoRoll for all players
@@ -65,4 +93,4 @@ game:BindToClose(function()
   wait(1)
 end)
 
-print("AutoRollHandler loaded successfully")
+print("AutoRollHandler (with HideRolls) loaded successfully")
