@@ -120,19 +120,25 @@ function WebhookHandler:SendItemRelease(item, rollPercentage)
 end
 
 -- Send high-value item drop notification
-function WebhookHandler:SendItemDrop(player, item, serialNumber)
+-- source: "roll" or "event" to specify where the item came from
+function WebhookHandler:SendHighValueUnbox(player, item, source)
         local rarityColor = getRarityColor(item.Rarity)
         
+        source = source or "roll"
+        local sourceText = source == "event" and "Event Drop" or "Unboxed"
+        local title = source == "event" and "🎁 High-Value Item from Event!" or "🎉 High-Value Item Unboxed!"
+        
         -- Build description
-        local description = string.format("**Player:**\n%s\n\n**Item:**\n%s\n\n**Value:**\nR$ %s",
+        local description = string.format("**Player:**\n%s\n\n**Item:**\n%s\n\n**Value:**\nR$ %s\n\n**Source:**\n%s",
                 player.Name,
                 item.Name,
-                formatNumber(item.Value)
+                formatNumber(item.Value),
+                sourceText
         )
         
         -- Add serial number if available
-        if serialNumber then
-                description = description .. string.format("\n\n**Serial:**\n#%d", serialNumber)
+        if item.SerialNumber then
+                description = description .. string.format("\n\n**Serial:**\n#%d", item.SerialNumber)
         end
         
         -- Get player thumbnail URL
@@ -140,7 +146,7 @@ function WebhookHandler:SendItemDrop(player, item, serialNumber)
         
         local payload = {
                 embeds = {{
-                        title = "🎉 High-Value Item Unboxed!",
+                        title = title,
                         description = description,
                         color = rarityColor,
                         thumbnail = {
@@ -150,7 +156,7 @@ function WebhookHandler:SendItemDrop(player, item, serialNumber)
                                 url = string.format("https://assetdelivery.roblox.com/v1/asset?id=%d", item.RobloxId)
                         },
                         footer = {
-                                text = "Item Drop"
+                                text = sourceText
                         },
                         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
                 }}
@@ -159,10 +165,22 @@ function WebhookHandler:SendItemDrop(player, item, serialNumber)
         local success = sendWebhook(ITEM_DROP_WEBHOOK, payload)
         
         if success then
-                print(string.format("📢 Sent item drop webhook: %s unboxed %s", player.Name, item.Name))
+                print(string.format("📢 Sent item drop webhook: %s %s %s", player.Name, sourceText:lower(), item.Name))
         end
         
         return success
+end
+
+-- Legacy function name for backwards compatibility
+function WebhookHandler:SendItemDrop(player, item, serialNumber)
+        local itemData = {
+                RobloxId = item.RobloxId,
+                Name = item.Name,
+                Value = item.Value,
+                Rarity = item.Rarity,
+                SerialNumber = serialNumber
+        }
+        return self:SendHighValueUnbox(player, itemData, "roll")
 end
 
 -- Send out of stock notification

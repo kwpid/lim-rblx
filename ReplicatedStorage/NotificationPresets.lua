@@ -74,6 +74,24 @@ notificationPresets.DATA_ERROR = {
   DEFAULT_COLOR = Color3.fromRGB(198, 34, 34),
 }
 
+notificationPresets.EVENT_START = {
+
+  DEFAULT_TITLE = "Event Started!",
+  DEFAULT_BODY = "A new event has begun!",
+  DEFAULT_IMAGE = "rbxassetid://8150337440",
+  DEFAULT_SOUND = "rbxassetid://10066947742",
+  DEFAULT_COLOR = Color3.fromRGB(255, 215, 0),
+}
+
+notificationPresets.EVENT_END = {
+
+  DEFAULT_TITLE = "Event Ended",
+  DEFAULT_BODY = "The event has ended!",
+  DEFAULT_IMAGE = "rbxassetid://8150337440",
+  DEFAULT_SOUND = "rbxassetid://550209561",
+  DEFAULT_COLOR = Color3.fromRGB(170, 170, 170),
+}
+
 
 
 return notificationPresets
