@@ -13,7 +13,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 
 ### Core Game Systems
 -   **Item System**: Items have Roblox asset IDs, names, values, and rarities (8 tiers from Common to Insane). Supports both stackable regular items and limited stock items with serial numbers. Weighted probability ensures higher value items are rarer.
--   **Crate Opening**: Free rolls with weighted random selection. Includes visual scrolling animation with rarity-colored item names, serial number display for stock items, and a "continue" button after each roll. The roll animation only displays items that are currently available (excludes sold-out stock items). High-value unboxes trigger chat notifications (250k+ server-wide, 5M+ cross-server global). Features:
+-   **Crate Opening**: Free rolls with weighted random selection influenced by luck multipliers. Includes visual scrolling animation with rarity-colored item names, serial number display for stock items, and a "continue" button after each roll. The roll animation only displays items that are currently available (excludes sold-out stock items). High-value unboxes trigger chat notifications (250k+ server-wide, 5M+ cross-server global). Features:
     - **Roll Time**: 5 seconds for normal players, 2 seconds for Fast Roll gamepass owners (2.5x faster)
     - **Fast Roll Gamepass**: Players who own gamepass ID 1242040274 from the old game get faster roll animations
     - **AutoRoll**: Toggle button that continuously rolls crates. Green text when ON, red text when OFF. Can be stopped mid-roll, and the button remains visible during rolls for easy toggling.
@@ -23,7 +23,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
     - Give items to players (by User ID or username) with notifications for both admin and recipient
     - Delete items with confirmation dialog (double-click required), removes from all players' inventories with automatic cleanup for offline players
     - Global "New Item" notification system and console commands for database checks
--   **Data Persistence**: Utilizes Roblox DataStore Service for player inventories (with auto-stacking), rolls, cash, inventory value, AutoRoll state, and HideRolls state. Auto-saves every 2 minutes. Includes a data version system to manage wipes and resets. Features automatic cleanup of deleted items when offline players rejoin.
+-   **Data Persistence**: Utilizes Roblox DataStore Service for player inventories (with auto-stacking), rolls, cash, inventory value, AutoRoll state, HideRolls state, and Luck multiplier. Auto-saves every 2 minutes. Includes a data version system to manage wipes and resets. Features automatic cleanup of deleted items when offline players rejoin.
 -   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays stock item counts ("X / Y copies" using CurrentStock) and regular item counts ("X copies" using TotalCopies instead of unique owners). RareText appears only on items with less than 25 copies. Includes search/filter functionality and detailed item info on click.
 -   **View Other Players' Inventories**: Players can hover over other players to see a yellow glow effect, then click to open a GUI showing that player's full inventory. Features structured error handling with retry logic for reliable data loading. Shows items sorted by value with accurate copy counts.
 -   **Equipping Items**: Players can equip/unequip items from their inventory, which are then visible to all players. Uses Roblox asset IDs to load and attach items (accessories, hats, and tools) to the character, with equipped items persisting across sessions. Headless items are handled by setting head transparency instead of replacing the head mesh.
@@ -56,6 +56,16 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Roblox MessagingService**: Used for cross-server notifications when ultra-rare items (5M+) are unboxed.
 
 ## Recent Updates (November 1, 2025)
+-   **Luck Multiplier System**: Added comprehensive luck system with both global and per-player control:
+    - **Global Luck Modifier**: `GLOBAL_LUCK_MODIFIER` constant in CratesServer.lua (easy to change in Studio for events/updates, default 1.0)
+    - **Player Luck Attribute**: Each player has a "Luck" attribute (default 1.0) that persists across sessions in DataStore
+    - **Bidirectional Effect**: ANY deviation from 1.0 affects probability distribution
+      - Luck > 1.0: Uses ceiling-based multi-roll system, picks LOWEST value → Favors rare/high-value items (e.g., 1.1 = 2 rolls, 2.5 = 3 rolls)
+      - Luck < 1.0: Uses ceiling-based multi-roll system, picks HIGHEST value → Favors common/low-value items (e.g., 0.9 = 2 rolls, 0.5 = 2 rolls, 0.33 = 3 rolls)
+      - Luck = 1.0: Normal single roll, no modification
+    - **Performance Cap**: Maximum 10 rolls to prevent performance issues
+    - **Total Luck Calculation**: Player's Luck × Global Modifier = Final luck used for rolls
+    - **API Methods**: `SetLuck(player, value)` and `GetLuck(player)` in DataStoreAPI.lua with validation (must be positive number)
 -   **Hide Rolls Feature with Persistence**: Added HideRolls toggle button in MainUI (next to Roll and AutoRoll buttons). When OFF (default, darker red RGB 170,0,0), the rolling animation is shown normally. When ON (brighter red RGB 255,0,0), the rolling frame is hidden but items are still awarded. Speeds up auto-rolling when hidden (0.5s delay vs 1.5s). Players can toggle visibility mid-roll for faster unboxing experience. HideRolls state now persists across sessions - when a player rejoins, their preference is automatically restored.
 -   **View Player Inventory Fix**: Fixed issue where players could only view one person's inventory. Now properly resets search bar and highlight state when opening/closing, allowing unlimited consecutive player inventory views without requiring page refresh.
 -   **TotalCopies Tracking System**: Changed from tracking unique owners to tracking total copies for regular items. Shows "X copies" instead of "X owners" in inventory and index. Stock items continue using CurrentStock. System automatically increments on roll/give and decrements on sell.
