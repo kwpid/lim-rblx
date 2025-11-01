@@ -264,6 +264,10 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   if not hideRollsEnabled then
     openedFrame.Visible = true
     openedGui.Enabled = true
+  else
+    -- Make sure GUI is disabled when hideRolls is ON to prevent blocking input
+    openedFrame.Visible = false
+    openedGui.Enabled = false
   end
 
   -- Use consistent animation speed (easing power)
@@ -317,7 +321,7 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   -- Show roll button again
   rollButton.Visible = true
 
-  -- Handle auto-roll
+  -- Handle auto-roll OR manual roll cleanup (when hideRolls is ON)
   if isAutoRolling and not shouldStopAutoRoll then
     -- Continue auto-rolling
     -- Wait a moment before next roll (shorter if rolls are hidden)
@@ -344,6 +348,19 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   elseif shouldStopAutoRoll then
     -- User requested to stop, turn off autoroll
     stopAutoRoll()
+  elseif hideRollsEnabled then
+    -- Manual roll with hideRolls ON - clear items after a short delay
+    task.delay(0.5, function()
+      -- Clear items for next roll
+      for _, child in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do
+        if child:IsA("Frame") or child:IsA("ImageLabel") then
+          child:Destroy()
+        end
+      end
+      -- Ensure GUI stays disabled
+      openedFrame.Visible = false
+      openedGui.Enabled = false
+    end)
   end
 end)
 

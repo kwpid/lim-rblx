@@ -13,6 +13,35 @@ local DATA_VERSION = "DataVersion.15"
 local ItemDatabase = {}
 ItemDatabase.Items = {}
 ItemDatabase.DataVersion = DATA_VERSION
+ItemDatabase._saveQueued = false
+ItemDatabase._lastSaveTime = 0
+
+-- Debounced save system to prevent DataStore queue overload
+-- Instead of saving immediately, queue a save that will happen after a short delay
+-- This batches multiple rapid changes into a single save operation
+local SAVE_DEBOUNCE_TIME = 3 -- Wait 3 seconds after last change before saving
+
+function ItemDatabase:QueueSave()
+  if self._saveQueued then
+    return -- Save already queued
+  end
+  
+  self._saveQueued = true
+  
+  task.delay(SAVE_DEBOUNCE_TIME, function()
+    self._saveQueued = false
+    local timeSinceLastSave = tick() - self._lastSaveTime
+    
+    -- Only save if enough time has passed (prevents rapid saves)
+    if timeSinceLastSave >= 1 then
+      self:SaveItems()
+      self._lastSaveTime = tick()
+    else
+      -- Too soon, queue another save
+      self:QueueSave()
+    end
+  end)
+end
 
 -- Load all items from DataStore
 function ItemDatabase:LoadItems()
@@ -194,7 +223,7 @@ function ItemDatabase:IncrementStock(item)
 
   if stock > 0 and currentStock < stock then
     item.CurrentStock = currentStock + 1
-    self:SaveItems()
+    self:QueueSave() -- Use queued save to prevent DataStore overload during rapid rolls
     return item.CurrentStock -- Return the serial number
   end
   return nil
@@ -239,7 +268,7 @@ function ItemDatabase:IncrementOwners(robloxId)
   if item then
     local oldOwners = item.Owners or 0
     item.Owners = oldOwners + 1
-    self:SaveItems()
+    self:QueueSave() -- Use queued save to prevent DataStore overload during rapid rolls
     return item.Owners
   else
     return nil
@@ -261,7 +290,7 @@ function ItemDatabase:IncrementTotalCopies(robloxId, amount)
   if item then
     local oldCopies = item.TotalCopies or 0
     item.TotalCopies = oldCopies + amount
-    self:SaveItems()
+    self:QueueSave() -- Use queued save to prevent DataStore overload during rapid rolls
     return item.TotalCopies
   else
     return nil
@@ -297,7 +326,7 @@ function ItemDatabase:DecrementOwners(robloxId)
   if item then
     local oldOwners = item.Owners or 0
     item.Owners = math.max(0, oldOwners - 1) -- Don't go below 0
-    self:SaveItems()
+    self:QueueSave() -- Use queued save to prevent DataStore overload
 
     return item.Owners
   else
@@ -321,7 +350,7 @@ function ItemDatabase:DecrementTotalCopies(robloxId, amount)
   if item then
     local oldCopies = item.TotalCopies or 0
     item.TotalCopies = math.max(0, oldCopies - amount) -- Don't go below 0
-    self:SaveItems()
+    self:QueueSave() -- Use queued save to prevent DataStore overload
 
     return item.TotalCopies
   else
@@ -352,7 +381,7 @@ function ItemDatabase:DecrementStock(robloxId)
 
   if stock > 0 and currentStock > 0 then
     item.CurrentStock = currentStock - 1
-    self:SaveItems()
+    self:QueueSave() -- Use queued save to prevent DataStore overload
     return true
   end
 
@@ -395,7 +424,7 @@ function ItemDatabase:IncreaseStockLimit(robloxId, userId, username)
       })
     end
 
-    self:SaveItems()
+    self:QueueSave() -- Use queued save to prevent DataStore overload
     print("📈 Increased stock limit for " .. item.Name .. " from " .. stock .. " to " .. item.Stock)
     return item.CurrentStock -- Return the new serial number
   end
@@ -429,7 +458,7 @@ function ItemDatabase:RecordSerialOwner(robloxId, userId, username, serialNumber
       -- Serial already recorded, update if needed
       owner.UserId = userId
       owner.Username = username
-      self:SaveItems()
+      self:QueueSave() -- Use queued save to prevent DataStore overload
       return true
     end
   end
@@ -441,7 +470,7 @@ function ItemDatabase:RecordSerialOwner(robloxId, userId, username, serialNumber
     Username = username
   })
 
-  self:SaveItems()
+  self:QueueSave() -- Use queued save to prevent DataStore overload
   return true
 end
 
