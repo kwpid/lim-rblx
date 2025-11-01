@@ -17,6 +17,8 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
   - Added "Close" button that slides popup out and deselects the item
   - Previous selection is automatically cleared when selecting a new item
   - Smooth animations using TweenService with Quart easing
+  - **Inventory GUI Animations**: Entire inventory slides up from bottom when opened (0.4s) and slides down when closed (0.3s)
+  - **Auto-Refresh on Equip**: Inventory automatically refreshes and re-orders when equipping/unequipping items, showing equipped items at the top immediately
 - **Limited Item Type**: Added new Limited item category that can be marked when creating items. Limited items display "LimText" in inventory and index. Items can have both rarity (Common, Rare, etc.) and Limited status.
 - **Edit Item Mode**: Admin panel now supports editing existing items. Paste an existing item ID to enter edit mode - auto-fills all fields and allows changing name, value, stock, and Limited status. Button changes from "CreateItem" to "Edit Item".
 - **RareText Fix**: Fixed RareText to properly show for items with 25 copies or less (was 24 or less). Applies to both stock and regular items in Index and Inventory.

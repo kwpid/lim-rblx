@@ -7,6 +7,20 @@ local player = Players.LocalPlayer
 local gui = script.Parent
 local buttons = {}
 
+-- Get the ScreenGui for enabling/disabling the inventory
+local screenGui = gui
+while screenGui and not screenGui:IsA("ScreenGui") do
+  screenGui = screenGui.Parent
+end
+
+if not screenGui then
+  warn("❌ ScreenGui not found for InventorySystem")
+  return
+end
+
+-- Get the main container Frame that we'll animate
+local mainFrame = gui:FindFirstChild("Frame") or gui:FindFirstChild("MainFrame") or gui:FindFirstChild("Container")
+
 local handler = gui:WaitForChild("Handler", 5)
 if not handler then
   warn("❌ Handler not found in InventorySystem GUI")
@@ -81,6 +95,12 @@ local rarityColors = {
 -- Store the original popup position for animation
 local popupOriginalPosition = popup.Position
 
+-- Store the original inventory frame position for animation
+local inventoryOriginalPosition = nil
+if mainFrame then
+  inventoryOriginalPosition = mainFrame.Position
+end
+
 function formatNumber(n)
   local formatted = tostring(n)
   while true do
@@ -88,6 +108,59 @@ function formatNumber(n)
     if k == 0 then break end
   end
   return formatted
+end
+
+function showInventory()
+  if mainFrame and inventoryOriginalPosition then
+    -- Start position (off-screen at the bottom)
+    local startPos = UDim2.new(
+      inventoryOriginalPosition.X.Scale,
+      inventoryOriginalPosition.X.Offset,
+      1.2, -- Below screen
+      0
+    )
+    
+    mainFrame.Position = startPos
+    
+    -- Tween to original position
+    local tweenInfo = TweenInfo.new(
+      0.4,
+      Enum.EasingStyle.Quart,
+      Enum.EasingDirection.Out
+    )
+    
+    local tween = TweenService:Create(mainFrame, tweenInfo, {Position = inventoryOriginalPosition})
+    tween:Play()
+  end
+end
+
+function hideInventory(callback)
+  if mainFrame and inventoryOriginalPosition then
+    -- Tween down to the bottom
+    local endPos = UDim2.new(
+      inventoryOriginalPosition.X.Scale,
+      inventoryOriginalPosition.X.Offset,
+      1.2, -- Below screen
+      0
+    )
+    
+    local tweenInfo = TweenInfo.new(
+      0.3,
+      Enum.EasingStyle.Quart,
+      Enum.EasingDirection.In
+    )
+    
+    local tween = TweenService:Create(mainFrame, tweenInfo, {Position = endPos})
+    tween:Play()
+    
+    if callback then
+      tween.Completed:Connect(callback)
+    end
+  else
+    if callback then
+      callback()
+    end
+  end
 end
 
 function showPopup()
@@ -513,6 +586,17 @@ if inventoryUpdatedEvent then
   end)
 end
 
+-- Listen for when the inventory GUI is opened
+if screenGui then
+  screenGui:GetPropertyChangedSignal("Enabled"):Connect(function()
+    if screenGui.Enabled then
+      -- Refresh and animate in when opened
+      pcall(refresh)
+      showInventory()
+    end
+  end)
+end
+
 -- Close button handler
 local closeButton = popup:FindFirstChild("Close")
 if closeButton then
@@ -537,6 +621,12 @@ if equipButton and equipItemEvent then
         equippedItems[selectedItemData.RobloxId] = true
         equipButton.Text = "Unequip"
       end
+      
+      -- Refresh inventory to re-order items (equipped items go to top)
+      task.wait(0.1) -- Small delay to let server update
+      hidePopup()
+      clearSelection()
+      pcall(refresh)
     end
   end)
 end
