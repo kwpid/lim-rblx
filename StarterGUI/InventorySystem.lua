@@ -23,7 +23,7 @@ if not sample then
 end
 
 -- Changed from "Frame" to "Popup"
-local popup = gui:WaitForChild("Popup", 5)
+local popup = script.Parent.Popout
 if not popup then
   warn("❌ Popup not found in InventorySystem GUI")
   return
@@ -106,7 +106,7 @@ end
 
 function showPopup()
   popup.Visible = true
-  
+
   -- Start position (off-screen to the right)
   local startPos = UDim2.new(
     popupOriginalPosition.X.Scale + 0.5,
@@ -114,17 +114,17 @@ function showPopup()
     popupOriginalPosition.Y.Scale,
     popupOriginalPosition.Y.Offset
   )
-  
+
   popup.Position = startPos
-  
+
   -- Tween to original position
   local tweenInfo = TweenInfo.new(
     0.3,
     Enum.EasingStyle.Quart,
     Enum.EasingDirection.Out
   )
-  
-  local tween = TweenService:Create(popup, tweenInfo, {Position = popupOriginalPosition})
+
+  local tween = TweenService:Create(popup, tweenInfo, { Position = popupOriginalPosition })
   tween:Play()
 end
 
@@ -136,16 +136,16 @@ function hidePopup()
     popupOriginalPosition.Y.Scale,
     popupOriginalPosition.Y.Offset
   )
-  
+
   local tweenInfo = TweenInfo.new(
     0.2,
     Enum.EasingStyle.Quart,
     Enum.EasingDirection.In
   )
-  
-  local tween = TweenService:Create(popup, tweenInfo, {Position = endPos})
+
+  local tween = TweenService:Create(popup, tweenInfo, { Position = endPos })
   tween:Play()
-  
+
   tween.Completed:Connect(function()
     popup.Visible = false
   end)
@@ -156,19 +156,19 @@ function clearSelection()
   if selectedButton then
     local contentFrame = selectedButton:FindFirstChild("Content")
     local content2Frame = selectedButton:FindFirstChild("content2")
-    
+
     -- Restore normal border size
     if contentFrame then
       contentFrame.BorderSizePixel = 1
     end
-    
+
     if content2Frame then
       content2Frame.BorderSizePixel = 1
     end
-    
+
     selectedButton = nil
   end
-  
+
   selectedItemData = nil
   selected.Value = ""
   sellConfirmation = false
@@ -382,7 +382,7 @@ function refresh()
       if selectedButton and selectedButton ~= button then
         local prevContentFrame = selectedButton:FindFirstChild("Content")
         local prevContent2Frame = selectedButton:FindFirstChild("content2")
-        
+
         -- Reset border size of previous button
         if prevContentFrame then
           prevContentFrame.BorderSizePixel = 1
@@ -391,7 +391,7 @@ function refresh()
           prevContent2Frame.BorderSizePixel = 1
         end
       end
-      
+
       -- Make borders bigger on the selected button
       if contentFrame then
         contentFrame.BorderSizePixel = 3
@@ -399,9 +399,9 @@ function refresh()
       if content2Frame then
         content2Frame.BorderSizePixel = 3
       end
-      
+
       selectedButton = button
-      
+
       local itemNameText = popup:WaitForChild("ItemName")
       local itemValueText = popup:WaitForChild("Value")
       local totalValueText = popup:FindFirstChild("TotalValue")
@@ -426,7 +426,7 @@ function refresh()
       else
         -- If imgFrame is a Frame containing an ImageLabel, update or create the image
         local existingImg = imgFrame:FindFirstChildOfClass("ImageLabel")
-        
+
         if existingImg then
           -- Use existing ImageLabel
           existingImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
@@ -435,7 +435,7 @@ function refresh()
           for _, child in ipairs(imgFrame:GetChildren()) do
             child:Destroy()
           end
-          
+
           local previewImg = Instance.new("ImageLabel")
           previewImg.Size = UDim2.new(1, 0, 1, 0)
           previewImg.BackgroundTransparency = 1
@@ -474,7 +474,7 @@ function refresh()
       if sellAllButton then
         sellAllButton.Visible = not isStockItem
       end
-      
+
       -- Show/hide SerialOwner text for serial items only
       local serialOwnerText = popup:FindFirstChild("SerialOwner")
       if serialOwnerText then
@@ -485,7 +485,7 @@ function refresh()
           serialOwnerText.Visible = false
         end
       end
-      
+
       -- Show the popup with animation
       showPopup()
     end)
@@ -570,7 +570,7 @@ if equipButton and equipItemEvent then
         equippedItems[selectedItemData.RobloxId] = true
         equipButton.Text = "Unequip"
       end
-      
+
       -- Refresh inventory to re-order items (equipped items go to top)
       task.wait(0.1) -- Small delay to let server update
       hidePopup()
