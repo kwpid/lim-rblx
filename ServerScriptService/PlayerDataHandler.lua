@@ -39,7 +39,7 @@ local function setupPlayer(player)
   if data.Inventory then
     local itemsToRemove = {}
     local removedItemNames = {}
-    
+
     for i, invItem in ipairs(data.Inventory) do
       -- Check if this item still exists in ItemDatabase
       local itemExists = ItemDatabase:GetItemByRobloxId(invItem.RobloxId)
@@ -49,12 +49,12 @@ local function setupPlayer(player)
         table.insert(removedItemNames, invItem.Name or "Unknown Item")
       end
     end
-    
+
     -- Remove items in reverse order to maintain indices
     for i = #itemsToRemove, 1, -1 do
       table.remove(data.Inventory, itemsToRemove[i])
     end
-    
+
     -- Also clean up EquippedItems array
     if data.EquippedItems then
       local equippedToRemove = {}
@@ -64,16 +64,16 @@ local function setupPlayer(player)
           table.insert(equippedToRemove, i)
         end
       end
-      
+
       for i = #equippedToRemove, 1, -1 do
         table.remove(data.EquippedItems, equippedToRemove[i])
       end
     end
-    
+
     -- Log and notify player if items were removed
     if #itemsToRemove > 0 then
       print("🧹 Cleaned up " .. #itemsToRemove .. " deleted items from " .. player.Name .. "'s inventory")
-      
+
       -- Send notification to player about removed items
       task.delay(3, function()
         local itemsList = ""
@@ -85,11 +85,11 @@ local function setupPlayer(player)
             end
           end
         end
-        
+
         if #removedItemNames > 3 then
           itemsList = itemsList .. " and " .. (#removedItemNames - 3) .. " more"
         end
-        
+
         local notificationData = {
           Type = "ERROR",
           Title = "Items Removed",
@@ -100,91 +100,7 @@ local function setupPlayer(player)
     end
   end
 
-  -- ═══════════════════════════════════════════════════
-  -- REPAIR SERIAL OWNERS: Fix missing SerialOwner records in ItemDatabase
-  -- This handles cases where stock items exist in player inventory but
-  -- aren't tracked in the ItemDatabase's SerialOwners array (e.g., migrated data)
-  -- ═══════════════════════════════════════════════════
-  if data.Inventory then
-    -- Wait for ItemDatabase to be ready before repairing
-    if not ItemDatabase.IsReady then
-      print("⏳ Waiting for ItemDatabase to repair SerialOwners for " .. player.Name)
-      local waitStart = tick()
-      local maxWait = 30
-      
-      while not ItemDatabase.IsReady and (tick() - waitStart) < maxWait do
-        task.wait(0.1)
-      end
-      
-      if not ItemDatabase.IsReady then
-        warn("❌ ItemDatabase not ready - SerialOwner repair skipped for " .. player.Name)
-      end
-    end
-    
-    -- Only run repair if ItemDatabase is now ready
-    if ItemDatabase.IsReady then
-      local repairedCount = 0
-      local updatedStockCount = 0
-      
-      for _, invItem in ipairs(data.Inventory) do
-        -- Only process stock items (items with SerialNumber)
-        if invItem.SerialNumber then
-          local dbItem = ItemDatabase:GetItemByRobloxId(invItem.RobloxId)
-          
-          if dbItem and dbItem.SerialOwners then
-            -- Check if this serial number is already recorded
-            local serialExists = false
-            for _, owner in ipairs(dbItem.SerialOwners) do
-              if owner.SerialNumber == invItem.SerialNumber and owner.UserId == player.UserId then
-                serialExists = true
-                break
-              end
-            end
-            
-            -- If serial not found, add it
-            if not serialExists then
-              local success = ItemDatabase:RecordSerialOwner(
-                invItem.RobloxId,
-                player.UserId,
-                player.Name,
-                invItem.SerialNumber
-              )
-              
-              if success then
-                repairedCount = repairedCount + 1
-                print(string.format("🔧 Repaired SerialOwner: %s #%d for %s", 
-                  invItem.Name, invItem.SerialNumber, player.Name))
-              end
-            end
-            
-            -- CRITICAL: Check if this serial number is higher than CurrentStock
-            -- This prevents duplicate serial numbers from being assigned by future rolls
-            local currentStock = dbItem.CurrentStock or 0
-            if invItem.SerialNumber > currentStock then
-              dbItem.CurrentStock = invItem.SerialNumber
-              ItemDatabase:SaveItems()
-              updatedStockCount = updatedStockCount + 1
-              print(string.format("📊 Updated CurrentStock for %s from %d to %d (found serial #%d)", 
-                dbItem.Name, currentStock, invItem.SerialNumber, invItem.SerialNumber))
-            end
-          end
-        end
-      end
-      
-      if repairedCount > 0 then
-        print(string.format("✅ Repaired %d missing SerialOwner records for %s", repairedCount, player.Name))
-      end
-      if updatedStockCount > 0 then
-        print(string.format("✅ Updated CurrentStock for %d items to prevent duplicate serials", updatedStockCount))
-      end
-    end
-  end
-
   PlayerData[player.UserId] = data
-  
-  -- Set player Luck attribute (default 1.0 if not in data)
-  local luck = data.Luck or 1.0
-  player:SetAttribute("Luck", luck)
 
   local leaderstats = Instance.new("Folder")
   leaderstats.Name = "leaderstats"

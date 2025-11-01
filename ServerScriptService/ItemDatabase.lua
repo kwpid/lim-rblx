@@ -140,11 +140,11 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
     Name = itemName,
     Value = itemValue,
     Rarity = rarity,
-    Stock = stock,      -- 0 = regular, 1-100 = stock item
-    CurrentStock = 0,   -- How many have been rolled (stock items)
-    Owners = 0,         -- How many unique players own this item (for backwards compatibility)
-    TotalCopies = 0,    -- Total copies across all players (regular items)
-    SerialOwners = {},  -- Array of {UserId, SerialNumber, Username} for stock items
+    Stock = stock,     -- 0 = regular, 1-100 = stock item
+    CurrentStock = 0,  -- How many have been rolled (stock items)
+    Owners = 0,        -- How many unique players own this item (for backwards compatibility)
+    TotalCopies = 0,   -- Total copies across all players (regular items)
+    SerialOwners = {}, -- Array of {UserId, SerialNumber, Username} for stock items
     CreatedAt = os.time()
   }
 
@@ -529,10 +529,10 @@ ItemDatabase.IsReady = false
 task.spawn(function()
   local startTime = tick()
   print("⏳ Loading ItemDatabase...")
-  
+
   ItemDatabase:LoadItems()
   ItemDatabase.IsReady = true
-  
+
   local loadTime = tick() - startTime
   print(string.format("✅ ItemDatabase ready! Loaded %d items in %.2f seconds", #ItemDatabase.Items, loadTime))
 end)
