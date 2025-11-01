@@ -355,6 +355,8 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
       table.remove(data.Inventory, itemIndex)
       ItemDatabase:DecrementOwners(item.RobloxId)
     end
+    -- Decrement total copies for regular items
+    ItemDatabase:DecrementTotalCopies(item.RobloxId, 1)
   end
 
   local stillOwnsItem = false
@@ -432,11 +434,19 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
 
   table.sort(itemsToRemove, function(a, b) return a.index > b.index end)
 
+  local totalCopiesRemoved = 0
   for _, entry in ipairs(itemsToRemove) do
     if entry.isStock then
       ItemDatabase:DecrementStock(entry.item.RobloxId)
+    else
+      totalCopiesRemoved = totalCopiesRemoved + entry.amount
     end
     table.remove(data.Inventory, entry.index)
+  end
+
+  -- Decrement total copies for regular items
+  if totalCopiesRemoved > 0 then
+    ItemDatabase:DecrementTotalCopies(firstItem.RobloxId, totalCopiesRemoved)
   end
 
   ItemDatabase:DecrementOwners(firstItem.RobloxId)

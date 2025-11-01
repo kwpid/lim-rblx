@@ -245,3 +245,49 @@ end
 local inventoryUpdatedEvent = Instance.new("RemoteEvent")
 inventoryUpdatedEvent.Name = "InventoryUpdatedEvent"
 inventoryUpdatedEvent.Parent = remoteEventsFolder
+
+-- Remote function to get another player's inventory (for viewing other players)
+local getPlayerInventoryFunction = remoteEventsFolder:FindFirstChild("GetPlayerInventoryFunction")
+if not getPlayerInventoryFunction then
+  getPlayerInventoryFunction = Instance.new("RemoteFunction")
+  getPlayerInventoryFunction.Name = "GetPlayerInventoryFunction"
+  getPlayerInventoryFunction.Parent = remoteEventsFolder
+end
+
+getPlayerInventoryFunction.OnServerInvoke = function(player, targetUserId)
+  -- Verify targetUserId is a number
+  if type(targetUserId) ~= "number" then
+    warn("❌ GetPlayerInventoryFunction: targetUserId must be a number")
+    return { success = false, error = "Invalid user ID" }
+  end
+
+  -- Wait for target player data to load (with bounded retries)
+  local attempts = 0
+  while not _G.PlayerData[targetUserId] and attempts < 10 do
+    attempts = attempts + 1
+    task.wait(0.1)
+  end
+
+  -- Check if player data was never loaded
+  if not _G.PlayerData[targetUserId] then
+    warn("⚠️ GetPlayerInventory: Player data not loaded for UserId " .. tostring(targetUserId))
+    return { success = false, error = "Player data not loaded" }
+  end
+
+  -- Get the target player's inventory
+  local success, result = pcall(function()
+    return DataStoreAPI:GetPlayerInventoryByUserId(targetUserId)
+  end)
+
+  if not success then
+    warn("❌ GetPlayerInventory failed for UserId " .. tostring(targetUserId) .. ": " .. tostring(result))
+    return { success = false, error = "Failed to retrieve inventory" }
+  end
+
+  if not result then
+    warn("⚠️ GetPlayerInventory returned nil for UserId " .. tostring(targetUserId))
+    return { success = false, error = "Inventory not available" }
+  end
+
+  return { success = true, inventory = result }
+end

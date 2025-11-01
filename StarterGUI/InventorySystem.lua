@@ -198,8 +198,8 @@ function refresh()
       -- Stock item: use CurrentStock (number of serials claimed)
       copiesCount = item.CurrentStock or 0
     else
-      -- Regular item: use Owners (unique players who own it)
-      copiesCount = item.Owners or 0
+      -- Regular item: use TotalCopies (total copies across all players)
+      copiesCount = item.TotalCopies or 0
     end
     
     -- Show/hide RareText based on copies count (< 25 = rare)
@@ -212,7 +212,7 @@ function refresh()
       end
     end
     
-    -- Display copies (stock items) or owners count (regular items)
+    -- Display copies (stock items) or total copies (regular items)
     local copiesLabel = button:FindFirstChild("copies")
     if copiesLabel then
       local stockCount = item.Stock or 0
@@ -222,8 +222,8 @@ function refresh()
           -- Stock item: show "X / Y copies" using CurrentStock
           copiesLabel.Text = copiesCount .. " / " .. stockCount .. " copies"
         else
-          -- Regular item: show "X owners" using Owners
-          copiesLabel.Text = copiesCount .. " owners"
+          -- Regular item: show "X copies" using TotalCopies
+          copiesLabel.Text = copiesCount .. " copies"
         end
         copiesLabel.Visible = true
       else
@@ -238,7 +238,7 @@ function refresh()
         -- Stock items show "CurrentStock/Stock" format
         o2Label.Text = formatNumber(copiesCount) .. "/" .. formatNumber(item.Stock)
       else
-        -- Regular items show just owners count
+        -- Regular items show just total copies count
         o2Label.Text = formatNumber(copiesCount)
       end
     end

@@ -52,7 +52,7 @@ function ItemDatabase:LoadItems()
         self.DataVersion = savedVersion
       end
 
-      -- Migrate legacy items (add Stock/CurrentStock/Owners/SerialOwners if missing)
+      -- Migrate legacy items (add Stock/CurrentStock/Owners/TotalCopies/SerialOwners if missing)
       for _, item in ipairs(self.Items) do
         if item.Stock == nil then
           item.Stock = 0
@@ -62,6 +62,9 @@ function ItemDatabase:LoadItems()
         end
         if item.Owners == nil then
           item.Owners = 0
+        end
+        if item.TotalCopies == nil then
+          item.TotalCopies = 0
         end
         if item.SerialOwners == nil then
           item.SerialOwners = {}
@@ -137,10 +140,11 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
     Name = itemName,
     Value = itemValue,
     Rarity = rarity,
-    Stock = stock,     -- 0 = regular, 1-100 = stock item
-    CurrentStock = 0,  -- How many have been rolled (starts at 0)
-    Owners = 0,        -- How many players own this item
-    SerialOwners = {}, -- Array of {UserId, SerialNumber, Username} for stock items
+    Stock = stock,      -- 0 = regular, 1-100 = stock item
+    CurrentStock = 0,   -- How many have been rolled (stock items)
+    Owners = 0,         -- How many unique players own this item (for backwards compatibility)
+    TotalCopies = 0,    -- Total copies across all players (regular items)
+    SerialOwners = {},  -- Array of {UserId, SerialNumber, Username} for stock items
     CreatedAt = os.time()
   }
 
@@ -222,7 +226,7 @@ function ItemDatabase:GetItemByRobloxId(robloxId)
   return nil
 end
 
--- Increment owners count for an item
+-- Increment owners count for an item (unique players)
 function ItemDatabase:IncrementOwners(robloxId)
   -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
@@ -237,6 +241,28 @@ function ItemDatabase:IncrementOwners(robloxId)
     item.Owners = oldOwners + 1
     self:SaveItems()
     return item.Owners
+  else
+    return nil
+  end
+end
+
+-- Increment total copies for a regular item (increments by amount)
+function ItemDatabase:IncrementTotalCopies(robloxId, amount)
+  -- Convert to number to ensure proper lookup
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    warn("❌ ItemDatabase:IncrementTotalCopies - Invalid RobloxId: " .. tostring(robloxId))
+    return nil
+  end
+
+  amount = amount or 1
+
+  local item = self:GetItemByRobloxId(numericId)
+  if item then
+    local oldCopies = item.TotalCopies or 0
+    item.TotalCopies = oldCopies + amount
+    self:SaveItems()
+    return item.TotalCopies
   else
     return nil
   end
@@ -276,6 +302,30 @@ function ItemDatabase:DecrementOwners(robloxId)
     return item.Owners
   else
     warn("❌ ItemDatabase:DecrementOwners - Item not found for RobloxId: " .. numericId)
+    return nil
+  end
+end
+
+-- Decrement total copies for a regular item (decrements by amount)
+function ItemDatabase:DecrementTotalCopies(robloxId, amount)
+  -- Convert to number to ensure proper lookup
+  local numericId = tonumber(robloxId)
+  if not numericId then
+    warn("❌ ItemDatabase:DecrementTotalCopies - Invalid RobloxId: " .. tostring(robloxId))
+    return nil
+  end
+
+  amount = amount or 1
+
+  local item = self:GetItemByRobloxId(numericId)
+  if item then
+    local oldCopies = item.TotalCopies or 0
+    item.TotalCopies = math.max(0, oldCopies - amount) -- Don't go below 0
+    self:SaveItems()
+
+    return item.TotalCopies
+  else
+    warn("❌ ItemDatabase:DecrementTotalCopies - Item not found for RobloxId: " .. numericId)
     return nil
   end
 end
@@ -507,6 +557,7 @@ getAllItemsFunction.OnServerInvoke = function(player)
       Stock = item.Stock or 0,
       CurrentStock = item.CurrentStock or 0,
       Owners = item.Owners or 0,
+      TotalCopies = item.TotalCopies or 0,
       CreatedAt = item.CreatedAt
     }
   end

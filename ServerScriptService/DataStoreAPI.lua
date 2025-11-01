@@ -83,6 +83,12 @@ function DataStoreAPI:AddItem(player, itemData)
     end
   end
 
+  -- Increment total copies for regular items
+  if not itemData.SerialNumber then
+    -- Regular item: increment total copies count
+    ItemDatabase:IncrementTotalCopies(itemData.RobloxId, 1)
+  end
+
   return true
 end
 
@@ -149,7 +155,7 @@ function DataStoreAPI:GetInventory(player)
 
 
 
-  -- Add Owners count and Stock info to each item from ItemDatabase
+  -- Add Owners count, TotalCopies, and Stock info to each item from ItemDatabase
   local inventoryWithOwners = {}
   for i, item in ipairs(data.Inventory) do
     local success, itemCopy = pcall(function()
@@ -170,18 +176,20 @@ function DataStoreAPI:GetInventory(player)
       }
     end
 
-    -- Get item from database to retrieve owners, stock info, and current stock
+    -- Get item from database to retrieve owners, total copies, stock info, and current stock
     local dbItemSuccess, dbItem = pcall(function()
       return ItemDatabase:GetItemByRobloxId(item.RobloxId)
     end)
 
     if dbItemSuccess and dbItem then
       itemCopy.Owners = dbItem.Owners or 0
+      itemCopy.TotalCopies = dbItem.TotalCopies or 0
       itemCopy.Stock = dbItem.Stock or 0
       itemCopy.CurrentStock = dbItem.CurrentStock or 0
     else
       warn("⚠️ Failed to get database item for " .. (item.Name or "item"))
       itemCopy.Owners = 0
+      itemCopy.TotalCopies = 0
       itemCopy.Stock = 0
       itemCopy.CurrentStock = 0
     end
@@ -268,6 +276,56 @@ function DataStoreAPI:GetAutoRoll(player)
     return data.AutoRoll or false
   end
   return false
+end
+
+-- Get another player's inventory by UserId (for viewing other players)
+function DataStoreAPI:GetPlayerInventoryByUserId(userId)
+  local playerData = _G.PlayerData[userId]
+  if not playerData then
+    return nil
+  end
+
+  -- Add Owners count, TotalCopies, and Stock info to each item from ItemDatabase
+  local inventoryWithOwners = {}
+  for i, item in ipairs(playerData.Inventory) do
+    local success, itemCopy = pcall(function()
+      return table.clone(item)
+    end)
+
+    if not success then
+      -- Create a manual copy instead
+      itemCopy = {
+        RobloxId = item.RobloxId,
+        Name = item.Name,
+        Value = item.Value,
+        Rarity = item.Rarity,
+        Amount = item.Amount,
+        SerialNumber = item.SerialNumber,
+        ObtainedAt = item.ObtainedAt
+      }
+    end
+
+    -- Get item from database to retrieve owners, total copies, stock info, and current stock
+    local dbItemSuccess, dbItem = pcall(function()
+      return ItemDatabase:GetItemByRobloxId(item.RobloxId)
+    end)
+
+    if dbItemSuccess and dbItem then
+      itemCopy.Owners = dbItem.Owners or 0
+      itemCopy.TotalCopies = dbItem.TotalCopies or 0
+      itemCopy.Stock = dbItem.Stock or 0
+      itemCopy.CurrentStock = dbItem.CurrentStock or 0
+    else
+      itemCopy.Owners = 0
+      itemCopy.TotalCopies = 0
+      itemCopy.Stock = 0
+      itemCopy.CurrentStock = 0
+    end
+
+    table.insert(inventoryWithOwners, itemCopy)
+  end
+
+  return inventoryWithOwners
 end
 
 return DataStoreAPI

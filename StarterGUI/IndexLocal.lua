@@ -151,8 +151,8 @@ function refresh()
       -- Stock item: use CurrentStock (number of serials claimed)
       copiesCount = item.CurrentStock or 0
     else
-      -- Regular item: use Owners (unique players who own it)
-      copiesCount = item.Owners or 0
+      -- Regular item: use TotalCopies (total copies across all players)
+      copiesCount = item.TotalCopies or 0
     end
     
     -- Display stock info
@@ -206,7 +206,7 @@ function refresh()
       t1Label.Visible = false
     end
 
-    -- Display copies (stock items) or owners count (regular items)
+    -- Display copies (stock items) or total copies (regular items)
     local copiesLabel = button:FindFirstChild("copies")
     if copiesLabel then
       local stockCount = item.Stock or 0
@@ -216,8 +216,8 @@ function refresh()
           -- Stock item: show "X / Y copies"
           copiesLabel.Text = copiesCount .. " / " .. stockCount .. " copies"
         else
-          -- Regular item: show "X owners"
-          copiesLabel.Text = copiesCount .. " owners"
+          -- Regular item: show "X copies"
+          copiesLabel.Text = copiesCount .. " copies"
         end
         copiesLabel.Visible = true
       else
