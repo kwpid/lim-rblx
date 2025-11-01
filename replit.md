@@ -13,7 +13,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 
 ### Core Game Systems
 -   **Item System**: Items have Roblox asset IDs, names, values, and rarities (8 tiers from Common to Insane). Supports both stackable regular items and limited stock items with serial numbers. Weighted probability ensures higher value items are rarer.
--   **Crate Opening**: Free rolls with weighted random selection. Includes visual scrolling animation with rarity-colored item names, serial number display for stock items, and a "continue" button after each roll. The roll animation only displays items that are currently available (excludes sold-out stock items). Features:
+-   **Crate Opening**: Free rolls with weighted random selection. Includes visual scrolling animation with rarity-colored item names, serial number display for stock items, and a "continue" button after each roll. The roll animation only displays items that are currently available (excludes sold-out stock items). High-value unboxes trigger chat notifications (250k+ server-wide, 5M+ cross-server global). Features:
     - **Roll Time**: 5 seconds for normal players, 2 seconds for Fast Roll gamepass owners (2.5x faster)
     - **Fast Roll Gamepass**: Players who own gamepass ID 1242040274 from the old game get faster roll animations
     - **AutoRoll**: Toggle button that continuously rolls crates. Green text when ON, red text when OFF. Can be stopped mid-roll, and the button remains visible during rolls for easy toggling.
@@ -51,12 +51,12 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Roblox API Services**: Requires "Studio Access to API Services" to be enabled for DataStore functionality and leaderstats to work.
 -   **Roblox InsertService**: Used for dynamically loading and attaching accessories/tools to player characters when items are equipped.
 -   **Roblox MarketplaceService**: Used to check gamepass ownership for the Fast Roll feature (gamepass ID: 1242040274 from old game).
+-   **Roblox MessagingService**: Used for cross-server notifications when ultra-rare items (5M+) are unboxed.
 
 ## Recent Updates (November 1, 2025)
 -   **Inventory Sorting**: Equipped items now appear first in inventory, followed by highest to lowest value items
 -   **Clearer Labels**: Stock items show "X / Y copies", regular items show "X owners" for accurate tracking
--   **High-Value Chat Notifications**: When players unbox items worth 250k+ Robux, a colored chat message appears. 5M+ items announce to the entire server. Shows item name, value, serial # (for stock items), and color-coded by rarity.
--   **Chat Notification Fix**: Fixed 250k+ items to only show message to the player who unboxed it (not the whole server). 5M+ items still announce globally.
+-   **High-Value Chat Notifications**: When players unbox items worth 250k+ Robux, a colored chat message appears server-wide. 5M+ items announce to the entire server AND broadcast globally across all servers using MessagingService. Shows item name, value, serial # (for stock items), and color-coded by rarity. Global messages are prefixed with [GLOBAL].
 -   **Auto-Rejoin on Server Shutdown**: Added TeleportService integration that automatically reconnects players to a new server when the current server shuts down for updates or restarts. Players no longer get kicked out.
 -   **Balanced Roll Percentages**: Roll chances adjusted using power of 0.75 scaling for lower, more balanced distribution
 -   **Rarity Indicator**: Inventory now shows RareText only for items with less than 25 copies in existence (works for both regular and stock items)

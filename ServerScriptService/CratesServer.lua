@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 local TextChatService = game:GetService("TextChatService")
+local MessagingService = game:GetService("MessagingService")
 
 local ItemDatabase = require(script.Parent.ItemDatabase)
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
@@ -32,15 +33,52 @@ if not crateOpenedEvent then
   crateOpenedEvent.Parent = remoteEvents
 end
 
-local chatNotificationEvent = remoteEvents:FindFirstChild("ChatNotificationEvent")
-if not chatNotificationEvent then
-  chatNotificationEvent = Instance.new("RemoteEvent")
-  chatNotificationEvent.Name = "ChatNotificationEvent"
-  chatNotificationEvent.Parent = remoteEvents
-end
-
 local rnd = Random.new()
 local playersRolling = {}
+
+-- Subscribe to cross-server high-value unbox messages
+local subscribeSuccess, subscribeErr = pcall(function()
+  MessagingService:SubscribeAsync("HighValueUnbox", function(message)
+    -- Receive cross-server notifications from other servers
+    local data = message.Data
+    
+    if data and data.PlayerName and data.ItemName and data.ItemValue then
+      -- Format the item value with commas
+      local function formatNumber(n)
+        local formatted = tostring(n)
+        while true do
+          formatted, k = formatted:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
+          if k == 0 then break end
+        end
+        return formatted
+      end
+      
+      -- Build the cross-server message
+      local colorTag = getValueColorTag(data.ItemValue)
+      local closeTag = "</font>"
+      
+      local crossServerMessage = colorTag .. "[GLOBAL] " .. data.PlayerName .. " unboxed " .. data.ItemName
+      
+      if data.SerialNumber then
+        crossServerMessage = crossServerMessage .. " #" .. data.SerialNumber
+      end
+      
+      crossServerMessage = crossServerMessage .. " (R$" .. formatNumber(data.ItemValue) .. ")" .. closeTag
+      
+      -- Display in this server's chat
+      local generalChannel = TextChatService:FindFirstChild("TextChannels"):FindFirstChild("RBXGeneral")
+      if generalChannel then
+        generalChannel:DisplaySystemMessage(crossServerMessage)
+      end
+    end
+  end)
+end)
+
+if subscribeSuccess then
+  print("✅ Subscribed to cross-server high-value unbox notifications")
+else
+  warn("⚠️ Failed to subscribe to cross-server messages: " .. tostring(subscribeErr))
+end
 
 -- Configuration
 local ROLL_COST = 0 -- Free rolls
@@ -97,7 +135,7 @@ function getValueColorTag(value)
 end
 
 -- Helper function to send chat message about unboxed item
-function sendUnboxChatMessage(player, item, serialNumber, isGlobal)
+function sendUnboxChatMessage(player, item, serialNumber, isCrossServer)
   local success, err = pcall(function()
     -- Format the item value with commas
     local function formatNumber(n)
@@ -121,15 +159,29 @@ function sendUnboxChatMessage(player, item, serialNumber, isGlobal)
     
     message = message .. " (R$" .. formatNumber(item.Value) .. ")" .. closeTag
     
-    if isGlobal then
-      -- Send to everyone in the server (5M+ items)
-      local generalChannel = TextChatService:FindFirstChild("TextChannels"):FindFirstChild("RBXGeneral")
-      if generalChannel then
-        generalChannel:DisplaySystemMessage(message)
+    -- Send to everyone in the current server
+    local generalChannel = TextChatService:FindFirstChild("TextChannels"):FindFirstChild("RBXGeneral")
+    if generalChannel then
+      generalChannel:DisplaySystemMessage(message)
+    end
+    
+    -- If cross-server (5M+ items), announce to all servers
+    if isCrossServer then
+      local messageData = {
+        PlayerName = player.Name,
+        ItemName = item.Name,
+        ItemValue = item.Value,
+        SerialNumber = serialNumber
+      }
+      
+      -- Publish to all servers via MessagingService
+      local publishSuccess, publishErr = pcall(function()
+        MessagingService:PublishAsync("HighValueUnbox", messageData)
+      end)
+      
+      if not publishSuccess then
+        warn("⚠️ Failed to publish cross-server message: " .. tostring(publishErr))
       end
-    else
-      -- Send only to the player who unboxed it (250k+ items)
-      chatNotificationEvent:FireClient(player, message)
     end
   end)
   
@@ -282,10 +334,10 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
 
   -- Send chat notification for high-value items
   if chosenItem.Value >= 5000000 then
-    -- 5M+ = Global notification (everyone in server)
+    -- 5M+ = Server-wide + Cross-server notification (all servers)
     sendUnboxChatMessage(player, chosenItem, serialNumber, true)
   elseif chosenItem.Value >= 250000 then
-    -- 250k+ = Local notification (player only)
+    -- 250k+ = Server-wide notification (current server only)
     sendUnboxChatMessage(player, chosenItem, serialNumber, false)
   end
 
