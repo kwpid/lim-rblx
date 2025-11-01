@@ -292,4 +292,17 @@ end)
 -- Initialize autoroll button color to red (off state)
 autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0)
 
+-- Handle chat notifications (server-wide and cross-server)
+local chatNotificationEvent = remoteEvents:WaitForChild("ChatNotificationEvent")
+chatNotificationEvent.OnClientEvent:Connect(function(message)
+  -- Display the formatted message in this player's chat
+  local TextChatService = game:GetService("TextChatService")
+  local generalChannel = TextChatService:FindFirstChild("TextChannels"):FindFirstChild("RBXGeneral")
+  
+  if generalChannel then
+    -- Display the message in this player's chat
+    generalChannel:DisplaySystemMessage(message)
+  end
+end)
+
 print("Crates Client loaded!")

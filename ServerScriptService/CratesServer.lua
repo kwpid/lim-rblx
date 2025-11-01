@@ -33,6 +33,13 @@ if not crateOpenedEvent then
   crateOpenedEvent.Parent = remoteEvents
 end
 
+local chatNotificationEvent = remoteEvents:FindFirstChild("ChatNotificationEvent")
+if not chatNotificationEvent then
+  chatNotificationEvent = Instance.new("RemoteEvent")
+  chatNotificationEvent.Name = "ChatNotificationEvent"
+  chatNotificationEvent.Parent = remoteEvents
+end
+
 local rnd = Random.new()
 local playersRolling = {}
 
@@ -65,11 +72,8 @@ local subscribeSuccess, subscribeErr = pcall(function()
       
       crossServerMessage = crossServerMessage .. " (R$" .. formatNumber(data.ItemValue) .. ")" .. closeTag
       
-      -- Display in this server's chat
-      local generalChannel = TextChatService:FindFirstChild("TextChannels"):FindFirstChild("RBXGeneral")
-      if generalChannel then
-        generalChannel:DisplaySystemMessage(crossServerMessage)
-      end
+      -- Send to all clients in this server to display
+      chatNotificationEvent:FireAllClients(crossServerMessage)
     end
   end)
 end)
@@ -159,11 +163,8 @@ function sendUnboxChatMessage(player, item, serialNumber, isCrossServer)
     
     message = message .. " (R$" .. formatNumber(item.Value) .. ")" .. closeTag
     
-    -- Send to everyone in the current server
-    local generalChannel = TextChatService:FindFirstChild("TextChannels"):FindFirstChild("RBXGeneral")
-    if generalChannel then
-      generalChannel:DisplaySystemMessage(message)
-    end
+    -- Send to all clients in the current server
+    chatNotificationEvent:FireAllClients(message)
     
     -- If cross-server (5M+ items), announce to all servers
     if isCrossServer then
