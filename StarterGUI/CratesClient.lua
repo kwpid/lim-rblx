@@ -7,10 +7,15 @@ local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 
--- Wait for RemoteEvents
-local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
-local rollCrateEvent = remoteEvents:WaitForChild("RollCrateEvent")
-local crateOpenedEvent = remoteEvents:WaitForChild("CrateOpenedEvent")
+-- Wait for RemoteEvents with timeout
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents", 5)
+if not remoteEvents then
+  warn("⚠️ RemoteEvents not found - CratesClient may not work properly")
+  return
+end
+
+local rollCrateEvent = remoteEvents:WaitForChild("RollCrateEvent", 5)
+local crateOpenedEvent = remoteEvents:WaitForChild("CrateOpenedEvent", 5)
 
 -- Wait for or create UpdateCrateResult event
 local updateResultEvent = remoteEvents:FindFirstChild("UpdateCrateResult")
@@ -21,37 +26,46 @@ if not updateResultEvent then
 end
 
 -- AutoRoll remote events
-local setAutoRollEvent = remoteEvents:WaitForChild("SetAutoRollEvent", 10)
-local getAutoRollFunction = remoteEvents:WaitForChild("GetAutoRollFunction", 10)
-local serverShutdownEvent = remoteEvents:WaitForChild("ServerShutdownEvent", 10)
+local setAutoRollEvent = remoteEvents:WaitForChild("SetAutoRollEvent", 5)
+local getAutoRollFunction = remoteEvents:WaitForChild("GetAutoRollFunction", 5)
+local serverShutdownEvent = remoteEvents:WaitForChild("ServerShutdownEvent", 5)
 
 -- HideRolls remote events
-local setHideRollsEvent = remoteEvents:WaitForChild("SetHideRollsEvent", 10)
-local getHideRollsFunction = remoteEvents:WaitForChild("GetHideRollsFunction", 10)
+local setHideRollsEvent = remoteEvents:WaitForChild("SetHideRollsEvent", 5)
+local getHideRollsFunction = remoteEvents:WaitForChild("GetHideRollsFunction", 5)
 
 -- Get ItemRarityModule
-local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
+local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule", 5))
 
 -- GUI Elements
-local openedGui = script.Parent:WaitForChild("OpenedCrateGui")
+local openedGui = script.Parent:WaitForChild("OpenedCrateGui", 5)
+if not openedGui then
+  warn("⚠️ OpenedCrateGui not found")
+  return
+end
 openedGui.Enabled = false
 
-local openedFrame = openedGui:WaitForChild("CrateFrame")
+local openedFrame = openedGui:WaitForChild("CrateFrame", 5)
 openedFrame.Visible = false
 
-local closeOpenedBtn = openedFrame:WaitForChild("ContinueButton")
-local openedItemsFrame = openedFrame:WaitForChild("ItemsFrame")
+local closeOpenedBtn = openedFrame:WaitForChild("ContinueButton", 5)
+local openedItemsFrame = openedFrame:WaitForChild("ItemsFrame", 5)
 
 -- Templates under CratesClient LocalScript
-local openingCrateItemTemplate = script:WaitForChild("OpeningCrateItemFrame")
+local openingCrateItemTemplate = script:WaitForChild("OpeningCrateItemFrame", 5)
 
 local rnd = Random.new()
 
--- Roll button (in MainUI)
-local mainUI = player.PlayerGui:WaitForChild("MainUI")
-local rollButton = mainUI:WaitForChild("Roll")
-local autoRollButton = mainUI:WaitForChild("AutoRoll")
-local hideRollsButton = mainUI:WaitForChild("HideRolls")
+-- Roll button (in MainUI) - wait longer for player GUI to load
+local mainUI = player.PlayerGui:WaitForChild("MainUI", 10)
+if not mainUI then
+  warn("⚠️ MainUI not found - CratesClient cannot initialize")
+  return
+end
+
+local rollButton = mainUI:WaitForChild("Roll", 5)
+local autoRollButton = mainUI:WaitForChild("AutoRoll", 5)
+local hideRollsButton = mainUI:WaitForChild("HideRolls", 5)
 
 -- Auto-roll variables
 local isAutoRolling = false
@@ -378,7 +392,7 @@ end)
 
 -- Restore AutoRoll and HideRolls state when player loads
 task.spawn(function()
-  task.wait(2) -- Wait for data to load
+  task.wait(0.5) -- Reduced wait time for faster initialization
   
   -- Restore AutoRoll state
   if getAutoRollFunction then
