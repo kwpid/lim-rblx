@@ -96,7 +96,7 @@ function WebhookHandler:SendItemRelease(item, rollPercentage)
                         description = description,
                         color = rarityColor,
                         thumbnail = {
-                                url = string.format("https://www.roblox.com/asset-thumbnail/image?assetId=%d&width=420&height=420&format=png", item.RobloxId)
+                                url = string.format("https://assetdelivery.roblox.com/v1/asset?id=%d", item.RobloxId)
                         },
                         footer = {
                                 text = "New Item Release"
@@ -105,9 +105,9 @@ function WebhookHandler:SendItemRelease(item, rollPercentage)
                 }}
         }
         
-        -- Add ping for high-value items (250k+)
+        -- Add role ping for high-value items (250k+)
         if item.Value >= 250000 then
-                payload.content = "<@1381033979502661722>"
+                payload.content = "<@&1381033979502661722>"
         end
         
         local success = sendWebhook(ITEM_RELEASE_WEBHOOK, payload)
@@ -147,7 +147,7 @@ function WebhookHandler:SendItemDrop(player, item, serialNumber)
                                 url = playerThumbnailUrl
                         },
                         image = {
-                                url = string.format("https://www.roblox.com/asset-thumbnail/image?assetId=%d&width=420&height=420&format=png", item.RobloxId)
+                                url = string.format("https://assetdelivery.roblox.com/v1/asset?id=%d", item.RobloxId)
                         },
                         footer = {
                                 text = "Item Drop"
@@ -183,7 +183,7 @@ function WebhookHandler:SendOutOfStock(item)
                         description = description,
                         color = rarityColor,
                         thumbnail = {
-                                url = string.format("https://www.roblox.com/asset-thumbnail/image?assetId=%d&width=420&height=420&format=png", item.RobloxId)
+                                url = string.format("https://assetdelivery.roblox.com/v1/asset?id=%d", item.RobloxId)
                         },
                         footer = {
                                 text = "Out of Stock"
