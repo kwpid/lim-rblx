@@ -20,17 +20,92 @@ local function equipItemToCharacter(player, robloxId)
     local model = InsertService:LoadAsset(robloxId)
     if model then
       local item = model:FindFirstChildOfClass("Accessory") or model:FindFirstChildOfClass("Tool") or
-      model:FindFirstChildOfClass("Hat")
+      model:FindFirstChildOfClass("Hat") or model:FindFirstChildOfClass("MeshPart") or model:FindFirstChildOfClass("Part")
 
+      -- Check if this is a head item (more strict detection)
+      local isHeadItem = false
       if item then
-        -- Clone the item and parent it to character
+        -- Check if it's explicitly named "Head" or has SpecialMesh with Head MeshType
+        if item.Name == "Head" or item.Name:lower() == "head" then
+          isHeadItem = true
+        elseif item:FindFirstChildOfClass("SpecialMesh") then
+          local mesh = item:FindFirstChildOfClass("SpecialMesh")
+          if mesh.MeshType == Enum.MeshType.Head then
+            isHeadItem = true
+          end
+        end
+      end
+
+      if isHeadItem then
+        -- Handle head replacement
+        local currentHead = character:FindFirstChild("Head")
+        if currentHead then
+          -- Store the original head position
+          local headCFrame = currentHead.CFrame
+          
+          -- Find the neck joint from Torso (R6) or UpperTorso (R15)
+          local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+          local neckJoint = torso and torso:FindFirstChild("Neck")
+          local neckC0, neckC1
+          
+          if neckJoint then
+            neckC0 = neckJoint.C0
+            neckC1 = neckJoint.C1
+            neckJoint:Destroy()
+          end
+          
+          -- Clone the new head
+          local newHead = item:Clone()
+          newHead.Name = "Head"
+          
+          -- Tag it so we can unequip it later
+          local idValue = Instance.new("IntValue")
+          idValue.Name = "OriginalRobloxId"
+          idValue.Value = robloxId
+          idValue.Parent = newHead
+          
+          -- Copy face if exists
+          local face = currentHead:FindFirstChildOfClass("Decal")
+          if face then
+            face:Clone().Parent = newHead
+          end
+          
+          -- Remove old head first
+          currentHead:Destroy()
+          
+          -- Add the new head
+          newHead.Parent = character
+          newHead.CFrame = headCFrame
+          
+          -- Recreate neck connection
+          if torso then
+            local neck = Instance.new("Motor6D")
+            neck.Name = "Neck"
+            neck.Part0 = torso
+            neck.Part1 = newHead
+            
+            -- Use stored values or defaults for R6/R15
+            if neckC0 then
+              neck.C0 = neckC0
+              neck.C1 = neckC1
+            else
+              -- R6 default neck values
+              neck.C0 = CFrame.new(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+              neck.C1 = CFrame.new(0, -0.5, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+            end
+            
+            neck.Parent = torso
+          end
+        end
+      elseif item then
+        -- Handle normal accessories, hats, and tools
         local itemClone = item:Clone()
         local idValue = Instance.new("IntValue")
         idValue.Name = "OriginalRobloxId"
         idValue.Value = robloxId
         idValue.Parent = itemClone
         
-        -- Parent to character - this works for all accessory types including heads
+        -- Parent to character - this works for all accessory types
         itemClone.Parent = character
         
         -- Force the humanoid to add the accessory (ensures it attaches properly)
@@ -53,6 +128,57 @@ local function equipItemToCharacter(player, robloxId)
               humanoid:AddAccessory(itemClone)
             end
             break
+          elseif child.Name == "Head" or child.Name:lower() == "head" then
+            -- Handle head from children using same logic
+            local currentHead = character:FindFirstChild("Head")
+            if currentHead then
+              local headCFrame = currentHead.CFrame
+              local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+              local neckJoint = torso and torso:FindFirstChild("Neck")
+              local neckC0, neckC1
+              
+              if neckJoint then
+                neckC0 = neckJoint.C0
+                neckC1 = neckJoint.C1
+                neckJoint:Destroy()
+              end
+              
+              local newHead = child:Clone()
+              newHead.Name = "Head"
+              
+              local idValue = Instance.new("IntValue")
+              idValue.Name = "OriginalRobloxId"
+              idValue.Value = robloxId
+              idValue.Parent = newHead
+              
+              local face = currentHead:FindFirstChildOfClass("Decal")
+              if face then
+                face:Clone().Parent = newHead
+              end
+              
+              currentHead:Destroy()
+              
+              newHead.Parent = character
+              newHead.CFrame = headCFrame
+              
+              if torso then
+                local neck = Instance.new("Motor6D")
+                neck.Name = "Neck"
+                neck.Part0 = torso
+                neck.Part1 = newHead
+                
+                if neckC0 then
+                  neck.C0 = neckC0
+                  neck.C1 = neckC1
+                else
+                  neck.C0 = CFrame.new(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+                  neck.C1 = CFrame.new(0, -0.5, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+                end
+                
+                neck.Parent = torso
+              end
+            end
+            break
           end
         end
       end
@@ -70,6 +196,77 @@ local function unequipItemFromCharacter(player, robloxId)
   end
 
   local itemsRemoved = 0
+  
+  -- Check if the head is equipped with this robloxId
+  local head = character:FindFirstChild("Head")
+  if head then
+    local storedId = head:FindFirstChild("OriginalRobloxId")
+    if storedId and storedId.Value == robloxId then
+      -- Restore default head
+      local success, result = pcall(function()
+        -- Find the torso (R6 or R15)
+        local torso = character:FindFirstChild("Torso") or character:FindFirstChild("UpperTorso")
+        local neckJoint = torso and torso:FindFirstChild("Neck")
+        local neckC0, neckC1
+        local headCFrame = head.CFrame
+        
+        if neckJoint then
+          neckC0 = neckJoint.C0
+          neckC1 = neckJoint.C1
+          neckJoint:Destroy()
+        end
+        
+        -- Destroy the equipped head
+        head:Destroy()
+        
+        -- Create a default Roblox head
+        local newHead = Instance.new("Part")
+        newHead.Name = "Head"
+        newHead.Size = Vector3.new(2, 1, 1)
+        newHead.TopSurface = Enum.SurfaceType.Smooth
+        newHead.BottomSurface = Enum.SurfaceType.Smooth
+        newHead.BrickColor = BrickColor.new("Bright yellow")
+        
+        -- Add default face
+        local face = Instance.new("Decal")
+        face.Name = "face"
+        face.Texture = "rbxasset://textures/face.png"
+        face.Face = Enum.NormalId.Front
+        face.Parent = newHead
+        
+        -- Position and parent the new head
+        newHead.Parent = character
+        newHead.CFrame = headCFrame
+        
+        -- Recreate neck connection
+        if torso then
+          local neck = Instance.new("Motor6D")
+          neck.Name = "Neck"
+          neck.Part0 = torso
+          neck.Part1 = newHead
+          
+          if neckC0 then
+            neck.C0 = neckC0
+            neck.C1 = neckC1
+          else
+            -- R6 default neck values
+            neck.C0 = CFrame.new(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+            neck.C1 = CFrame.new(0, -0.5, 0, -1, 0, 0, 0, 0, 1, 0, 1, 0)
+          end
+          
+          neck.Parent = torso
+        end
+        
+        itemsRemoved = itemsRemoved + 1
+      end)
+      
+      if not success then
+        warn("Failed to restore default head:", result)
+      end
+    end
+  end
+  
+  -- Handle accessories, tools, and hats
   for _, child in ipairs(character:GetChildren()) do
     if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
       local storedId = child:FindFirstChild("OriginalRobloxId")

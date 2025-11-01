@@ -113,6 +113,12 @@ Items are automatically assigned rarity based on their value:
   - Equipped items are saved to player data in EquippedItems array
   - When player rejoins, all previously equipped items automatically equip to their character
   - Items equip when character spawns or respawns
+  - Supports accessories, hats, tools, and head items
+- **Head Item Support:**
+  - Head items replace the player's existing head when equipped
+  - When unequipped, the default Roblox head is restored with a default face
+  - Properly handles neck Motor6D connections for head replacement
+  - Works seamlessly with character respawns and auto-equip on rejoin
 - **Failsafe Protection:**
   - System checks if player still owns each equipped item before equipping
   - Items that are no longer owned are removed from EquippedItems

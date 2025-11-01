@@ -24,7 +24,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
     - Global "New Item" notification system and console commands for database checks
 -   **Data Persistence**: Utilizes Roblox DataStore Service for player inventories (with auto-stacking), rolls, cash, and inventory value. Auto-saves every 2 minutes. Includes a data version system to manage wipes and resets. Features automatic cleanup of deleted items when offline players rejoin.
 -   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays stock item counts ("copies: X / Y exist" using CurrentStock) and regular item counts ("copies: X" using Owners). RareText appears only on items with less than 25 copies. Includes search/filter functionality and detailed item info on click.
--   **Equipping Items**: Players can equip/unequip items from their inventory, which are then visible to all players. Uses Roblox asset IDs to load and attach items (accessories, hats, tools) to the character, with equipped items persisting across sessions.
+-   **Equipping Items**: Players can equip/unequip items from their inventory, which are then visible to all players. Uses Roblox asset IDs to load and attach items (accessories, hats, tools, and heads) to the character, with equipped items persisting across sessions. Head items replace the player's existing head and restore the default head when unequipped.
 -   **Selling Items**: Players can sell regular items for 80% of their value. Features a confirmation step and options to sell single items or all copies of an item. Selling stock items is prevented. Cash is added to the player's wallet, and inventory value updates automatically.
 -   **Index System**: Displays all items in the game database with detailed information. Shows item name, total owners, and value. For stock items, displays an owner list with player avatars, @usernames, and #serial numbers, sorted by serial number. Owner data persists in the database (SerialOwners array) so it works even when players are offline. The index automatically refreshes every 3 minutes when open, whenever manually opened, and when new items are created. Owner data is always fetched fresh from the server to ensure accuracy.
 
@@ -54,6 +54,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Roblox MessagingService**: Used for cross-server notifications when ultra-rare items (5M+) are unboxed.
 
 ## Recent Updates (November 1, 2025)
+-   **Head Item Support**: Equipping system now supports head items. When equipped, the player's head is replaced with the new head. When unequipped, the default Roblox head is restored with a default face. Works seamlessly with character respawns and auto-equip on rejoin.
 -   **Inventory Sorting**: Equipped items now appear first in inventory, followed by highest to lowest value items
 -   **Clearer Labels**: Stock items show "X / Y copies", regular items show "X owners" for accurate tracking
 -   **High-Value Chat Notifications**: When players unbox items worth 250k+ Robux, a colored chat message appears server-wide. 5M+ items announce to the entire server AND broadcast globally across all servers using MessagingService. Shows item name, value, serial # (for stock items), and color-coded by rarity. Global messages are prefixed with [GLOBAL].
