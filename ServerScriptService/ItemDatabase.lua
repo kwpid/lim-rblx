@@ -566,6 +566,14 @@ task.spawn(function()
   print(string.format("✅ ItemDatabase ready! Loaded %d items in %.2f seconds", #ItemDatabase.Items, loadTime))
 end)
 
+-- Force save on server shutdown to ensure no data loss from queued saves
+game:BindToClose(function()
+  print("🛑 Server shutdown - Force saving ItemDatabase...")
+  ItemDatabase._saveQueued = false -- Cancel any pending queued save
+  ItemDatabase:SaveItems() -- Force immediate save
+  print("✅ ItemDatabase saved on shutdown")
+end)
+
 -- Set up RemoteFunction for clients to get all items
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
