@@ -10,6 +10,18 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 1, 2025)
+- **Random Event System**: Added dynamic event system with Random Item Drops event:
+  - Events spawn automatically every 5-10 minutes
+  - Admins can manually spawn events with `/spawn event_RandomItemDrops` command
+  - **Random Item Drops Event**: 15-20 items drop from the sky (from "dropzone" part) over 3 minutes
+    - Items use proximity prompts for collection
+    - Event drop probability FAVORS rare items (opposite of normal rolling) - uses value^0.5 weighting
+    - Serial items can drop and are handled same as rolling
+    - High-value event items show "from the event" in chat/webhooks instead of "rolled"
+    - Items stay on ground 1-2 minutes before cleanup
+    - Notifications on event start and end
+  - Event system is modular - new events can be added to ServerScriptService/Events/
+- **Inventory Animation Update**: Removed slide-up/slide-down animations when opening/closing inventory (instant show/hide). Kept item popup slide-in animations.
 - **Unified MainUI System**: Combined Inventory and Index into a single MainUI ScreenGui with toggle buttons:
   - MainUI contains: Inventory (Frame), Index (Frame), InventoryOpen (Button), IndexOpen (Button)
   - Clicking InventoryOpen shows Inventory and hides Index
@@ -58,7 +70,8 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 ### Core Game Systems
 -   **Item System**: Supports regular and limited stock items with up to 8 rarity tiers. Weighted probability governs item drops. Items can be marked as "Limited" which displays special LimText indicator.
 -   **Crate Opening**: Features weighted random selection, visual scrolling animation with rarity-colored item names, and serial number display for stock items. Includes "Fast Roll" for gamepass owners and "AutoRoll" and "HideRolls" toggles with persistence. High-value unboxes trigger chat notifications (server-wide and cross-server global).
--   **Admin Tools**: Whitelisted admin GUI for creating, editing, giving, and deleting items with live previews, auto-fill for item names, and confirmation dialogs. Edit mode auto-detects existing items when pasting item IDs. Includes global "New Item" and "Item Updated" notifications. LimitedToggle button allows marking items as Limited (green = ON, red = OFF).
+-   **Event System**: Random events spawn every 5-10 minutes with modular event modules. Includes Random Item Drops event where items fall from the sky with proximity prompts for collection. Events use increased probability for rare items (opposite of normal rolling). Admins can manually spawn events with `/spawn event_[event_name]` chat command.
+-   **Admin Tools**: Whitelisted admin GUI for creating, editing, giving, and deleting items with live previews, auto-fill for item names, and confirmation dialogs. Edit mode auto-detects existing items when pasting item IDs. Includes global "New Item" and "Item Updated" notifications. LimitedToggle button allows marking items as Limited (green = ON, red = OFF). Admins can use `/spawn event_[event_name]` to manually trigger events.
 -   **Data Persistence**: Uses Roblox DataStore Service for player inventories (with auto-stacking), rolls, cash, inventory value, AutoRoll state, HideRolls state, and Luck multiplier. Features auto-save, data versioning, and automatic cleanup of deleted items.
 -   **Anti-AFK System**: Automatically rejoins players every 15 minutes to prevent AFK disconnection. Perfect for overnight AutoRoll farming sessions.
 -   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays accurate copy counts for both stackable and stock items. Includes search/filter functionality and detailed item info on click. RareText appears on items with 25 copies or less. LimText appears only on Limited items. Equipped items appear first and have an orange border.
@@ -90,9 +103,10 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 -   Equipping accessories uses `Humanoid:AddAccessory()`.
 
 ### File Structure (Key Directories)
--   `ReplicatedStorage/`: `ItemRarityModule.lua`
--   `ServerScriptService/`: `AdminConfig.lua`, `AdminItemHandler.lua`, `AntiAFKHandler.lua`, `CratesServer.lua`, `DataStoreAPI.lua`, `DataStoreManager.lua`, `ItemDatabase.lua`, `PlayerDataHandler.lua`, `EquipSellHandler.lua`, `ServerShutdownHandler.lua`
--   `StarterGUI/`: `AdminGUI.lua`, `CratesClient.lua`, `InventorySystem.lua`, `IndexLocal.lua`, `ViewPlayerInventory.lua`
+-   `ReplicatedStorage/`: `ItemRarityModule.lua`, `NotificationPresets.lua`
+-   `ServerScriptService/`: `AdminConfig.lua`, `AdminItemHandler.lua`, `AntiAFKHandler.lua`, `AutoRollHandler.lua`, `ChatCommandHandler.lua`, `CratesServer.lua`, `DataStoreAPI.lua`, `DataStoreManager.lua`, `EquipSellHandler.lua`, `EventSystem.lua`, `ItemDatabase.lua`, `PlayerDataHandler.lua`, `ServerShutdownHandler.lua`, `WebhookHandler.lua`
+-   `ServerScriptService/Events/`: `RandomItemDrops.lua` (event modules are loaded automatically)
+-   `StarterGUI/`: `AdminGUI.lua`, `CratesClient.lua`, `IndexLocal.lua`, `InventorySystem.lua`, `MainUIToggle.lua`, `NotificationHandler.lua`, `ViewPlayerInventory.lua`
 
 ## External Dependencies
 -   **Roblox DataStore Service**: Persistent data storage for player data and global item database.
