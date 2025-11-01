@@ -522,8 +522,20 @@ function ItemDatabase:DeleteItem(robloxId)
   end
 end
 
--- Initialize database
-ItemDatabase:LoadItems()
+-- Async initialization flag
+ItemDatabase.IsReady = false
+
+-- Initialize database asynchronously (non-blocking)
+task.spawn(function()
+  local startTime = tick()
+  print("⏳ Loading ItemDatabase...")
+  
+  ItemDatabase:LoadItems()
+  ItemDatabase.IsReady = true
+  
+  local loadTime = tick() - startTime
+  print(string.format("✅ ItemDatabase ready! Loaded %d items in %.2f seconds", #ItemDatabase.Items, loadTime))
+end)
 
 -- Set up RemoteFunction for clients to get all items
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

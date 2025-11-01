@@ -315,6 +315,22 @@ end
 
 -- Handle roll request
 rollCrateEvent.OnServerEvent:Connect(function(player)
+  -- Wait for ItemDatabase to be ready (if not ready yet)
+  if not ItemDatabase.IsReady then
+    print("⏳ ItemDatabase not ready yet, waiting...")
+    local waitStart = tick()
+    local maxWait = 30 -- Maximum 30 seconds wait
+    
+    while not ItemDatabase.IsReady and (tick() - waitStart) < maxWait do
+      task.wait(0.1)
+    end
+    
+    if not ItemDatabase.IsReady then
+      warn("❌ ItemDatabase failed to load in time!")
+      return
+    end
+  end
+  
   -- Check if player is already rolling
   if playersRolling[player] then
     return
