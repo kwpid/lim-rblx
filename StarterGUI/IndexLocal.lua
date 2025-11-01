@@ -235,6 +235,26 @@ function refresh()
       end
     end
 
+    -- Show/hide RareText based on copies count (<= 25 = rare)
+    local rareText = button:FindFirstChild("RareText")
+    if rareText then
+      if copiesCount > 0 and copiesCount <= 25 then
+        rareText.Visible = true
+      else
+        rareText.Visible = false
+      end
+    end
+    
+    -- Show/hide LimText based on Limited status
+    local limText = button:FindFirstChild("LimText")
+    if limText then
+      if item.Limited then
+        limText.Visible = true
+      else
+        limText.Visible = false
+      end
+    end
+
     -- Display value
     local valueLabel = contentFrame and contentFrame:FindFirstChild("Value")
     if valueLabel then

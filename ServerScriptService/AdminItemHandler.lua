@@ -50,58 +50,94 @@ checkAdminFunction.OnServerInvoke = function(player)
   return AdminConfig:IsAdmin(player)
 end
 
--- Handle item creation requests
-createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemValue, itemStock)
+-- Handle item creation/edit requests
+createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemValue, itemStock, isLimited, isEditMode)
   -- Verify player is admin
   if not AdminConfig:IsAdmin(player) then
-    warn("⚠️ Non-admin " .. player.Name .. " attempted to create item!")
+    warn("⚠️ Non-admin " .. player.Name .. " attempted to create/edit item!")
     return
   end
 
   -- Default stock to 0 if not provided
   itemStock = itemStock or 0
+  
+  -- Default Limited to false if not provided
+  isLimited = isLimited or false
+  
+  -- Default edit mode to false if not provided
+  isEditMode = isEditMode or false
 
-  -- Attempt to create item
-  local success, result = ItemDatabase:AddItem(robloxId, itemName, itemValue, itemStock)
-
-  if success then
-    local stockText = itemStock > 0 and " [Stock: " .. itemStock .. "]" or ""
-    print("✅ Admin " .. player.Name .. " created item: " .. itemName .. stockText)
-
-    -- Send success back to client
-    createItemEvent:FireClient(player, true, "Item created successfully!", result)
-
-    -- Send notification to all players about the new item
-    local notificationData = {
-      Type = "GIFT",
-      Title = "New Item",
-      Body = itemName .. " is now available!",
-      ImageId = robloxId  -- Pass just the number, handler will convert to rbxassetid://
-    }
-    notificationEvent:FireAllClients(notificationData)
-    print("📢 Sent new item notification to all players: " .. itemName .. " (ImageId: " .. robloxId .. ")")
+  local success, result
+  
+  if isEditMode then
+    -- EDIT MODE - Update existing item
+    success, result = ItemDatabase:EditItem(robloxId, itemName, itemValue, itemStock, isLimited)
     
-    -- Calculate roll percentage and send Discord webhook
-    task.spawn(function()
-      local allItems = ItemDatabase:GetAllItems()
-      local itemsWithPercentages = ItemRarityModule:CalculateAllRollPercentages(allItems)
-      
-      -- Find the newly created item's roll percentage
-      local rollPercentage = 0
-      for _, itemData in ipairs(itemsWithPercentages) do
-        if itemData.RobloxId == robloxId then
-          rollPercentage = itemData.RollPercentage
-          break
-        end
-      end
-      
-      -- Send webhook notification
-      WebhookHandler:SendItemRelease(result, rollPercentage)
-    end)
+    if success then
+      local stockText = itemStock > 0 and " [Stock: " .. itemStock .. "]" or ""
+      local limitedText = isLimited and " [Limited]" or ""
+      print("✅ Admin " .. player.Name .. " edited item: " .. itemName .. stockText .. limitedText)
+
+      -- Send success back to client
+      createItemEvent:FireClient(player, true, "Item edited successfully!", result)
+
+      -- Send notification to all players about the edited item
+      local notificationData = {
+        Type = "GIFT",
+        Title = "Item Updated",
+        Body = itemName .. " has been updated!",
+        ImageId = robloxId
+      }
+      notificationEvent:FireAllClients(notificationData)
+      print("📢 Sent item update notification to all players: " .. itemName)
+    else
+      warn("❌ Failed to edit item: " .. result)
+      createItemEvent:FireClient(player, false, result)
+    end
   else
-    warn("❌ Failed to create item: " .. result)
-    -- Send error back to client
-    createItemEvent:FireClient(player, false, result)
+    -- CREATE MODE - Add new item
+    success, result = ItemDatabase:AddItem(robloxId, itemName, itemValue, itemStock, isLimited)
+
+    if success then
+      local stockText = itemStock > 0 and " [Stock: " .. itemStock .. "]" or ""
+      local limitedText = isLimited and " [Limited]" or ""
+      print("✅ Admin " .. player.Name .. " created item: " .. itemName .. stockText .. limitedText)
+
+      -- Send success back to client
+      createItemEvent:FireClient(player, true, "Item created successfully!", result)
+
+      -- Send notification to all players about the new item
+      local notificationData = {
+        Type = "GIFT",
+        Title = "New Item",
+        Body = itemName .. " is now available!",
+        ImageId = robloxId
+      }
+      notificationEvent:FireAllClients(notificationData)
+      print("📢 Sent new item notification to all players: " .. itemName .. " (ImageId: " .. robloxId .. ")")
+      
+      -- Calculate roll percentage and send Discord webhook
+      task.spawn(function()
+        local allItems = ItemDatabase:GetAllItems()
+        local itemsWithPercentages = ItemRarityModule:CalculateAllRollPercentages(allItems)
+        
+        -- Find the newly created item's roll percentage
+        local rollPercentage = 0
+        for _, itemData in ipairs(itemsWithPercentages) do
+          if itemData.RobloxId == robloxId then
+            rollPercentage = itemData.RollPercentage
+            break
+          end
+        end
+        
+        -- Send webhook notification
+        WebhookHandler:SendItemRelease(result, rollPercentage)
+      end)
+    else
+      warn("❌ Failed to create item: " .. result)
+      -- Send error back to client
+      createItemEvent:FireClient(player, false, result)
+    end
   end
 end)
 

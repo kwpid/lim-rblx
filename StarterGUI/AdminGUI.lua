@@ -29,6 +29,11 @@ local itemNameBox = uiFrame:WaitForChild("Item_Name")
 local itemValueBox = uiFrame:WaitForChild("Item_Value")
 local itemStockBox = uiFrame:WaitForChild("Item_Stock_Optional")
 local createButton = uiFrame:WaitForChild("CreateItem")
+local limitedToggle = uiFrame:WaitForChild("LimitedToggle")
+
+-- State variables
+local isEditMode = false
+local isLimitedEnabled = false
 
 -- GUI Elements - Give Item Section
 local giveItemIdBox = uiFrame:WaitForChild("Give_Item_Id")
@@ -90,23 +95,76 @@ local function calculateRollPercentageForValue(itemValue)
   return ItemRarityModule:GetRollPercentage(itemValue, totalInverseValue)
 end
 
--- Update item preview when ID changes
+-- LimitedToggle button functionality
+limitedToggle.MouseButton1Click:Connect(function()
+  isLimitedEnabled = not isLimitedEnabled
+  
+  if isLimitedEnabled then
+    limitedToggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0) -- Green
+    limitedToggle.Text = "Limited: ON"
+  else
+    limitedToggle.BackgroundColor3 = Color3.fromRGB(139, 0, 0) -- Dark red
+    limitedToggle.Text = "Limited: OFF"
+  end
+end)
+
+-- Update item preview when ID changes (also check for edit mode)
 itemIdBox:GetPropertyChangedSignal("Text"):Connect(function()
   local idText = itemIdBox.Text
   local itemId = tonumber(idText)
 
   if itemId then
+    -- Check if this item already exists in the database (edit mode)
+    local success, allItems = pcall(function()
+      return getAllItemsFunction:InvokeServer()
+    end)
+
+    if success and allItems and type(allItems) == "table" then
+      local existingItem = nil
+      for _, item in ipairs(allItems) do
+        if item.RobloxId == itemId then
+          existingItem = item
+          break
+        end
+      end
+
+      if existingItem then
+        -- EDIT MODE - Item exists
+        isEditMode = true
+        createButton.Text = "Edit Item"
+        
+        -- Auto-fill fields with existing data
+        itemNameBox.Text = existingItem.Name
+        itemValueBox.Text = tostring(existingItem.Value)
+        itemStockBox.Text = existingItem.Stock > 0 and tostring(existingItem.Stock) or ""
+        
+        -- Set Limited toggle to match existing item
+        isLimitedEnabled = existingItem.Limited or false
+        if isLimitedEnabled then
+          limitedToggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0) -- Green
+          limitedToggle.Text = "Limited: ON"
+        else
+          limitedToggle.BackgroundColor3 = Color3.fromRGB(139, 0, 0) -- Dark red
+          limitedToggle.Text = "Limited: OFF"
+        end
+      else
+        -- CREATE MODE - Item doesn't exist
+        isEditMode = false
+        createButton.Text = "CreateItem"
+      end
+    end
+
     -- Try to load the item thumbnail
-    local success, productInfo = pcall(function()
+    local productSuccess, productInfo = pcall(function()
       return MarketplaceService:GetProductInfo(itemId)
     end)
 
-    if success and productInfo then
+    if productSuccess and productInfo then
       -- Load the image
       itemPreview.Image = "rbxthumb://type=Asset&id=" .. itemId .. "&w=150&h=150"
 
-      -- Auto-fill name if empty
-      if itemNameBox.Text == "" then
+      -- Auto-fill name if empty (only in create mode)
+      if not isEditMode and itemNameBox.Text == "" then
         itemNameBox.Text = productInfo.Name
       end
     else
@@ -114,6 +172,8 @@ itemIdBox:GetPropertyChangedSignal("Text"):Connect(function()
     end
   else
     itemPreview.Image = ""
+    isEditMode = false
+    createButton.Text = "CreateItem"
   end
 end)
 
@@ -139,7 +199,7 @@ itemValueBox:GetPropertyChangedSignal("Text"):Connect(function()
   end
 end)
 
--- Create item button
+-- Create/Edit item button
 createButton.MouseButton1Click:Connect(function()
   local itemId = tonumber(itemIdBox.Text)
   local itemName = itemNameBox.Text
@@ -169,16 +229,27 @@ createButton.MouseButton1Click:Connect(function()
   end
 
   -- Disable button while processing
-  createButton.Text = "Creating..."
+  if isEditMode then
+    createButton.Text = "Editing..."
+  else
+    createButton.Text = "Creating..."
+  end
   createButton.Active = false
 
-  -- Send to server
-  createItemEvent:FireServer(itemId, itemName, itemValue, itemStock)
+  -- Send to server with edit mode flag and Limited status
+  createItemEvent:FireServer(itemId, itemName, itemValue, itemStock, isLimitedEnabled, isEditMode)
 end)
 
 -- Handle server response
 createItemEvent.OnClientEvent:Connect(function(success, message, itemData)
   if success then
+    -- Show appropriate success message
+    if isEditMode then
+      createButton.Text = "✅ Edited!"
+    else
+      createButton.Text = "✅ Created!"
+    end
+    
     -- Clear fields
     itemIdBox.Text = ""
     itemNameBox.Text = ""
@@ -188,8 +259,14 @@ createItemEvent.OnClientEvent:Connect(function(success, message, itemData)
     if infoPreview then
       infoPreview.Text = ""
     end
-
-    createButton.Text = "✅ Created!"
+    
+    -- Reset Limited toggle
+    isLimitedEnabled = false
+    limitedToggle.BackgroundColor3 = Color3.fromRGB(139, 0, 0) -- Dark red
+    limitedToggle.Text = "Limited: OFF"
+    
+    -- Reset edit mode
+    isEditMode = false
   else
     warn("❌ " .. message)
     createButton.Text = "❌ Failed"
@@ -199,6 +276,7 @@ createItemEvent.OnClientEvent:Connect(function(success, message, itemData)
   task.wait(2)
   createButton.Text = "CreateItem"
   createButton.Active = true
+  isEditMode = false
 end)
 
 -- ═══════════════════════════════════════════════════

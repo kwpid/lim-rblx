@@ -90,7 +90,7 @@ function ItemDatabase:LoadItems()
         self.DataVersion = savedVersion
       end
 
-      -- Migrate legacy items (add Stock/CurrentStock/Owners/TotalCopies/SerialOwners if missing)
+      -- Migrate legacy items (add Stock/CurrentStock/Owners/TotalCopies/SerialOwners/Limited if missing)
       for _, item in ipairs(self.Items) do
         if item.Stock == nil then
           item.Stock = 0
@@ -106,6 +106,9 @@ function ItemDatabase:LoadItems()
         end
         if item.SerialOwners == nil then
           item.SerialOwners = {}
+        end
+        if item.Limited == nil then
+          item.Limited = false
         end
       end
     else
@@ -142,7 +145,7 @@ function ItemDatabase:SaveItems()
 end
 
 -- Add a new item to the database
-function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
+function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock, isLimited)
   -- Validate inputs
   if type(robloxId) ~= "number" then
     return false, "RobloxId must be a number"
@@ -161,6 +164,9 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
   if type(stock) ~= "number" or stock < 0 or stock > 100 then
     return false, "Stock must be between 0 and 100"
   end
+  
+  -- Default Limited to false if not provided
+  isLimited = isLimited or false
 
   -- Check if item already exists
   for _, item in ipairs(self.Items) do
@@ -183,6 +189,7 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
     Owners = 0,        -- How many unique players own this item (for backwards compatibility)
     TotalCopies = 0,   -- Total copies across all players (regular items)
     SerialOwners = {}, -- Array of {UserId, SerialNumber, Username} for stock items
+    Limited = isLimited, -- true = Limited item (shows LimText)
     CreatedAt = os.time()
   }
 
@@ -199,6 +206,67 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock)
     -- Remove from memory if save failed
     table.remove(self.Items, #self.Items)
     return false, "Failed to save item to database"
+  end
+end
+
+-- Edit an existing item in the database
+function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited)
+  -- Validate inputs
+  if type(robloxId) ~= "number" then
+    return false, "RobloxId must be a number"
+  end
+
+  if type(itemName) ~= "string" or itemName == "" then
+    return false, "Item name cannot be empty"
+  end
+
+  if type(itemValue) ~= "number" or itemValue < 0 then
+    return false, "Item value must be a positive number"
+  end
+
+  -- Validate stock (optional, 0 or nil = regular item, 1-100 = stock item)
+  stock = stock or 0
+  if type(stock) ~= "number" or stock < 0 or stock > 100 then
+    return false, "Stock must be between 0 and 100"
+  end
+  
+  -- Default Limited to false if not provided
+  if isLimited == nil then
+    isLimited = false
+  end
+
+  -- Find the item to edit
+  local itemToEdit = nil
+  for _, item in ipairs(self.Items) do
+    if item.RobloxId == robloxId then
+      itemToEdit = item
+      break
+    end
+  end
+
+  if not itemToEdit then
+    return false, "Item with this Roblox ID does not exist"
+  end
+
+  -- Get rarity from new value
+  local rarity = ItemRarityModule:GetRarity(itemValue)
+
+  -- Update item properties
+  itemToEdit.Name = itemName
+  itemToEdit.Value = itemValue
+  itemToEdit.Rarity = rarity
+  itemToEdit.Stock = stock
+  itemToEdit.Limited = isLimited
+
+  -- Save to DataStore
+  local saveSuccess = self:SaveItems()
+
+  if saveSuccess then
+    local stockText = stock > 0 and " [Stock: " .. stock .. "]" or ""
+    local limitedText = isLimited and " [Limited]" or ""
+    return true, itemToEdit
+  else
+    return false, "Failed to save edited item to database"
   end
 end
 
