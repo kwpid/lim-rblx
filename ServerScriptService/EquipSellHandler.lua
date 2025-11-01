@@ -60,12 +60,17 @@ local function equipItemToCharacter(player, robloxId)
           idValue.Value = robloxId
           idValue.Parent = itemClone
           
-          -- Parent to character - this works for all accessory types
-          itemClone.Parent = character
-          
-          -- Force the humanoid to add the accessory (ensures it attaches properly)
-          if itemClone:IsA("Accessory") and humanoid then
-            humanoid:AddAccessory(itemClone)
+          -- Handle tools differently - they go in Backpack, not Character
+          if itemClone:IsA("Tool") then
+            itemClone.Parent = player.Backpack
+          else
+            -- Accessories and Hats go to character
+            itemClone.Parent = character
+            
+            -- Force the humanoid to add the accessory (ensures it attaches properly)
+            if itemClone:IsA("Accessory") and humanoid then
+              humanoid:AddAccessory(itemClone)
+            end
           end
         else
           -- Fallback: search children
@@ -76,11 +81,18 @@ local function equipItemToCharacter(player, robloxId)
               idValue.Name = "OriginalRobloxId"
               idValue.Value = robloxId
               idValue.Parent = itemClone
-              itemClone.Parent = character
               
-              -- Force the humanoid to add the accessory
-              if itemClone:IsA("Accessory") and humanoid then
-                humanoid:AddAccessory(itemClone)
+              -- Handle tools differently - they go in Backpack, not Character
+              if itemClone:IsA("Tool") then
+                itemClone.Parent = player.Backpack
+              else
+                -- Accessories and Hats go to character
+                itemClone.Parent = character
+                
+                -- Force the humanoid to add the accessory
+                if itemClone:IsA("Accessory") and humanoid then
+                  humanoid:AddAccessory(itemClone)
+                end
               end
               break
             end
@@ -121,13 +133,27 @@ local function unequipItemFromCharacter(player, robloxId)
     end
   end
   
-  -- Handle accessories, tools, and hats
+  -- Handle accessories and hats in character
   for _, child in ipairs(character:GetChildren()) do
     if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
       local storedId = child:FindFirstChild("OriginalRobloxId")
       if storedId and storedId.Value == robloxId then
         child:Destroy()
         itemsRemoved = itemsRemoved + 1
+      end
+    end
+  end
+  
+  -- Also check Backpack for tools
+  local backpack = player:FindFirstChild("Backpack")
+  if backpack then
+    for _, child in ipairs(backpack:GetChildren()) do
+      if child:IsA("Tool") then
+        local storedId = child:FindFirstChild("OriginalRobloxId")
+        if storedId and storedId.Value == robloxId then
+          child:Destroy()
+          itemsRemoved = itemsRemoved + 1
+        end
       end
     end
   end

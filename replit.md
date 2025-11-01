@@ -54,6 +54,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Roblox MessagingService**: Used for cross-server notifications when ultra-rare items (5M+) are unboxed.
 
 ## Recent Updates (November 1, 2025)
+-   **Tool Equipping Fix**: Fixed tools not equipping properly - tools now correctly go to the player's Backpack instead of being placed in the character, allowing them to be used normally.
 -   **Headless Support**: Simplified headless implementation - when a headless item is equipped, the player's head and face decal are set to transparency 1 (invisible). When unequipped, transparency is restored to 0. Works seamlessly with character respawns. Headless items are detected by name (contains "headless").
 -   **AutoRoll Persistence**: AutoRoll state now persists across sessions and server shutdowns. When a player rejoins, AutoRoll automatically resumes if it was enabled. Server shutdowns automatically enable AutoRoll for all players, ensuring continuous rolling after reconnection.
 -   **Equipped Item Visual Feedback**: Equipped items now display with an orange border in the inventory. Equipping or unequipping an item triggers an automatic inventory refresh to update sorting (equipped items first) and border colors.
