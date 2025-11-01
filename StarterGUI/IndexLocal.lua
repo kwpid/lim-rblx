@@ -145,11 +145,21 @@ function refresh()
       content2Frame.BorderColor3 = rarityColor
     end
 
+    -- Calculate the number of copies
+    local copiesCount = 0
+    if item.Stock and item.Stock > 0 then
+      -- Stock item: use CurrentStock (number of serials claimed)
+      copiesCount = item.CurrentStock or 0
+    else
+      -- Regular item: use Owners (unique players who own it)
+      copiesCount = item.Owners or 0
+    end
+    
     -- Display stock info
     local qtyLabel = button:FindFirstChild("Qty")
     if qtyLabel then
       if item.Stock and item.Stock > 0 then
-        qtyLabel.Text = item.CurrentStock .. "/" .. item.Stock
+        qtyLabel.Text = copiesCount .. "/" .. item.Stock
       else
         qtyLabel.Text = "∞"
       end
@@ -178,14 +188,13 @@ function refresh()
     -- Display owners count
     local copiesLabel = button:FindFirstChild("copies")
     if copiesLabel then
-      local ownersCount = item.Owners or 0
       local stockCount = item.Stock or 0
 
-      if ownersCount > 0 then
+      if copiesCount > 0 then
         if stockCount > 0 then
-          copiesLabel.Text = "copies: " .. ownersCount .. " / " .. stockCount .. " exist"
+          copiesLabel.Text = "copies: " .. copiesCount .. " / " .. stockCount .. " exist"
         else
-          copiesLabel.Text = "copies: " .. ownersCount
+          copiesLabel.Text = "copies: " .. copiesCount
         end
         copiesLabel.Visible = true
       else
@@ -193,14 +202,13 @@ function refresh()
       end
     end
 
-    -- Also update o2 label
+    -- Also update o2 label to show copies count
     local o2Label = contentFrame and contentFrame:FindFirstChild("o2")
     if o2Label then
-      local ownersCount = item.Owners or 0
       if item.Stock and item.Stock > 0 then
-        o2Label.Text = formatNumber(ownersCount) .. "/" .. formatNumber(item.Stock)
+        o2Label.Text = formatNumber(copiesCount) .. "/" .. formatNumber(item.Stock)
       else
-        o2Label.Text = formatNumber(ownersCount)
+        o2Label.Text = formatNumber(copiesCount)
       end
     end
 

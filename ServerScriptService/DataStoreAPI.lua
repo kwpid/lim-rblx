@@ -170,7 +170,7 @@ function DataStoreAPI:GetInventory(player)
       }
     end
 
-    -- Get item from database to retrieve owners and stock info
+    -- Get item from database to retrieve owners, stock info, and current stock
     local dbItemSuccess, dbItem = pcall(function()
       return ItemDatabase:GetItemByRobloxId(item.RobloxId)
     end)
@@ -178,10 +178,12 @@ function DataStoreAPI:GetInventory(player)
     if dbItemSuccess and dbItem then
       itemCopy.Owners = dbItem.Owners or 0
       itemCopy.Stock = dbItem.Stock or 0
+      itemCopy.CurrentStock = dbItem.CurrentStock or 0
     else
       warn("⚠️ Failed to get database item for " .. (item.Name or "item"))
       itemCopy.Owners = 0
       itemCopy.Stock = 0
+      itemCopy.CurrentStock = 0
     end
 
     table.insert(inventoryWithOwners, itemCopy)

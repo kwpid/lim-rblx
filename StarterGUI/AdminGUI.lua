@@ -72,20 +72,20 @@ local function calculateRollPercentageForValue(itemValue)
   local success, allItems = pcall(function()
     return getAllItemsFunction:InvokeServer()
   end)
-  
+
   if not success or not allItems or type(allItems) ~= "table" then
     return 0
   end
-  
+
   -- Calculate total inverse value
   local totalInverseValue = 0
   for _, item in ipairs(allItems) do
     totalInverseValue = totalInverseValue + (1 / item.Value)
   end
-  
+
   -- Add the new item's inverse value
   totalInverseValue = totalInverseValue + (1 / itemValue)
-  
+
   -- Calculate the percentage for this item
   return ItemRarityModule:GetRollPercentage(itemValue, totalInverseValue)
 end
@@ -121,17 +121,17 @@ end)
 itemValueBox:GetPropertyChangedSignal("Text"):Connect(function()
   local valueText = itemValueBox.Text
   local itemValue = tonumber(valueText)
-  
+
   if itemValue and itemValue > 0 and infoPreview then
     -- Get the rarity for this value
     local rarity = ItemRarityModule:GetRarity(itemValue)
-    
+
     -- Calculate the roll percentage
     local rollPercentage = calculateRollPercentageForValue(itemValue)
-    
+
     -- Format the percentage with 2 decimal places
     local percentText = string.format("%.2f%%", rollPercentage)
-    
+
     -- Update the info preview text
     infoPreview.Text = rarity .. " | " .. percentText
   elseif infoPreview then
@@ -269,13 +269,13 @@ local deleteConfirmation = false
 deleteItemIdBox:GetPropertyChangedSignal("Text"):Connect(function()
   local deleteIdText = deleteItemIdBox.Text
   local deleteItemId = tonumber(deleteIdText)
-  
+
   if deleteItemId and deleteName then
     -- Get all items and find the one with this ID
     local success, allItems = pcall(function()
       return getAllItemsFunction:InvokeServer()
     end)
-    
+
     if success and allItems and type(allItems) == "table" then
       local foundItem = nil
       for _, item in ipairs(allItems) do
@@ -284,7 +284,7 @@ deleteItemIdBox:GetPropertyChangedSignal("Text"):Connect(function()
           break
         end
       end
-      
+
       if foundItem then
         deleteName.Text = foundItem.Name
       else

@@ -23,7 +23,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
     - Delete items with confirmation dialog (double-click required), removes from all players' inventories with automatic cleanup for offline players
     - Global "New Item" notification system and console commands for database checks
 -   **Data Persistence**: Utilizes Roblox DataStore Service for player inventories (with auto-stacking), rolls, cash, and inventory value. Auto-saves every 2 minutes. Includes a data version system to manage wipes and resets. Features automatic cleanup of deleted items when offline players rejoin.
--   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays stock item counts ("copies: X / Y exist") and regular item counts ("copies: X"). Includes search/filter functionality and detailed item info on click.
+-   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays stock item counts ("copies: X / Y exist" using CurrentStock) and regular item counts ("copies: X" using Owners). RareText appears only on items with less than 25 copies. Includes search/filter functionality and detailed item info on click.
 -   **Equipping Items**: Players can equip/unequip items from their inventory, which are then visible to all players. Uses Roblox asset IDs to load and attach items (accessories, hats, tools) to the character, with equipped items persisting across sessions.
 -   **Selling Items**: Players can sell regular items for 80% of their value. Features a confirmation step and options to sell single items or all copies of an item. Selling stock items is prevented. Cash is added to the player's wallet, and inventory value updates automatically.
 -   **Index System**: Displays all items in the game database with detailed information. Shows item name, total owners, and value. For stock items, displays an owner list with player avatars, @usernames, and #serial numbers, sorted by serial number. Owner data persists in the database (SerialOwners array) so it works even when players are offline. The index automatically refreshes every 3 minutes when open, whenever manually opened, and when new items are created. Owner data is always fetched fresh from the server to ensure accuracy.
@@ -53,6 +53,8 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Roblox MarketplaceService**: Used to check gamepass ownership for the Fast Roll feature (gamepass ID: 1242040274 from old game).
 
 ## Recent Updates (November 1, 2025)
+-   **Rarity Indicator**: Inventory now shows RareText only for items with less than 25 copies in existence (works for both regular and stock items)
+-   **Accurate Copy Count**: Both inventory and index now show CurrentStock (actual serials claimed) for stock items instead of unique owners
 -   **Roll Percentage Display**: Index now shows roll percentage next to rarity (e.g., "Uncommon | 0.25%")
 -   **Admin Panel Preview**: When creating items, the admin panel now shows a live preview of rarity and roll percentage as you type the value in `info_preview`
 -   **Delete Confirmation**: When deleting an item, `delete_name` now shows the item name for confirmation

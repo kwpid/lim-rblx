@@ -174,19 +174,38 @@ function refresh()
       t1Label.Visible = false
     end
 
+    -- Calculate the number of copies for rarity check
+    local copiesCount = 0
+    if item.Stock and item.Stock > 0 then
+      -- Stock item: use CurrentStock (number of serials claimed)
+      copiesCount = item.CurrentStock or 0
+    else
+      -- Regular item: use Owners (unique players who own it)
+      copiesCount = item.Owners or 0
+    end
+    
+    -- Show/hide RareText based on copies count (< 25 = rare)
+    local rareText = button:FindFirstChild("RareText")
+    if rareText then
+      if copiesCount > 0 and copiesCount < 25 then
+        rareText.Visible = true
+      else
+        rareText.Visible = false
+      end
+    end
+    
     -- Display copies (owners count) with stock info for stock items
     local copiesLabel = button:FindFirstChild("copies")
     if copiesLabel then
-      local ownersCount = item.Owners or 0
       local stockCount = item.Stock or 0
       
-      if ownersCount > 0 then
+      if copiesCount > 0 then
         if stockCount > 0 then
-          -- Stock item: show "copies: X / Y exist"
-          copiesLabel.Text = "copies: " .. ownersCount .. " / " .. stockCount .. " exist"
+          -- Stock item: show "copies: X / Y exist" using CurrentStock
+          copiesLabel.Text = "copies: " .. copiesCount .. " / " .. stockCount .. " exist"
         else
-          -- Regular item: show "copies: X"
-          copiesLabel.Text = "copies: " .. ownersCount
+          -- Regular item: show "copies: X" using Owners
+          copiesLabel.Text = "copies: " .. copiesCount
         end
         copiesLabel.Visible = true
       else
@@ -194,16 +213,15 @@ function refresh()
       end
     end
     
-    -- Also update o2 label (Sample.Content.o2) for owner count
+    -- Also update o2 label (Sample.Content.o2) to show copies count
     local o2Label = contentFrame and contentFrame:FindFirstChild("o2")
     if o2Label then
-      local ownersCount = item.Owners or 0
       if item.Stock and item.Stock > 0 then
-        -- Stock items show "owners/stock" format
-        o2Label.Text = formatNumber(ownersCount) .. "/" .. formatNumber(item.Stock)
+        -- Stock items show "CurrentStock/Stock" format
+        o2Label.Text = formatNumber(copiesCount) .. "/" .. formatNumber(item.Stock)
       else
         -- Regular items show just owners count
-        o2Label.Text = formatNumber(ownersCount)
+        o2Label.Text = formatNumber(copiesCount)
       end
     end
 
