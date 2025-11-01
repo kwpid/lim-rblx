@@ -96,7 +96,7 @@ function WebhookHandler:SendItemRelease(item, rollPercentage)
                         description = description,
                         color = rarityColor,
                         thumbnail = {
-                                url = string.format("https://assetdelivery.roblox.com/v1/asset/?id=%d", item.RobloxId)
+                                url = string.format("https://www.roblox.com/asset-thumbnail/image?assetId=%d&width=420&height=420&format=png", item.RobloxId)
                         },
                         footer = {
                                 text = "New Item Release"
@@ -142,7 +142,7 @@ function WebhookHandler:SendItemDrop(player, item, serialNumber)
                                 url = playerThumbnailUrl
                         },
                         image = {
-                                url = string.format("https://assetdelivery.roblox.com/v1/asset/?id=%d", item.RobloxId)
+                                url = string.format("https://www.roblox.com/asset-thumbnail/image?assetId=%d&width=420&height=420&format=png", item.RobloxId)
                         },
                         footer = {
                                 text = "Item Drop"
@@ -178,7 +178,7 @@ function WebhookHandler:SendOutOfStock(item)
                         description = description,
                         color = rarityColor,
                         thumbnail = {
-                                url = string.format("https://assetdelivery.roblox.com/v1/asset/?id=%d", item.RobloxId)
+                                url = string.format("https://www.roblox.com/asset-thumbnail/image?assetId=%d&width=420&height=420&format=png", item.RobloxId)
                         },
                         footer = {
                                 text = "Out of Stock"
