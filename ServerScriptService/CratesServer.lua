@@ -150,6 +150,11 @@ function pickRandomItem(items, luckMultiplier)
     numRolls = math.min(math.ceil(1.0 / luckMultiplier), 10)
   end
   
+  -- Debug: Log number of rolls
+  if numRolls > 1 then
+    print(string.format("  🎲 Performing %d rolls (luck=%.1fx)", numRolls, luckMultiplier))
+  end
+  
   -- Perform all rolls
   local allRolls = {}
   local epicPlusRolls = {}
@@ -161,12 +166,14 @@ function pickRandomItem(items, luckMultiplier)
     -- Track Epic+ rolls separately
     if rolledItem.Value >= LUCK_MIN_VALUE then
       table.insert(epicPlusRolls, rolledItem)
+      print(string.format("  ✨ Roll #%d: EPIC+ %s (R$%s)", i, rolledItem.Name, tostring(rolledItem.Value)))
     end
   end
   
   -- Decision logic based on luck and what was rolled
   if #epicPlusRolls > 0 then
     -- At least one Epic+ item was rolled - apply luck selection logic
+    print(string.format("  🎯 Got %d Epic+ items out of %d rolls", #epicPlusRolls, numRolls))
     if luckMultiplier > 1.0 then
       -- Higher luck: pick the HIGHEST value Epic+ item (most rare)
       local bestItem = epicPlusRolls[1]
@@ -175,6 +182,7 @@ function pickRandomItem(items, luckMultiplier)
           bestItem = item
         end
       end
+      print(string.format("  ⬆️ Selected HIGHEST: %s (R$%s)", bestItem.Name, tostring(bestItem.Value)))
       return bestItem
     elseif luckMultiplier < 1.0 then
       -- Lower luck: pick the LOWEST value Epic+ item (least rare in Epic+ tier)
@@ -184,7 +192,14 @@ function pickRandomItem(items, luckMultiplier)
           worstItem = item
         end
       end
+      print(string.format("  ⬇️ Selected LOWEST: %s (R$%s)", worstItem.Name, tostring(worstItem.Value)))
       return worstItem
+    end
+  else
+    -- No Epic+ items rolled
+    if numRolls > 1 then
+      print(string.format("  ❌ No Epic+ items in %d rolls, returning first roll: %s (R$%s)", 
+        numRolls, allRolls[1].Name, tostring(allRolls[1].Value)))
     end
   end
   
@@ -333,6 +348,10 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
   
   -- Apply global luck multiplier
   local totalLuck = playerLuck * GLOBAL_LUCK_MULTIPLIER
+  
+  -- Debug: Print luck values
+  print(string.format("🍀 %s rolling with luck: Player=%.1fx, Global=%.1fx, Total=%.1fx", 
+    player.Name, playerLuck, GLOBAL_LUCK_MULTIPLIER, totalLuck))
   
   -- Pick random item (weighted by inverse value with luck modifier)
   local chosenItem = pickRandomItem(allItems, totalLuck)
