@@ -124,6 +124,7 @@ local function setupPlayer(player)
     -- Only run repair if ItemDatabase is now ready
     if ItemDatabase.IsReady then
       local repairedCount = 0
+      local updatedStockCount = 0
       
       for _, invItem in ipairs(data.Inventory) do
         -- Only process stock items (items with SerialNumber)
@@ -155,12 +156,26 @@ local function setupPlayer(player)
                   invItem.Name, invItem.SerialNumber, player.Name))
               end
             end
+            
+            -- CRITICAL: Check if this serial number is higher than CurrentStock
+            -- This prevents duplicate serial numbers from being assigned by future rolls
+            local currentStock = dbItem.CurrentStock or 0
+            if invItem.SerialNumber > currentStock then
+              dbItem.CurrentStock = invItem.SerialNumber
+              ItemDatabase:SaveItems()
+              updatedStockCount = updatedStockCount + 1
+              print(string.format("📊 Updated CurrentStock for %s from %d to %d (found serial #%d)", 
+                dbItem.Name, currentStock, invItem.SerialNumber, invItem.SerialNumber))
+            end
           end
         end
       end
       
       if repairedCount > 0 then
         print(string.format("✅ Repaired %d missing SerialOwner records for %s", repairedCount, player.Name))
+      end
+      if updatedStockCount > 0 then
+        print(string.format("✅ Updated CurrentStock for %d items to prevent duplicate serials", updatedStockCount))
       end
     end
   end
