@@ -1,0 +1,30 @@
+ YourOfferList is not a valid member of Frame "Players.Player1.PlayerGui.TradeGui.TradeFrame.TradingFrame.YourOfferFrame"  -  Client - TradeClient:202
+  18:03:48.029  Stack Begin  -  Studio
+  18:03:48.029  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 202 - function updateTradeOffersDisplay  -  Studio - TradeClient:202
+  18:03:48.029  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 373  -  Studio - TradeClient:373
+  18:03:48.029  Stack End  -  Studio
+  18:03:48.029  YourOfferList is not a valid member of Frame "Players.Player1.PlayerGui.TradeGui.TradeFrame.TradingFrame.YourOfferFrame"  -  Client - TradeClient:202
+  18:03:48.030  Stack Begin  -  Studio
+  18:03:48.030  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 202 - function updateTradeOffersDisplay  -  Studio - TradeClient:202
+  18:03:48.030  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 361  -  Studio - TradeClient:361
+  18:03:48.030  Stack End  -  Studio
+  18:03:48.030  YourOfferList is not a valid member of Frame "Players.Player1.PlayerGui.TradeGui.TradeFrame.TradingFrame.YourOfferFrame"  -  Client - TradeClient:202
+  18:03:48.030  Stack Begin  -  Studio
+  18:03:48.030  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 202 - function updateTradeOffersDisplay  -  Studio - TradeClient:202
+  18:03:48.030  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 373  -  Studio - TradeClient:373
+  18:03:48.030  Stack End  -  Studio
+  18:03:48.030  YourOfferList is not a valid member of Frame "Players.Player1.PlayerGui.TradeGui.TradeFrame.TradingFrame.YourOfferFrame"  -  Client - TradeClient:202
+  18:03:48.030  Stack Begin  -  Studio
+  18:03:48.030  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 202 - function updateTradeOffersDisplay  -  Studio - TradeClient:202
+  18:03:48.030  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 373  -  Studio - TradeClient:373
+  18:03:48.030  Stack End  -  Studio
+  18:03:48.030  YourOfferList is not a valid member of Frame "Players.Player1.PlayerGui.TradeGui.TradeFrame.TradingFrame.YourOfferFrame"  -  Client - TradeClient:202
+  18:03:48.031  Stack Begin  -  Studio
+  18:03:48.031  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 202 - function updateTradeOffersDisplay  -  Studio - TradeClient:202
+  18:03:48.031  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 373  -  Studio - TradeClient:373
+  18:03:48.031  Stack End  -  Studio
+  18:03:48.031  YourOfferList is not a valid member of Frame "Players.Player1.PlayerGui.TradeGui.TradeFrame.TradingFrame.YourOfferFrame"  -  Client - TradeClient:202
+  18:03:48.031  Stack Begin  -  Studio
+  18:03:48.031  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 202 - function updateTradeOffersDisplay  -  Studio - TradeClient:202
+  18:03:48.031  Script 'Players.Player1.PlayerGui.TradeGui.TradeClient', Line 373  -  Studio - TradeClient:373
+  18:03:48.031  Stack End  -  Studio
