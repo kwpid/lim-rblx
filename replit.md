@@ -12,7 +12,7 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 ## Recent Changes (November 1, 2025)
 - **Inventory Popup UI Rework**: Changed inventory item details frame to a popup system with animations:
   - Renamed "Frame" to "Popup" and set to invisible by default
-  - Selected items now highlight with a light yellow background
+  - Selected items have bigger borders (BorderSizePixel = 3) that return to normal (1) when unselected
   - Popup slides in from the right when an item is selected (0.3s animation)
   - Added "Close" button that slides popup out and deselects the item
   - Previous selection is automatically cleared when selecting a new item

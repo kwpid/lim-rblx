@@ -138,38 +138,18 @@ function hidePopup()
 end
 
 function clearSelection()
-  -- De-highlight the selected button
+  -- Reset border size of the selected button
   if selectedButton then
     local contentFrame = selectedButton:FindFirstChild("Content")
     local content2Frame = selectedButton:FindFirstChild("content2")
     
-    -- Get the item data from the button
-    local itemRobloxId = selectedItemData and selectedItemData.RobloxId
-    local isEquipped = itemRobloxId and equippedItems[itemRobloxId] or false
-    
-    -- Restore original border color
+    -- Restore normal border size
     if contentFrame then
-      if isEquipped then
-        contentFrame.BorderColor3 = Color3.fromRGB(255, 165, 0)
-      else
-        local itemRarity = selectedItemData and selectedItemData.Rarity
-        local rarityColor = rarityColors[itemRarity] or Color3.new(1, 1, 1)
-        contentFrame.BorderColor3 = rarityColor
-      end
-      -- Remove highlight effect
-      contentFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+      contentFrame.BorderSizePixel = 1
     end
     
     if content2Frame then
-      if isEquipped then
-        content2Frame.BorderColor3 = Color3.fromRGB(255, 165, 0)
-      else
-        local itemRarity = selectedItemData and selectedItemData.Rarity
-        local rarityColor = rarityColors[itemRarity] or Color3.new(1, 1, 1)
-        content2Frame.BorderColor3 = rarityColor
-      end
-      -- Remove highlight effect
-      content2Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+      content2Frame.BorderSizePixel = 1
     end
     
     selectedButton = nil
@@ -389,21 +369,21 @@ function refresh()
         local prevContentFrame = selectedButton:FindFirstChild("Content")
         local prevContent2Frame = selectedButton:FindFirstChild("content2")
         
-        -- Remove highlight from previous button
+        -- Reset border size of previous button
         if prevContentFrame then
-          prevContentFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+          prevContentFrame.BorderSizePixel = 1
         end
         if prevContent2Frame then
-          prevContent2Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+          prevContent2Frame.BorderSizePixel = 1
         end
       end
       
-      -- Highlight the selected button
+      -- Make borders bigger on the selected button
       if contentFrame then
-        contentFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 150) -- Light yellow highlight
+        contentFrame.BorderSizePixel = 3
       end
       if content2Frame then
-        content2Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 150) -- Light yellow highlight
+        content2Frame.BorderSizePixel = 3
       end
       
       selectedButton = button
