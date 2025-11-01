@@ -10,6 +10,11 @@ local function equipItemToCharacter(player, robloxId)
   if not character then
     return false, "No character"
   end
+  
+  local humanoid = character:FindFirstChildOfClass("Humanoid")
+  if not humanoid then
+    return false, "No humanoid"
+  end
 
   local success, result = pcall(function()
     local model = InsertService:LoadAsset(robloxId)
@@ -18,13 +23,22 @@ local function equipItemToCharacter(player, robloxId)
       model:FindFirstChildOfClass("Hat")
 
       if item then
+        -- Clone the item and parent it to character
         local itemClone = item:Clone()
         local idValue = Instance.new("IntValue")
         idValue.Name = "OriginalRobloxId"
         idValue.Value = robloxId
         idValue.Parent = itemClone
+        
+        -- Parent to character - this works for all accessory types including heads
         itemClone.Parent = character
+        
+        -- Force the humanoid to add the accessory (ensures it attaches properly)
+        if itemClone:IsA("Accessory") and humanoid then
+          humanoid:AddAccessory(itemClone)
+        end
       else
+        -- Fallback: search children
         for _, child in ipairs(model:GetChildren()) do
           if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
             local itemClone = child:Clone()
@@ -33,6 +47,11 @@ local function equipItemToCharacter(player, robloxId)
             idValue.Value = robloxId
             idValue.Parent = itemClone
             itemClone.Parent = character
+            
+            -- Force the humanoid to add the accessory
+            if itemClone:IsA("Accessory") and humanoid then
+              humanoid:AddAccessory(itemClone)
+            end
             break
           end
         end
