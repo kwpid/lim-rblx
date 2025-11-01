@@ -105,45 +105,63 @@ local function setupPlayer(player)
   -- This handles cases where stock items exist in player inventory but
   -- aren't tracked in the ItemDatabase's SerialOwners array (e.g., migrated data)
   -- ═══════════════════════════════════════════════════
-  if data.Inventory and ItemDatabase.IsReady then
-    local repairedCount = 0
+  if data.Inventory then
+    -- Wait for ItemDatabase to be ready before repairing
+    if not ItemDatabase.IsReady then
+      print("⏳ Waiting for ItemDatabase to repair SerialOwners for " .. player.Name)
+      local waitStart = tick()
+      local maxWait = 30
+      
+      while not ItemDatabase.IsReady and (tick() - waitStart) < maxWait do
+        task.wait(0.1)
+      end
+      
+      if not ItemDatabase.IsReady then
+        warn("❌ ItemDatabase not ready - SerialOwner repair skipped for " .. player.Name)
+      end
+    end
     
-    for _, invItem in ipairs(data.Inventory) do
-      -- Only process stock items (items with SerialNumber)
-      if invItem.SerialNumber then
-        local dbItem = ItemDatabase:GetItemByRobloxId(invItem.RobloxId)
-        
-        if dbItem and dbItem.SerialOwners then
-          -- Check if this serial number is already recorded
-          local serialExists = false
-          for _, owner in ipairs(dbItem.SerialOwners) do
-            if owner.SerialNumber == invItem.SerialNumber and owner.UserId == player.UserId then
-              serialExists = true
-              break
-            end
-          end
+    -- Only run repair if ItemDatabase is now ready
+    if ItemDatabase.IsReady then
+      local repairedCount = 0
+      
+      for _, invItem in ipairs(data.Inventory) do
+        -- Only process stock items (items with SerialNumber)
+        if invItem.SerialNumber then
+          local dbItem = ItemDatabase:GetItemByRobloxId(invItem.RobloxId)
           
-          -- If serial not found, add it
-          if not serialExists then
-            local success = ItemDatabase:RecordSerialOwner(
-              invItem.RobloxId,
-              player.UserId,
-              player.Name,
-              invItem.SerialNumber
-            )
+          if dbItem and dbItem.SerialOwners then
+            -- Check if this serial number is already recorded
+            local serialExists = false
+            for _, owner in ipairs(dbItem.SerialOwners) do
+              if owner.SerialNumber == invItem.SerialNumber and owner.UserId == player.UserId then
+                serialExists = true
+                break
+              end
+            end
             
-            if success then
-              repairedCount = repairedCount + 1
-              print(string.format("🔧 Repaired SerialOwner: %s #%d for %s", 
-                invItem.Name, invItem.SerialNumber, player.Name))
+            -- If serial not found, add it
+            if not serialExists then
+              local success = ItemDatabase:RecordSerialOwner(
+                invItem.RobloxId,
+                player.UserId,
+                player.Name,
+                invItem.SerialNumber
+              )
+              
+              if success then
+                repairedCount = repairedCount + 1
+                print(string.format("🔧 Repaired SerialOwner: %s #%d for %s", 
+                  invItem.Name, invItem.SerialNumber, player.Name))
+              end
             end
           end
         end
       end
-    end
-    
-    if repairedCount > 0 then
-      print(string.format("✅ Repaired %d missing SerialOwner records for %s", repairedCount, player.Name))
+      
+      if repairedCount > 0 then
+        print(string.format("✅ Repaired %d missing SerialOwner records for %s", repairedCount, player.Name))
+      end
     end
   end
 
