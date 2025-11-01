@@ -84,12 +84,6 @@ local rarityColors = {
 -- Store the original popup position for animation
 local popupOriginalPosition = popup.Position
 
--- Store the original inventory frame position for animation
-local inventoryOriginalPosition = nil
-if mainFrame then
-  inventoryOriginalPosition = mainFrame.Position
-end
-
 function formatNumber(n)
   local formatted = tostring(n)
   while true do
@@ -100,55 +94,13 @@ function formatNumber(n)
 end
 
 function showInventory()
-  if mainFrame and inventoryOriginalPosition then
-    -- Start position (off-screen at the bottom)
-    local startPos = UDim2.new(
-      inventoryOriginalPosition.X.Scale,
-      inventoryOriginalPosition.X.Offset,
-      1.2, -- Below screen
-      0
-    )
-    
-    mainFrame.Position = startPos
-    
-    -- Tween to original position
-    local tweenInfo = TweenInfo.new(
-      0.4,
-      Enum.EasingStyle.Quart,
-      Enum.EasingDirection.Out
-    )
-    
-    local tween = TweenService:Create(mainFrame, tweenInfo, {Position = inventoryOriginalPosition})
-    tween:Play()
-  end
+  -- No animation, inventory is controlled by MainUIToggle
 end
 
 function hideInventory(callback)
-  if mainFrame and inventoryOriginalPosition then
-    -- Tween down to the bottom
-    local endPos = UDim2.new(
-      inventoryOriginalPosition.X.Scale,
-      inventoryOriginalPosition.X.Offset,
-      1.2, -- Below screen
-      0
-    )
-    
-    local tweenInfo = TweenInfo.new(
-      0.3,
-      Enum.EasingStyle.Quart,
-      Enum.EasingDirection.In
-    )
-    
-    local tween = TweenService:Create(mainFrame, tweenInfo, {Position = endPos})
-    tween:Play()
-    
-    if callback then
-      tween.Completed:Connect(callback)
-    end
-  else
-    if callback then
-      callback()
-    end
+  -- No animation, inventory is controlled by MainUIToggle
+  if callback then
+    callback()
   end
 end
 
@@ -589,9 +541,8 @@ end
 -- Listen for when the inventory frame becomes visible
 gui:GetPropertyChangedSignal("Visible"):Connect(function()
   if gui.Visible then
-    -- Refresh and animate in when opened
+    -- Refresh when opened
     pcall(refresh)
-    showInventory()
   end
 end)
 
