@@ -130,15 +130,25 @@ function refresh()
 
     local contentFrame = button:FindFirstChild("Content")
     local content2Frame = button:FindFirstChild("content2")
+    
+    local isEquipped = equippedItems[item.RobloxId] or false
 
-    -- Set rarity colors
+    -- Set border colors (orange for equipped, rarity color for unequipped)
     if contentFrame then
-      local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-      contentFrame.BorderColor3 = rarityColor
+      if isEquipped then
+        contentFrame.BorderColor3 = Color3.fromRGB(255, 165, 0) -- Orange border for equipped
+      else
+        local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+        contentFrame.BorderColor3 = rarityColor
+      end
     end
     if content2Frame then
-      local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-      content2Frame.BorderColor3 = rarityColor
+      if isEquipped then
+        content2Frame.BorderColor3 = Color3.fromRGB(255, 165, 0) -- Orange border for equipped
+      else
+        local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+        content2Frame.BorderColor3 = rarityColor
+      end
     end
 
     -- Display quantity or serial number

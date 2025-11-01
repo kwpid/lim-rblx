@@ -20,6 +20,11 @@ if not updateResultEvent then
   updateResultEvent.Parent = remoteEvents
 end
 
+-- AutoRoll remote events
+local setAutoRollEvent = remoteEvents:WaitForChild("SetAutoRollEvent", 10)
+local getAutoRollFunction = remoteEvents:WaitForChild("GetAutoRollFunction", 10)
+local serverShutdownEvent = remoteEvents:WaitForChild("ServerShutdownEvent", 10)
+
 -- Get ItemRarityModule
 local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
 
@@ -54,6 +59,23 @@ local function stopAutoRoll()
   shouldStopAutoRoll = false
   autoRollButton.Text = "[AUTOROLL: OFF]"
   autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red when off
+  
+  -- Save AutoRoll state
+  if setAutoRollEvent then
+    setAutoRollEvent:FireServer(false)
+  end
+end
+
+local function startAutoRoll()
+  isAutoRolling = true
+  shouldStopAutoRoll = false
+  autoRollButton.Text = "[AUTOROLL: ON]"
+  autoRollButton.TextColor3 = Color3.fromRGB(0, 255, 0) -- Green when on
+  
+  -- Save AutoRoll state
+  if setAutoRollEvent then
+    setAutoRollEvent:FireServer(true)
+  end
 end
 
 -- Helper functions
@@ -106,9 +128,7 @@ autoRollButton.MouseButton1Click:Connect(function()
 
   if isAutoRolling then
     -- Turn ON autoroll
-    autoRollButton.Text = "[AUTOROLL: ON]"
-    autoRollButton.TextColor3 = Color3.fromRGB(0, 255, 0) -- Green when on
-    shouldStopAutoRoll = false
+    startAutoRoll()
 
     -- Start first roll if not already rolling
     if not isCurrentlyRolling then
@@ -123,6 +143,11 @@ autoRollButton.MouseButton1Click:Connect(function()
       shouldStopAutoRoll = true
       autoRollButton.Text = "[AUTOROLL: OFF]"
       autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red when off
+      
+      -- Save state
+      if setAutoRollEvent then
+        setAutoRollEvent:FireServer(false)
+      end
     else
       -- Not rolling, stop immediately
       stopAutoRoll()
@@ -304,5 +329,36 @@ chatNotificationEvent.OnClientEvent:Connect(function(message)
     generalChannel:DisplaySystemMessage(message)
   end
 end)
+
+-- Restore AutoRoll state when player loads
+task.spawn(function()
+  task.wait(2) -- Wait for data to load
+  
+  if getAutoRollFunction then
+    local success, savedAutoRoll = pcall(function()
+      return getAutoRollFunction:InvokeServer()
+    end)
+    
+    if success and savedAutoRoll then
+      -- Restore AutoRoll state
+      startAutoRoll()
+      print("✓ Restored AutoRoll state: ON")
+      
+      -- Start the first roll automatically
+      if not isCurrentlyRolling then
+        isCurrentlyRolling = true
+        rollButton.Visible = false
+        rollCrateEvent:FireServer()
+      end
+    end
+  end
+end)
+
+-- Handle server shutdown event
+if serverShutdownEvent then
+  serverShutdownEvent.OnClientEvent:Connect(function()
+    print("Server is shutting down - AutoRoll will be enabled on reconnect")
+  end)
+end
 
 print("Crates Client loaded!")

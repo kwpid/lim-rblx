@@ -250,4 +250,24 @@ function DataStoreAPI:UpdateInventoryValue(player)
   return true
 end
 
+-- Set AutoRoll state
+function DataStoreAPI:SetAutoRoll(player, enabled)
+  local data = self:GetPlayerData(player)
+  if not data then
+    return false
+  end
+
+  data.AutoRoll = enabled
+  return true
+end
+
+-- Get AutoRoll state
+function DataStoreAPI:GetAutoRoll(player)
+  local data = self:GetPlayerData(player)
+  if data then
+    return data.AutoRoll or false
+  end
+  return false
+end
+
 return DataStoreAPI

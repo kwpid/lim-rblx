@@ -18,6 +18,7 @@ local DEFAULT_DATA = {
   Cash = 0,
   InvValue = 0,       -- Total inventory value
   EquippedItems = {}, -- Array of RobloxIds of equipped items
+  AutoRoll = false,   -- AutoRoll state (persists across sessions)
   DataVersion = DATA_VERSION
 }
 
@@ -78,6 +79,7 @@ function DataStoreManager:LoadData(player)
   if not data.Cash then data.Cash = 0 end
   if not data.InvValue then data.InvValue = 0 end
   if not data.EquippedItems then data.EquippedItems = {} end
+  if data.AutoRoll == nil then data.AutoRoll = false end
   if not data.DataVersion then data.DataVersion = DATA_VERSION end
 
   return data
@@ -91,6 +93,7 @@ function DataStoreManager:GetDefaultData()
     Cash = 0,
     InvValue = 0,
     EquippedItems = {},
+    AutoRoll = false,
     DataVersion = DATA_VERSION
   }
   return defaultCopy
