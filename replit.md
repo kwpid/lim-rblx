@@ -23,7 +23,8 @@ This project is a Roblox crate opening/unboxing game where players can open crat
     - Delete items with confirmation dialog (double-click required), removes from all players' inventories with automatic cleanup for offline players
     - Global "New Item" notification system and console commands for database checks
 -   **Data Persistence**: Utilizes Roblox DataStore Service for player inventories (with auto-stacking), rolls, cash, and inventory value. Auto-saves every 2 minutes. Includes a data version system to manage wipes and resets. Features automatic cleanup of deleted items when offline players rejoin.
--   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays stock item counts ("copies: X / Y exist" using CurrentStock) and regular item counts ("copies: X" using Owners). RareText appears only on items with less than 25 copies. Includes search/filter functionality and detailed item info on click.
+-   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays stock item counts ("X / Y copies" using CurrentStock) and regular item counts ("X copies" using TotalCopies instead of unique owners). RareText appears only on items with less than 25 copies. Includes search/filter functionality and detailed item info on click.
+-   **View Other Players' Inventories**: Players can hover over other players to see a yellow glow effect, then click to open a GUI showing that player's full inventory. Features structured error handling with retry logic for reliable data loading. Shows items sorted by value with accurate copy counts.
 -   **Equipping Items**: Players can equip/unequip items from their inventory, which are then visible to all players. Uses Roblox asset IDs to load and attach items (accessories, hats, and tools) to the character, with equipped items persisting across sessions. Headless items are handled by setting head transparency instead of replacing the head mesh.
 -   **Selling Items**: Players can sell regular items for 80% of their value. Features a confirmation step and options to sell single items or all copies of an item. Selling stock items is prevented. Cash is added to the player's wallet, and inventory value updates automatically.
 -   **Index System**: Displays all items in the game database with detailed information. Shows item name, total owners, and value. For stock items, displays an owner list with player avatars, @usernames, and #serial numbers, sorted by serial number. Owner data persists in the database (SerialOwners array) so it works even when players are offline. The index automatically refreshes every 3 minutes when open, whenever manually opened, and when new items are created. Owner data is always fetched fresh from the server to ensure accuracy.
@@ -44,7 +45,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 ### File Structure (Key Directories)
 -   `ReplicatedStorage/`: `ItemRarityModule.lua`
 -   `ServerScriptService/`: `AdminConfig.lua`, `AdminItemHandler.lua`, `CratesServer.lua`, `DataStoreAPI.lua`, `DataStoreManager.lua`, `ItemDatabase.lua`, `PlayerDataHandler.lua`, `EquipSellHandler.lua`, `ServerShutdownHandler.lua`
--   `StarterGUI/`: `AdminGUI.lua`, `CratesClient.lua`, `InventorySystem.lua`, `IndexLocal.lua`
+-   `StarterGUI/`: `AdminGUI.lua`, `CratesClient.lua`, `InventorySystem.lua`, `IndexLocal.lua`, `ViewPlayerInventory.lua`
 
 ## External Dependencies
 -   **Roblox DataStore Service**: Used for all persistent data storage, including player inventories, cash, cases opened, and the global item database.
@@ -54,6 +55,8 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Roblox MessagingService**: Used for cross-server notifications when ultra-rare items (5M+) are unboxed.
 
 ## Recent Updates (November 1, 2025)
+-   **TotalCopies Tracking System**: Changed from tracking unique owners to tracking total copies for regular items. Shows "X copies" instead of "X owners" in inventory and index. Stock items continue using CurrentStock. System automatically increments on roll/give and decrements on sell.
+-   **View Other Players' Inventories**: Added hover detection with yellow glow effect on other players. Click to open a GUI showing their complete inventory with items sorted by value. Features robust error handling with retry logic (waits up to 1 second for data to load) and structured response pattern ({success, inventory/error}) for reliable cross-player viewing.
 -   **Tool Equipping Fix**: Fixed tools not equipping properly - tools now correctly go to the player's Backpack instead of being placed in the character, allowing them to be used normally.
 -   **Headless Support**: Simplified headless implementation - when a headless item is equipped, the player's head and face decal are set to transparency 1 (invisible). When unequipped, transparency is restored to 0. Works seamlessly with character respawns. Headless items are detected by name (contains "headless").
 -   **AutoRoll Persistence**: AutoRoll state now persists across sessions and server shutdowns. When a player rejoins, AutoRoll automatically resumes if it was enabled. Server shutdowns automatically enable AutoRoll for all players, ensuring continuous rolling after reconnection.
