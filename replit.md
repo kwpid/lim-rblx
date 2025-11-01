@@ -10,6 +10,8 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 1, 2025)
+- **CRITICAL FIX - DataStore Queue Overload**: Implemented debounced/batched save system for ItemDatabase to prevent "DataStore request queue fills" error. Instead of saving on every single roll/owner change (causing 100+ saves per minute with auto-roll), changes are now batched within a 3-second window. This completely eliminates DataStore throttling issues that were preventing players from rolling.
+- **CRITICAL FIX - HideRolls Breaking After 2 Rolls**: Fixed bug where manual rolling with HideRolls enabled would stop working after 2 rolls. The GUI now properly stays disabled when HideRolls is ON (preventing input blocking), and items are properly cleared between rolls even when the animation frame is hidden.
 - **Fixed CratesClient Initialization Delay**: Changed ItemDatabase to load asynchronously instead of blocking the require() call. This eliminates the 10-15 second delay before the crate opening UI becomes responsive when players join. RemoteEvents are now created immediately on server startup.
 - **Client Optimization**: Reduced WaitForChild timeouts and improved initialization speed in CratesClient.lua for faster UI responsiveness.
 - **Fixed SerialOwners Tracking**: Added automatic repair system that scans player inventories on join and adds missing SerialOwner records to ItemDatabase. This fixes the issue where stock items appear in inventories but don't show up in the Index owner list (e.g., migrated data from Studio).
@@ -38,8 +40,10 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 ### Technical Implementations
 -   `RemoteEvents` and `RemoteFunctions` are used for client-server communication.
 -   ItemDatabase loads asynchronously (non-blocking) to ensure RemoteEvents are created immediately on server startup.
+-   **Debounced DataStore Saves**: ItemDatabase uses a queued save system with 3-second debounce to batch rapid changes and prevent DataStore request queue overflow. Critical operations (AddItem, DeleteItem) still save immediately.
 -   Roll handler includes readiness check with graceful 30-second timeout if ItemDatabase is slow to load.
 -   SerialOwner repair system automatically fixes missing records when players join (handles migrated/legacy data).
+-   **HideRolls System**: When enabled, the crate opening GUI stays completely disabled to prevent input blocking. Items are automatically cleared between rolls even when the animation is hidden.
 -   Roblox `InsertService` is used for equipping items.
 -   Roblox `MarketplaceService` checks Fast Roll gamepass ownership.
 -   DataStore operations include error logging and validation.
