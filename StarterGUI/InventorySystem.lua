@@ -91,12 +91,12 @@ function refresh()
     warn("⚠️ Failed to load inventory, will retry...")
     return false -- Return false to indicate failure
   end
-  
+
   if getEquippedItemsFunction then
     local equippedSuccess, equippedResult = pcall(function()
       return getEquippedItemsFunction:InvokeServer()
     end)
-    
+
     if equippedSuccess and equippedResult then
       equippedItems = {}
       for _, robloxId in ipairs(equippedResult) do
@@ -114,11 +114,11 @@ function refresh()
   table.sort(inventory, function(a, b)
     local aEquipped = equippedItems[a.RobloxId] or false
     local bEquipped = equippedItems[b.RobloxId] or false
-    
+
     if aEquipped ~= bEquipped then
       return aEquipped -- Equipped items come first
     end
-    
+
     return a.Value > b.Value -- Then sort by value (highest to lowest)
   end)
 
@@ -131,7 +131,7 @@ function refresh()
 
     local contentFrame = button:FindFirstChild("Content")
     local content2Frame = button:FindFirstChild("content2")
-    
+
     local isEquipped = equippedItems[item.RobloxId] or false
 
     -- Set border colors (orange for equipped, rarity color for unequipped)
@@ -202,7 +202,7 @@ function refresh()
       -- Regular item: use TotalCopies (total copies across all players)
       copiesCount = item.TotalCopies or 0
     end
-    
+
     -- Show/hide RareText based on copies count (<= 25 = rare)
     local rareText = button:FindFirstChild("RareText")
     if rareText then
@@ -212,7 +212,7 @@ function refresh()
         rareText.Visible = false
       end
     end
-    
+
     -- Show/hide LimText based on Limited status
     local limText = button:FindFirstChild("LimText")
     if limText then
@@ -222,12 +222,12 @@ function refresh()
         limText.Visible = false
       end
     end
-    
+
     -- Display copies (stock items) or total copies (regular items)
     local copiesLabel = button:FindFirstChild("copies")
     if copiesLabel then
       local stockCount = item.Stock or 0
-      
+
       if copiesCount > 0 then
         if stockCount > 0 then
           -- Stock item: show "X / Y copies" using CurrentStock
@@ -241,7 +241,7 @@ function refresh()
         copiesLabel.Visible = false
       end
     end
-    
+
     -- Also update o2 label (Sample.Content.o2) to show copies count
     local o2Label = contentFrame and contentFrame:FindFirstChild("o2")
     if o2Label then
@@ -301,22 +301,35 @@ function refresh()
         totalValueText.Text = "Total: R$ " .. formatNumber(totalValue)
       end
 
-      -- Clear previous image
-      for _, child in ipairs(imgFrame:GetChildren()) do
-        child:Destroy()
+      -- Set the ImageLabel to show the selected item's image
+      if imgFrame:IsA("ImageLabel") then
+        -- If imgFrame itself is an ImageLabel, set its image directly
+        imgFrame.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
+      else
+        -- If imgFrame is a Frame containing an ImageLabel, update or create the image
+        local existingImg = imgFrame:FindFirstChildOfClass("ImageLabel")
+        
+        if existingImg then
+          -- Use existing ImageLabel
+          existingImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
+        else
+          -- Clear previous content and create new ImageLabel
+          for _, child in ipairs(imgFrame:GetChildren()) do
+            child:Destroy()
+          end
+          
+          local previewImg = Instance.new("ImageLabel")
+          previewImg.Size = UDim2.new(1, 0, 1, 0)
+          previewImg.BackgroundTransparency = 1
+          previewImg.BorderSizePixel = 0
+          previewImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
+          previewImg.Parent = imgFrame
+        end
       end
 
-      -- Show item preview
-      local previewImg = Instance.new("ImageLabel")
-      previewImg.Size = UDim2.new(1, 0, 1, 0)
-      previewImg.BackgroundTransparency = 1
-      previewImg.BorderSizePixel = 0
-      previewImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
-      previewImg.Parent = imgFrame
-      
       sellConfirmation = false
       sellAllConfirmation = false
-      
+
       local equipButton = frame:FindFirstChild("Equip")
       if equipButton then
         if equippedItems[item.RobloxId] then
@@ -325,17 +338,17 @@ function refresh()
           equipButton.Text = "Equip"
         end
       end
-      
+
       local sellButton = frame:FindFirstChild("Sell")
       local sellAllButton = frame:FindFirstChild("SellAll")
-      
+
       if sellButton then
         sellButton.Text = "Sell"
       end
       if sellAllButton then
         sellAllButton.Text = "Sell All"
       end
-      
+
       local isStockItem = item.Stock and item.Stock > 0
       if sellButton then
         sellButton.Visible = not isStockItem
@@ -345,7 +358,7 @@ function refresh()
       end
     end)
   end
-  
+
   return true -- Return true to indicate successful load
 end
 
@@ -364,23 +377,23 @@ end
 local function loadInventoryWithRetry()
   local maxRetries = 10
   local retryDelay = 0.5
-  
+
   for attempt = 1, maxRetries do
     task.wait(retryDelay)
-    
+
     local success, result = pcall(refresh)
     -- Check both pcall success AND refresh return value
     if success and result == true then
       print("✅ Inventory loaded successfully on attempt " .. attempt)
       return
     end
-    
+
     -- Exponential backoff: 0.5s, 1s, 2s, 4s, etc. (max 4s)
     retryDelay = math.min(retryDelay * 2, 4)
-    warn(string.format("⏳ Inventory load attempt %d/%d failed, retrying in %.1fs...", 
+    warn(string.format("⏳ Inventory load attempt %d/%d failed, retrying in %.1fs...",
       attempt, maxRetries, retryDelay))
   end
-  
+
   warn("❌ Failed to load inventory after " .. maxRetries .. " attempts")
 end
 
@@ -398,7 +411,7 @@ if equipButton and equipItemEvent then
   equipButton.MouseButton1Click:Connect(function()
     if selectedItemData and selectedItemData.RobloxId then
       local isEquipped = equippedItems[selectedItemData.RobloxId]
-      
+
       if isEquipped then
         equipItemEvent:FireServer(selectedItemData.RobloxId, true)
         equippedItems[selectedItemData.RobloxId] = nil
@@ -419,7 +432,7 @@ if sellButton and sellItemEvent then
       if not sellConfirmation then
         sellConfirmation = true
         sellButton.Text = "Are you sure?"
-        
+
         task.delay(3, function()
           if sellConfirmation then
             sellConfirmation = false
@@ -442,7 +455,7 @@ if sellAllButton and sellAllItemEvent then
       if not sellAllConfirmation then
         sellAllConfirmation = true
         sellAllButton.Text = "Are you sure?"
-        
+
         task.delay(3, function()
           if sellAllConfirmation then
             sellAllConfirmation = false
