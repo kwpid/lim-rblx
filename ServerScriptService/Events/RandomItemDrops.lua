@@ -19,8 +19,10 @@ local EVENT_DURATION = 3 * 60 -- 3 minutes
 local ITEM_LIFETIME = math.random(60, 120) -- Items stay 1-2 minutes after landing
 local DROP_INTERVAL = EVENT_DURATION / NUM_ITEMS_TO_DROP
 
--- Increased probability power for event drops (0.5 = much higher chance for rare items)
-local EVENT_DROP_POWER = 0.5 -- Lower power = more chance for rare items
+-- Increased probability power for event drops (higher value = higher chance)
+-- For events, we use VALUE ^ POWER instead of 1/VALUE ^ POWER
+-- This makes higher-value items MORE likely to drop (opposite of normal rolling)
+local EVENT_DROP_POWER = 0.5 -- Power to apply to item value
 
 -- Chat notification
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
@@ -58,20 +60,22 @@ local function formatNumber(n)
 end
 
 -- Pick a random item using event probability (higher chance for rare items)
+-- Unlike normal rolling, events FAVOR high-value items by using value^power directly
 local function pickRandomEventItem(items)
   if #items == 0 then return nil end
   
-  -- Calculate total inverse value using EVENT_DROP_POWER
-  local totalInverseValue = 0
+  -- Calculate total value weight using EVENT_DROP_POWER
+  -- Higher value items get HIGHER weights (opposite of normal rolling)
+  local totalValueWeight = 0
   for _, item in ipairs(items) do
-    totalInverseValue = totalInverseValue + (1 / (item.Value ^ EVENT_DROP_POWER))
+    totalValueWeight = totalValueWeight + (item.Value ^ EVENT_DROP_POWER)
   end
   
-  -- Pick random item
-  local randomValue = math.random() * totalInverseValue
+  -- Pick random item based on value weights
+  local randomValue = math.random() * totalValueWeight
   local cumulative = 0
   for _, item in ipairs(items) do
-    cumulative = cumulative + (1 / (item.Value ^ EVENT_DROP_POWER))
+    cumulative = cumulative + (item.Value ^ EVENT_DROP_POWER)
     if randomValue <= cumulative then
       return item
     end
