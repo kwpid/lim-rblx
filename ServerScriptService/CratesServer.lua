@@ -32,6 +32,13 @@ if not crateOpenedEvent then
   crateOpenedEvent.Parent = remoteEvents
 end
 
+local chatNotificationEvent = remoteEvents:FindFirstChild("ChatNotificationEvent")
+if not chatNotificationEvent then
+  chatNotificationEvent = Instance.new("RemoteEvent")
+  chatNotificationEvent.Name = "ChatNotificationEvent"
+  chatNotificationEvent.Parent = remoteEvents
+end
+
 local rnd = Random.new()
 local playersRolling = {}
 
@@ -114,20 +121,15 @@ function sendUnboxChatMessage(player, item, serialNumber, isGlobal)
     
     message = message .. " (R$" .. formatNumber(item.Value) .. ")" .. closeTag
     
-    -- Get the general chat channel
-    local generalChannel = TextChatService:FindFirstChild("TextChannels"):FindFirstChild("RBXGeneral")
-    
-    if generalChannel then
-      if isGlobal then
-        -- Send to everyone
+    if isGlobal then
+      -- Send to everyone in the server (5M+ items)
+      local generalChannel = TextChatService:FindFirstChild("TextChannels"):FindFirstChild("RBXGeneral")
+      if generalChannel then
         generalChannel:DisplaySystemMessage(message)
-      else
-        -- Send only to the player
-        local textSource = generalChannel:AddUserAsync(player.UserId)
-        if textSource then
-          generalChannel:DisplaySystemMessage(message)
-        end
       end
+    else
+      -- Send only to the player who unboxed it (250k+ items)
+      chatNotificationEvent:FireClient(player, message)
     end
   end)
   

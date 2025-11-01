@@ -43,7 +43,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 
 ### File Structure (Key Directories)
 -   `ReplicatedStorage/`: `ItemRarityModule.lua`
--   `ServerScriptService/`: `AdminConfig.lua`, `AdminItemHandler.lua`, `CratesServer.lua`, `DataStoreAPI.lua`, `DataStoreManager.lua`, `ItemDatabase.lua`, `PlayerDataHandler.lua`, `EquipSellHandler.lua`
+-   `ServerScriptService/`: `AdminConfig.lua`, `AdminItemHandler.lua`, `CratesServer.lua`, `DataStoreAPI.lua`, `DataStoreManager.lua`, `ItemDatabase.lua`, `PlayerDataHandler.lua`, `EquipSellHandler.lua`, `ServerShutdownHandler.lua`
 -   `StarterGUI/`: `AdminGUI.lua`, `CratesClient.lua`, `InventorySystem.lua`, `IndexLocal.lua`
 
 ## External Dependencies
@@ -56,6 +56,8 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Inventory Sorting**: Equipped items now appear first in inventory, followed by highest to lowest value items
 -   **Clearer Labels**: Stock items show "X / Y copies", regular items show "X owners" for accurate tracking
 -   **High-Value Chat Notifications**: When players unbox items worth 250k+ Robux, a colored chat message appears. 5M+ items announce to the entire server. Shows item name, value, serial # (for stock items), and color-coded by rarity.
+-   **Chat Notification Fix**: Fixed 250k+ items to only show message to the player who unboxed it (not the whole server). 5M+ items still announce globally.
+-   **Auto-Rejoin on Server Shutdown**: Added TeleportService integration that automatically reconnects players to a new server when the current server shuts down for updates or restarts. Players no longer get kicked out.
 -   **Balanced Roll Percentages**: Roll chances adjusted using power of 0.75 scaling for lower, more balanced distribution
 -   **Rarity Indicator**: Inventory now shows RareText only for items with less than 25 copies in existence (works for both regular and stock items)
 -   **Accurate Copy Count**: Both inventory and index now show CurrentStock (actual serials claimed) for stock items instead of unique owners
