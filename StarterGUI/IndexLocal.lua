@@ -172,10 +172,29 @@ function refresh()
         rarityLabel.Visible = false
       else
         rarityLabel.Visible = true
-        -- Format percentage with up to 10 decimal places, removing trailing zeros
-        local percentText = string.format("%.10f%%", item.RollPercentage or 0)
-        -- Remove trailing zeros and trailing decimal point
-        percentText = percentText:gsub("0+%%", "%%"):gsub("%.%%", "%%")
+        -- Format percentage with smart decimal handling:
+        -- Show at least 4 decimals OR up to first non-zero digit (whichever shows more)
+        local percentage = item.RollPercentage or 0
+        local percentText = string.format("%.10f", percentage)
+        
+        -- Find first non-zero digit after decimal point
+        local decimalPart = percentText:match("%.(%d+)")
+        local firstNonZeroPos = 4 -- minimum 4 decimals
+        
+        if decimalPart then
+          for i = 1, #decimalPart do
+            if decimalPart:sub(i, i) ~= "0" then
+              firstNonZeroPos = math.max(4, i)
+              break
+            end
+          end
+        end
+        
+        -- Format with appropriate decimal places
+        percentText = string.format("%." .. firstNonZeroPos .. "f%%", percentage)
+        -- Remove trailing zeros
+        percentText = percentText:gsub("(%d)0+%%", "%1%%"):gsub("%.0+%%", "%%")
+        
         rarityLabel.Text = item.Rarity .. " | " .. percentText
         rarityLabel.TextColor3 = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
       end

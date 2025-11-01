@@ -55,7 +55,7 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 ## Recent Updates (November 1, 2025)
 -   **Rarity Indicator**: Inventory now shows RareText only for items with less than 25 copies in existence (works for both regular and stock items)
 -   **Accurate Copy Count**: Both inventory and index now show CurrentStock (actual serials claimed) for stock items instead of unique owners
--   **Roll Percentage Display**: Index now shows roll percentage next to rarity with up to 10 decimal places, removing trailing zeros (e.g., "Uncommon | 0.25%" or "Insane | 0.0000123456%")
+-   **Roll Percentage Display**: Index shows roll percentage with smart decimal handling - minimum 4 decimals or up to first non-zero digit (e.g., "Uncommon | 0.25%" or "Insane | 0.000004%"). Roll percentages increased using square root scaling for better distribution.
 -   **Admin Panel Preview**: When creating items, the admin panel now shows a live preview of rarity and roll percentage as you type the value in `info_preview`
 -   **Delete Confirmation**: When deleting an item, `delete_name` now shows the item name for confirmation
 -   **Fast Roll Gamepass**: Added support for fast roll gamepass (ID: 1242040274) that reduces roll time from 5 seconds to 2 seconds for owners
