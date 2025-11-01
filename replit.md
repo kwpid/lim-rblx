@@ -52,7 +52,10 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Roblox InsertService**: Used for dynamically loading and attaching accessories/tools to player characters when items are equipped.
 -   **Roblox MarketplaceService**: Used to check gamepass ownership for the Fast Roll feature (gamepass ID: 1242040274 from old game).
 
-## Recent Updates (October 31, 2025)
+## Recent Updates (November 1, 2025)
+-   **Roll Percentage Display**: Index now shows roll percentage next to rarity (e.g., "Uncommon | 0.25%")
+-   **Admin Panel Preview**: When creating items, the admin panel now shows a live preview of rarity and roll percentage as you type the value in `info_preview`
+-   **Delete Confirmation**: When deleting an item, `delete_name` now shows the item name for confirmation
 -   **Fast Roll Gamepass**: Added support for fast roll gamepass (ID: 1242040274) that reduces roll time from 5 seconds to 2 seconds for owners
 -   **AutoRoll Enhancement**: Changed autoroll to toggle button that no longer stops on player movement. Button stays visible during rolls with green (ON) and red (OFF) color coding
 -   **Index Auto-Refresh**: Index now automatically refreshes every 3 minutes when open to show current owner counts and stock levels

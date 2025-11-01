@@ -14,6 +14,12 @@ local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local checkAdminFunction = remoteEvents:WaitForChild("CheckAdminFunction")
 local createItemEvent = remoteEvents:WaitForChild("CreateItemEvent")
 
+-- Load the ItemRarityModule
+local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
+
+-- Wait for GetAllItemsFunction
+local getAllItemsFunction = remoteEvents:WaitForChild("GetAllItemsFunction")
+
 -- GUI Elements - Create Item Section
 local openAdminButton = gui:WaitForChild("Open_Admin")
 local uiFrame = gui:WaitForChild("UIFrame")
@@ -34,6 +40,13 @@ local giveItemButton = uiFrame:WaitForChild("GiveItem")
 local deleteItemIdBox = uiFrame:WaitForChild("Delete_Item_Id")
 local deleteItemButton = uiFrame:WaitForChild("DeleteItem")
 
+-- Wait for GetItemByRobloxIdFunction (if it exists)
+local getItemByRobloxIdFunction = remoteEvents:FindFirstChild("GetItemByRobloxIdFunction")
+
+-- GUI Elements - Info Preview (optional elements)
+local infoPreview = uiFrame:FindFirstChild("info_preview")
+local deleteName = uiFrame:FindFirstChild("delete_name")
+
 -- Start with frame hidden
 uiFrame.Visible = false
 
@@ -52,6 +65,30 @@ end
 openAdminButton.MouseButton1Click:Connect(function()
   uiFrame.Visible = not uiFrame.Visible
 end)
+
+-- Helper function to calculate roll percentage for a single item value
+local function calculateRollPercentageForValue(itemValue)
+  -- Get all items from the database
+  local success, allItems = pcall(function()
+    return getAllItemsFunction:InvokeServer()
+  end)
+  
+  if not success or not allItems or type(allItems) ~= "table" then
+    return 0
+  end
+  
+  -- Calculate total inverse value
+  local totalInverseValue = 0
+  for _, item in ipairs(allItems) do
+    totalInverseValue = totalInverseValue + (1 / item.Value)
+  end
+  
+  -- Add the new item's inverse value
+  totalInverseValue = totalInverseValue + (1 / itemValue)
+  
+  -- Calculate the percentage for this item
+  return ItemRarityModule:GetRollPercentage(itemValue, totalInverseValue)
+end
 
 -- Update item preview when ID changes
 itemIdBox:GetPropertyChangedSignal("Text"):Connect(function()
@@ -77,6 +114,28 @@ itemIdBox:GetPropertyChangedSignal("Text"):Connect(function()
     end
   else
     itemPreview.Image = ""
+  end
+end)
+
+-- Update info preview when value changes (show rarity and roll %)
+itemValueBox:GetPropertyChangedSignal("Text"):Connect(function()
+  local valueText = itemValueBox.Text
+  local itemValue = tonumber(valueText)
+  
+  if itemValue and itemValue > 0 and infoPreview then
+    -- Get the rarity for this value
+    local rarity = ItemRarityModule:GetRarity(itemValue)
+    
+    -- Calculate the roll percentage
+    local rollPercentage = calculateRollPercentageForValue(itemValue)
+    
+    -- Format the percentage with 2 decimal places
+    local percentText = string.format("%.2f%%", rollPercentage)
+    
+    -- Update the info preview text
+    infoPreview.Text = rarity .. " | " .. percentText
+  elseif infoPreview then
+    infoPreview.Text = ""
   end
 end)
 
@@ -126,6 +185,9 @@ createItemEvent.OnClientEvent:Connect(function(success, message, itemData)
     itemValueBox.Text = ""
     itemStockBox.Text = ""
     itemPreview.Image = ""
+    if infoPreview then
+      infoPreview.Text = ""
+    end
 
     createButton.Text = "✅ Created!"
   else
@@ -203,6 +265,39 @@ end)
 
 local deleteConfirmation = false
 
+-- Update delete_name when delete item ID changes (show item name)
+deleteItemIdBox:GetPropertyChangedSignal("Text"):Connect(function()
+  local deleteIdText = deleteItemIdBox.Text
+  local deleteItemId = tonumber(deleteIdText)
+  
+  if deleteItemId and deleteName then
+    -- Get all items and find the one with this ID
+    local success, allItems = pcall(function()
+      return getAllItemsFunction:InvokeServer()
+    end)
+    
+    if success and allItems and type(allItems) == "table" then
+      local foundItem = nil
+      for _, item in ipairs(allItems) do
+        if item.RobloxId == deleteItemId then
+          foundItem = item
+          break
+        end
+      end
+      
+      if foundItem then
+        deleteName.Text = foundItem.Name
+      else
+        deleteName.Text = "Item not found"
+      end
+    else
+      deleteName.Text = ""
+    end
+  elseif deleteName then
+    deleteName.Text = ""
+  end
+end)
+
 -- Delete item button
 deleteItemButton.MouseButton1Click:Connect(function()
   local deleteItemId = tonumber(deleteItemIdBox.Text)
@@ -245,6 +340,9 @@ deleteItemEvent.OnClientEvent:Connect(function(success, message)
   if success then
     -- Clear fields
     deleteItemIdBox.Text = ""
+    if deleteName then
+      deleteName.Text = ""
+    end
 
     deleteItemButton.Text = "✅ Deleted!"
     deleteItemButton.BackgroundColor3 = Color3.fromRGB(111, 218, 40) -- Green

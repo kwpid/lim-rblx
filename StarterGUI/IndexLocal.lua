@@ -5,6 +5,9 @@ local player = Players.LocalPlayer
 local gui = script.Parent
 local buttons = {}
 
+-- Load the ItemRarityModule
+local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
+
 -- Get the actual ScreenGui (parent of the frame the script is in)
 local screenGui = gui
 while screenGui and not screenGui:IsA("ScreenGui") do
@@ -101,6 +104,9 @@ function refresh()
     return
   end
 
+  -- Calculate roll percentages for all items
+  local itemsWithPercentages = ItemRarityModule:CalculateAllRollPercentages(allItems)
+
   -- Store the currently selected item ID to re-select it after refresh
   local currentlySelectedId = selectedItemData and selectedItemData.RobloxId or nil
 
@@ -109,7 +115,7 @@ function refresh()
   end
   buttons = {}
 
-  table.sort(allItems, function(a, b)
+  table.sort(itemsWithPercentages, function(a, b)
     if a.Value ~= b.Value then
       return a.Value > b.Value
     elseif a.Rarity ~= b.Rarity then
@@ -119,7 +125,7 @@ function refresh()
     end
   end)
 
-  for i, item in ipairs(allItems) do
+  for i, item in ipairs(itemsWithPercentages) do
     local button = sample:Clone()
     button.Name = item.Name or "Item_" .. i
     button.LayoutOrder = i
@@ -149,14 +155,16 @@ function refresh()
       end
     end
 
-    -- Display rarity (hide if Common)
+    -- Display rarity with roll percentage (hide if Common)
     local rarityLabel = contentFrame and contentFrame:FindFirstChild("Rarity")
     if rarityLabel then
       if item.Rarity == "Common" then
         rarityLabel.Visible = false
       else
         rarityLabel.Visible = true
-        rarityLabel.Text = item.Rarity
+        -- Format percentage with 2 decimal places
+        local percentText = string.format("%.2f%%", item.RollPercentage or 0)
+        rarityLabel.Text = item.Rarity .. " | " .. percentText
         rarityLabel.TextColor3 = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
       end
     end
@@ -233,7 +241,7 @@ function refresh()
 
   -- If an item was previously selected, re-select it with fresh data
   if currentlySelectedId then
-    for _, item in ipairs(allItems) do
+    for _, item in ipairs(itemsWithPercentages) do
       if item.RobloxId == currentlySelectedId then
         updateItemDetails(item)
         break
