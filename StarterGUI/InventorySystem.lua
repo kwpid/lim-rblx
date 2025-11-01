@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MarketplaceService = game:GetService("MarketplaceService")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local gui = script.Parent
@@ -18,11 +19,15 @@ if not sample then
   return
 end
 
-local frame = gui:WaitForChild("Frame", 5)
-if not frame then
-  warn("❌ Frame not found in InventorySystem GUI")
+-- Changed from "Frame" to "Popup"
+local popup = gui:WaitForChild("Popup", 5)
+if not popup then
+  warn("❌ Popup not found in InventorySystem GUI")
   return
 end
+
+-- Set popup to invisible by default
+popup.Visible = false
 
 local searchBar = gui:FindFirstChild("SearchBar")
 
@@ -39,6 +44,7 @@ elseif not selected:IsA("StringValue") then
 end
 
 local selectedItemData = nil
+local selectedButton = nil
 local equippedItems = {}
 local sellConfirmation = false
 local sellAllConfirmation = false
@@ -72,6 +78,9 @@ local rarityColors = {
   ["Insane"] = Color3.fromRGB(255, 0, 255)
 }
 
+-- Store the original popup position for animation
+local popupOriginalPosition = popup.Position
+
 function formatNumber(n)
   local formatted = tostring(n)
   while true do
@@ -79,6 +88,97 @@ function formatNumber(n)
     if k == 0 then break end
   end
   return formatted
+end
+
+function showPopup()
+  popup.Visible = true
+  
+  -- Start position (off-screen to the right)
+  local startPos = UDim2.new(
+    popupOriginalPosition.X.Scale + 0.5,
+    popupOriginalPosition.X.Offset,
+    popupOriginalPosition.Y.Scale,
+    popupOriginalPosition.Y.Offset
+  )
+  
+  popup.Position = startPos
+  
+  -- Tween to original position
+  local tweenInfo = TweenInfo.new(
+    0.3,
+    Enum.EasingStyle.Quart,
+    Enum.EasingDirection.Out
+  )
+  
+  local tween = TweenService:Create(popup, tweenInfo, {Position = popupOriginalPosition})
+  tween:Play()
+end
+
+function hidePopup()
+  -- Tween out to the right
+  local endPos = UDim2.new(
+    popupOriginalPosition.X.Scale + 0.5,
+    popupOriginalPosition.X.Offset,
+    popupOriginalPosition.Y.Scale,
+    popupOriginalPosition.Y.Offset
+  )
+  
+  local tweenInfo = TweenInfo.new(
+    0.2,
+    Enum.EasingStyle.Quart,
+    Enum.EasingDirection.In
+  )
+  
+  local tween = TweenService:Create(popup, tweenInfo, {Position = endPos})
+  tween:Play()
+  
+  tween.Completed:Connect(function()
+    popup.Visible = false
+  end)
+end
+
+function clearSelection()
+  -- De-highlight the selected button
+  if selectedButton then
+    local contentFrame = selectedButton:FindFirstChild("Content")
+    local content2Frame = selectedButton:FindFirstChild("content2")
+    
+    -- Get the item data from the button
+    local itemRobloxId = selectedItemData and selectedItemData.RobloxId
+    local isEquipped = itemRobloxId and equippedItems[itemRobloxId] or false
+    
+    -- Restore original border color
+    if contentFrame then
+      if isEquipped then
+        contentFrame.BorderColor3 = Color3.fromRGB(255, 165, 0)
+      else
+        local itemRarity = selectedItemData and selectedItemData.Rarity
+        local rarityColor = rarityColors[itemRarity] or Color3.new(1, 1, 1)
+        contentFrame.BorderColor3 = rarityColor
+      end
+      -- Remove highlight effect
+      contentFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    end
+    
+    if content2Frame then
+      if isEquipped then
+        content2Frame.BorderColor3 = Color3.fromRGB(255, 165, 0)
+      else
+        local itemRarity = selectedItemData and selectedItemData.Rarity
+        local rarityColor = rarityColors[itemRarity] or Color3.new(1, 1, 1)
+        content2Frame.BorderColor3 = rarityColor
+      end
+      -- Remove highlight effect
+      content2Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    end
+    
+    selectedButton = nil
+  end
+  
+  selectedItemData = nil
+  selected.Value = ""
+  sellConfirmation = false
+  sellAllConfirmation = false
 end
 
 function refresh()
@@ -284,10 +384,34 @@ function refresh()
     table.insert(buttons, button)
 
     button.MouseButton1Click:Connect(function()
-      local itemNameText = frame:WaitForChild("ItemName")
-      local itemValueText = frame:WaitForChild("Value")
-      local totalValueText = frame:FindFirstChild("TotalValue")
-      local imgFrame = frame:WaitForChild("ImageLabel")
+      -- Clear previous selection
+      if selectedButton and selectedButton ~= button then
+        local prevContentFrame = selectedButton:FindFirstChild("Content")
+        local prevContent2Frame = selectedButton:FindFirstChild("content2")
+        
+        -- Remove highlight from previous button
+        if prevContentFrame then
+          prevContentFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        end
+        if prevContent2Frame then
+          prevContent2Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        end
+      end
+      
+      -- Highlight the selected button
+      if contentFrame then
+        contentFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 150) -- Light yellow highlight
+      end
+      if content2Frame then
+        content2Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 150) -- Light yellow highlight
+      end
+      
+      selectedButton = button
+      
+      local itemNameText = popup:WaitForChild("ItemName")
+      local itemValueText = popup:WaitForChild("Value")
+      local totalValueText = popup:FindFirstChild("TotalValue")
+      local imgFrame = popup:WaitForChild("ImageLabel")
 
       itemNameText.Text = item.Name
       selected.Value = item.Name
@@ -330,7 +454,7 @@ function refresh()
       sellConfirmation = false
       sellAllConfirmation = false
 
-      local equipButton = frame:FindFirstChild("Equip")
+      local equipButton = popup:FindFirstChild("Equip")
       if equipButton then
         if equippedItems[item.RobloxId] then
           equipButton.Text = "Unequip"
@@ -339,8 +463,8 @@ function refresh()
         end
       end
 
-      local sellButton = frame:FindFirstChild("Sell")
-      local sellAllButton = frame:FindFirstChild("SellAll")
+      local sellButton = popup:FindFirstChild("Sell")
+      local sellAllButton = popup:FindFirstChild("SellAll")
 
       if sellButton then
         sellButton.Text = "Sell"
@@ -356,6 +480,9 @@ function refresh()
       if sellAllButton then
         sellAllButton.Visible = not isStockItem
       end
+      
+      -- Show the popup with animation
+      showPopup()
     end)
   end
 
@@ -406,7 +533,16 @@ if inventoryUpdatedEvent then
   end)
 end
 
-local equipButton = frame:FindFirstChild("Equip")
+-- Close button handler
+local closeButton = popup:FindFirstChild("Close")
+if closeButton then
+  closeButton.MouseButton1Click:Connect(function()
+    hidePopup()
+    clearSelection()
+  end)
+end
+
+local equipButton = popup:FindFirstChild("Equip")
 if equipButton and equipItemEvent then
   equipButton.MouseButton1Click:Connect(function()
     if selectedItemData and selectedItemData.RobloxId then
@@ -425,7 +561,7 @@ if equipButton and equipItemEvent then
   end)
 end
 
-local sellButton = frame:FindFirstChild("Sell")
+local sellButton = popup:FindFirstChild("Sell")
 if sellButton and sellItemEvent then
   sellButton.MouseButton1Click:Connect(function()
     if selectedItemData and selectedItemData.RobloxId then
@@ -448,7 +584,7 @@ if sellButton and sellItemEvent then
   end)
 end
 
-local sellAllButton = frame:FindFirstChild("SellAll")
+local sellAllButton = popup:FindFirstChild("SellAll")
 if sellAllButton and sellAllItemEvent then
   sellAllButton.MouseButton1Click:Connect(function()
     if selectedItemData and selectedItemData.RobloxId then

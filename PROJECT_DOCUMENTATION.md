@@ -379,9 +379,10 @@ For the game to work properly in Roblox, you need:
 
 3. **InventorySystem ScreenGui** with structure:
    - Handler folder
-   - Frame with ItemName, Value, TotalValue, ImageLabel
+   - Popup (previously Frame) with ItemName, Value, TotalValue, ImageLabel, Equip, Sell, SellAll, and Close buttons
    - Sample button template
    - SearchBar TextBox
+   - **Note:** The Popup should be set to Visible = false by default in the Roblox Studio GUI properties
 
 4. **MainUI ScreenGui** with:
    - Roll button
