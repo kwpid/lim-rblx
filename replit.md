@@ -10,6 +10,10 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 1, 2025)
+- **Limited Item Type**: Added new Limited item category that can be marked when creating items. Limited items display "LimText" in inventory and index. Items can have both rarity (Common, Rare, etc.) and Limited status.
+- **Edit Item Mode**: Admin panel now supports editing existing items. Paste an existing item ID to enter edit mode - auto-fills all fields and allows changing name, value, stock, and Limited status. Button changes from "CreateItem" to "Edit Item".
+- **RareText Fix**: Fixed RareText to properly show for items with 25 copies or less (was 24 or less). Applies to both stock and regular items in Index and Inventory.
+- **Removed Trading System**: Deleted all trading-related files and code per user request.
 - **Discord Webhook Integration**: Added webhook notifications for new item releases, high-value drops (250k+), and items going out of stock. **IMPORTANT**: You must add your Discord webhook URLs to `ServerScriptService/WebhookConfig.lua` for webhooks to work.
 - **Anti-AFK Movement Detection**: Fixed Anti-AFK system to only rejoin players who haven't moved in 15 minutes (instead of rejoining all players). Tracks player position and only kicks truly inactive players.
 - **Inventory Load Retry Logic**: Fixed inventory not showing when players rejoin. Added exponential backoff retry system that properly retries failed inventory loads up to 10 times.
@@ -23,16 +27,16 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 ## System Architecture
 
 ### Core Game Systems
--   **Item System**: Supports regular and limited stock items with up to 8 rarity tiers. Weighted probability governs item drops.
+-   **Item System**: Supports regular and limited stock items with up to 8 rarity tiers. Weighted probability governs item drops. Items can be marked as "Limited" which displays special LimText indicator.
 -   **Crate Opening**: Features weighted random selection, visual scrolling animation with rarity-colored item names, and serial number display for stock items. Includes "Fast Roll" for gamepass owners and "AutoRoll" and "HideRolls" toggles with persistence. High-value unboxes trigger chat notifications (server-wide and cross-server global).
--   **Admin Tools**: Whitelisted admin GUI for creating, giving, and deleting items with live previews, auto-fill for item names, and confirmation dialogs. Includes global "New Item" notifications.
+-   **Admin Tools**: Whitelisted admin GUI for creating, editing, giving, and deleting items with live previews, auto-fill for item names, and confirmation dialogs. Edit mode auto-detects existing items when pasting item IDs. Includes global "New Item" and "Item Updated" notifications. LimitedToggle button allows marking items as Limited (green = ON, red = OFF).
 -   **Data Persistence**: Uses Roblox DataStore Service for player inventories (with auto-stacking), rolls, cash, inventory value, AutoRoll state, HideRolls state, and Luck multiplier. Features auto-save, data versioning, and automatic cleanup of deleted items.
 -   **Anti-AFK System**: Automatically rejoins players every 15 minutes to prevent AFK disconnection. Perfect for overnight AutoRoll farming sessions.
--   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays accurate copy counts for both stackable and stock items. Includes search/filter functionality and detailed item info on click. RareText appears only on items with less than 25 copies. Equipped items appear first and have an orange border.
+-   **Inventory Display**: Shows owned items with thumbnails, rarity colors, and serial numbers. Displays accurate copy counts for both stackable and stock items. Includes search/filter functionality and detailed item info on click. RareText appears on items with 25 copies or less. LimText appears only on Limited items. Equipped items appear first and have an orange border.
 -   **View Other Players' Inventories**: Allows players to view others' inventories via a GUI activated by clicking on a highlighted player. Features structured error handling and retry logic.
 -   **Equipping Items**: Players can equip/unequip items (accessories, hats, tools) which persist across sessions and are visible to other players. Headless items are handled by setting head transparency. Tools are placed in the player's Backpack.
 -   **Selling Items**: Players can sell regular items for 80% of their value with confirmation. Stock items cannot be sold.
--   **Index System**: Displays all game items with details, owner lists for stock items (with serial numbers), and refresh capabilities. Includes roll percentage display with smart decimal handling.
+-   **Index System**: Displays all game items with details, owner lists for stock items (with serial numbers), and refresh capabilities. Includes roll percentage display with smart decimal handling. RareText shows for items with 25 copies or less. LimText shows for Limited items.
 -   **Halloween Event Luck System**: A temporary luck system affecting Epic+ rarity items (value 250k+). Player Luck attribute and a Global Luck Modifier combine. Luck > 1.0 performs multiple rolls and picks the highest value Epic+ item; Luck < 1.0 picks the lowest. Maximum 10 rolls for performance.
 
 ### UI/UX Decisions
