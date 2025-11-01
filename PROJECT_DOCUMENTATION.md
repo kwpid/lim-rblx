@@ -167,11 +167,13 @@ Items are automatically assigned rarity based on their value:
 - **Item Detail Popup:**
   - Popup is hidden by default, appears when clicking an item
   - ItemName: Display name of the selected item
-  - TotalOwners: Shows total owners count (only visible for serial/stock items)
+  - TotalOwners: Shows total owners count (always visible for all items)
   - Value: Robux value of the item
   - ImageLabel: Displays item thumbnail with UICorner preserved during image changes
   - Close button: Hides popup and deselects the item
-- **Owner List (Stock Items Only):**
+- **Owner List (Stock/Serial Items Only):**
+  - OwnerListText: Label/header for the owner list (only visible for serial items)
+  - OwnerList: Scrolling frame showing owners (only visible for serial items)
   - Shows scrolling list of all players who own each serial number
   - Each entry displays:
     - PlayerPFP: Player's avatar headshot
@@ -391,12 +393,14 @@ For the game to work properly in Roblox, you need:
 
 2. **IndexLocal ScreenGui** with structure:
    - Handler folder
-   - Popup (previously Frame) with ItemName, Value, TotalOwners (TextLabel), ImageLabel, OwnerList, and Close button
+   - Popup (previously Frame) with ItemName, Value, TotalOwners (TextLabel), ImageLabel, OwnerListText (TextLabel), OwnerList (ScrollingFrame), and Close button
    - Sample button template
    - UserTemplate for owner list entries
    - SearchBar TextBox
    - **Note:** The Popup should be set to Visible = false by default in the Roblox Studio GUI properties
-   - **TotalOwners TextLabel:** Shows "Total Owners: X" for serial items only, hidden for regular items
+   - **TotalOwners TextLabel:** Always visible, shows "Total Owners: X" for all items
+   - **OwnerListText TextLabel:** Only visible for serial items, hidden for regular items
+   - **OwnerList ScrollingFrame:** Only visible for serial items, hidden for regular items
    - **ImageLabel:** Should have a UICorner child that is preserved when changing images
 
 3. **OpenedCrateGui ScreenGui** with structure:

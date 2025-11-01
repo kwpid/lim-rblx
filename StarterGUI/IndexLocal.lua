@@ -375,20 +375,17 @@ function updateItemDetails(item)
     itemNameText.Text = item.Name
   end
 
-  -- Show/hide TotalOwners text (only for serial items)
-  local isStockItem = item.Stock and item.Stock > 0
+  -- TotalOwners text (always visible for all items)
   if totalOwnersText then
-    if isStockItem then
-      totalOwnersText.Visible = true
-      totalOwnersText.Text = "Total Owners: " .. formatNumber(item.Owners or 0)
-    else
-      totalOwnersText.Visible = false
-    end
+    totalOwnersText.Visible = true
+    totalOwnersText.Text = "Total Owners: " .. formatNumber(item.Owners or 0)
   end
 
   if valueText then
     valueText.Text = "R$ " .. formatNumber(item.Value)
   end
+  
+  local isStockItem = item.Stock and item.Stock > 0
 
   -- Set the ImageLabel to show the selected item's image
   -- IMPORTANT: Preserve UICorner if it exists
@@ -428,7 +425,12 @@ function updateItemDetails(item)
     end
   end
 
-  -- Show/hide OwnerList based on if it's a stock item
+  -- Show/hide OwnerList and OwnerListText (only for serial/stock items)
+  local ownerListText = popup:FindFirstChild("OwnerListText")
+  if ownerListText then
+    ownerListText.Visible = isStockItem
+  end
+  
   if ownerList then
     ownerList.Visible = isStockItem
 
