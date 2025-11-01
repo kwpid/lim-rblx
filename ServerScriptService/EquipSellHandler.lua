@@ -473,7 +473,19 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
 end)
 
 local function autoEquipItems(player)
-  task.wait(0.5)
+  -- Wait for character to fully load
+  task.wait(1)
+  
+  local character = player.Character
+  if not character then
+    return
+  end
+  
+  -- Wait for humanoid
+  local humanoid = character:WaitForChild("Humanoid", 5)
+  if not humanoid then
+    return
+  end
 
   local data = DataStoreAPI:GetPlayerData(player)
   if not data or not data.EquippedItems then
@@ -489,14 +501,22 @@ local function autoEquipItems(player)
   local itemsToRemove = {}
   for i, robloxId in ipairs(data.EquippedItems) do
     if ownedRobloxIds[robloxId] then
-      equipItemToCharacter(player, robloxId)
+      local success, err = equipItemToCharacter(player, robloxId)
+      if not success then
+        warn("⚠️ Failed to auto-equip item " .. robloxId .. " for " .. player.Name .. ": " .. tostring(err))
+      end
     else
       table.insert(itemsToRemove, i)
     end
   end
 
+  -- Remove items that are no longer owned
   for i = #itemsToRemove, 1, -1 do
     table.remove(data.EquippedItems, itemsToRemove[i])
+  end
+  
+  if #data.EquippedItems > 0 then
+    print("✅ Auto-equipped " .. #data.EquippedItems .. " items for " .. player.Name)
   end
 end
 
