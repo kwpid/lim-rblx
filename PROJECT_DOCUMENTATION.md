@@ -317,17 +317,14 @@ All client-server communication uses RemoteEvents in ReplicatedStorage/RemoteEve
 ## 🐛 Known Limitations
 
 1. Cash system exists but is not currently used
-2. No trading system yet
-3. No item deletion/selling system yet
-4. Admin panel is client-side GUI (needs to be placed in correct ScreenGui)
-5. Inventory UI needs ScreenGui with specific structure
-6. Crate opening UI needs ScreenGui with specific structure
+2. No item deletion/selling system yet (selling system exists, but no admin deletion)
+3. Admin panel is client-side GUI (needs to be placed in correct ScreenGui)
+4. Inventory UI needs ScreenGui with specific structure
+5. Crate opening UI needs ScreenGui with specific structure
 
 ## 📝 Future Development Areas
 
 Based on the code structure, potential features to add:
-- Item selling system (convert items to cash)
-- Trading between players
 - Different crate types with different item pools
 - Daily rewards system
 - Leaderboards for most valuable inventory

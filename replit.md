@@ -1,7 +1,7 @@
 # Project Memory
 
 ## Overview
-This project is a Roblox crate opening/unboxing game. It allows players to open virtual crates to acquire items of varying rarities and values. Key features include weighted probability rolls, comprehensive admin tools for item management, robust data persistence, an interactive inventory system, Discord webhook notifications, and the ability to equip and trade virtual goods. The game aims to deliver an engaging unboxing experience within the Roblox platform.
+This project is a Roblox crate opening/unboxing game. It allows players to open virtual crates to acquire items of varying rarities and values. Key features include weighted probability rolls, comprehensive admin tools for item management, robust data persistence, an interactive inventory system, Discord webhook notifications, and the ability to equip virtual goods. The game aims to deliver an engaging unboxing experience within the Roblox platform.
 
 ## User Preferences
 - User will test the game in Roblox and provide feedback
