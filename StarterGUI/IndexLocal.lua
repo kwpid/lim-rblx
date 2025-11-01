@@ -512,6 +512,13 @@ end)
 if screenGui then
   screenGui:GetPropertyChangedSignal("Enabled"):Connect(function()
     if screenGui.Enabled then
+      -- Close Inventory GUI if it's open
+      local playerGui = player:WaitForChild("PlayerGui")
+      local inventoryGui = playerGui:FindFirstChild("InventorySystem")
+      if inventoryGui and inventoryGui:IsA("ScreenGui") and inventoryGui.Enabled then
+        inventoryGui.Enabled = false
+      end
+      
       -- Refresh data whenever the index is opened
       pcall(refresh)
     end

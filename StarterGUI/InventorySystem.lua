@@ -601,6 +601,13 @@ end
 if screenGui then
   screenGui:GetPropertyChangedSignal("Enabled"):Connect(function()
     if screenGui.Enabled then
+      -- Close Index GUI if it's open
+      local playerGui = player:WaitForChild("PlayerGui")
+      local indexGui = playerGui:FindFirstChild("IndexLocal")
+      if indexGui and indexGui:IsA("ScreenGui") and indexGui.Enabled then
+        indexGui.Enabled = false
+      end
+      
       -- Refresh and animate in when opened
       pcall(refresh)
       showInventory()
