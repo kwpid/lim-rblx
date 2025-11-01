@@ -47,12 +47,16 @@ local rnd = Random.new()
 local mainUI = player.PlayerGui:WaitForChild("MainUI")
 local rollButton = mainUI:WaitForChild("Roll")
 local autoRollButton = mainUI:WaitForChild("AutoRoll")
+local hideRollsButton = mainUI:WaitForChild("HideRolls")
 
 -- Auto-roll variables
 local isAutoRolling = false
 local isCurrentlyRolling = false
 local currentChosenItem = nil
 local shouldStopAutoRoll = false -- Flag to stop after current roll finishes
+
+-- HideRolls toggle variable
+local hideRollsEnabled = true -- Default is OFF state which means rolls are hidden
 
 local function stopAutoRoll()
   isAutoRolling = false
@@ -155,6 +159,22 @@ autoRollButton.MouseButton1Click:Connect(function()
   end
 end)
 
+-- HideRolls button click (toggle on/off)
+hideRollsButton.MouseButton1Click:Connect(function()
+  -- Toggle hide rolls state
+  hideRollsEnabled = not hideRollsEnabled
+  
+  if hideRollsEnabled then
+    -- State is OFF - rolls are hidden (darker red, default state)
+    hideRollsButton.Text = "[HIDE ROLLS: OFF]"
+    hideRollsButton.TextColor3 = Color3.fromRGB(170, 0, 0) -- Darker red when off
+  else
+    -- State is ON - rolls are shown (brighter red)
+    hideRollsButton.Text = "[HIDE ROLLS: ON]"
+    hideRollsButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- Brighter red when on
+  end
+end)
+
 -- Handle crate opening animation
 crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   -- allItems is an array of items for the animation
@@ -227,39 +247,48 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
 
   local timeOpened = tick()
 
-  -- Show opening frame
+  -- Show opening frame (only if not hiding rolls)
   openedFrame.CrateName.Text = "Rolling..."
   closeOpenedBtn.Visible = false -- Always hide at start
-  openedFrame.Visible = true
-  openedGui.Enabled = true
+  
+  -- Only show the frame if hideRolls is disabled
+  if not hideRollsEnabled then
+    openedFrame.Visible = true
+    openedGui.Enabled = true
+  end
 
   -- Use consistent animation speed (easing power)
   local pow = 2.5 -- Fixed easing for consistent animation speed
   local lastSlot = 0
 
-  -- Animation loop
-  while true do
-    local timeSinceOpened = tick() - timeOpened
-    local x = timeSinceOpened / unboxTime
+  -- Animation loop (only run if rolls are not hidden)
+  if not hideRollsEnabled then
+    while true do
+      local timeSinceOpened = tick() - timeOpened
+      local x = timeSinceOpened / unboxTime
 
-    local t = tweenGraph(x, pow)
-    local newXPos = lerp(0, posFinal, t)
+      local t = tweenGraph(x, pow)
+      local newXPos = lerp(0, posFinal, t)
 
-    local currentSlot = math.abs(math.floor((newXPos + rndOffset) / cellSize)) + 1
-    if currentSlot ~= lastSlot then
-      if script:FindFirstChild("TickSound") then
-        script.TickSound:Play()
+      local currentSlot = math.abs(math.floor((newXPos + rndOffset) / cellSize)) + 1
+      if currentSlot ~= lastSlot then
+        if script:FindFirstChild("TickSound") then
+          script.TickSound:Play()
+        end
+        lastSlot = currentSlot
       end
-      lastSlot = currentSlot
+
+      openedItemsFrame.ItemsContainer.Position = UDim2.new(newXPos, 0, 0.5, 0)
+
+      if x >= 1 then
+        break
+      end
+
+      RunService.Heartbeat:Wait()
     end
-
-    openedItemsFrame.ItemsContainer.Position = UDim2.new(newXPos, 0, 0.5, 0)
-
-    if x >= 1 then
-      break
-    end
-
-    RunService.Heartbeat:Wait()
+  else
+    -- If rolls are hidden, just wait for the unbox time to complete
+    task.wait(unboxTime)
   end
 
   -- Store chosen item for serial number update
@@ -268,8 +297,10 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   -- Show won item (serial number will be added later if it's a stock item)
   openedFrame.CrateName.Text = "You won: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")!"
 
-  -- Always show continue button after every roll
-  closeOpenedBtn.Visible = true
+  -- Always show continue button after every roll (only if frame is visible)
+  if not hideRollsEnabled then
+    closeOpenedBtn.Visible = true
+  end
 
   -- Mark rolling as complete
   isCurrentlyRolling = false
@@ -280,11 +311,13 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   -- Handle auto-roll
   if isAutoRolling and not shouldStopAutoRoll then
     -- Continue auto-rolling
-    -- Wait a moment before next roll
-    task.delay(1.5, function()
+    -- Wait a moment before next roll (shorter if rolls are hidden)
+    local delayTime = hideRollsEnabled and 0.5 or 1.5
+    task.delay(delayTime, function()
       if isAutoRolling and not isCurrentlyRolling and not shouldStopAutoRoll then
         -- Hide the crate result and start next roll
         openedFrame.Visible = false
+        openedGui.Enabled = false
 
         -- Clear items for next animation
         for _, child in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do
@@ -316,6 +349,10 @@ end)
 
 -- Initialize autoroll button color to red (off state)
 autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+
+-- Initialize hide rolls button to off state (darker red)
+hideRollsButton.Text = "[HIDE ROLLS: OFF]"
+hideRollsButton.TextColor3 = Color3.fromRGB(170, 0, 0)
 
 -- Handle chat notifications (server-wide and cross-server)
 local chatNotificationEvent = remoteEvents:WaitForChild("ChatNotificationEvent")

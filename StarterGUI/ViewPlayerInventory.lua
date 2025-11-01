@@ -174,6 +174,11 @@ function populateInventory(targetPlayer)
     titleLabel.Text = targetPlayer.Name .. "'s Inventory"
   end
   
+  -- Clear search bar when opening new inventory
+  if searchBar then
+    searchBar.Text = ""
+  end
+  
   -- Clear existing buttons
   for _, button in pairs(buttons) do
     button:Destroy()
@@ -357,11 +362,22 @@ if closeButton then
     screenGui.Enabled = false
     currentlyViewingPlayer = nil
     
+    -- Clear search bar
+    if searchBar then
+      searchBar.Text = ""
+    end
+    
     -- Clear buttons
     for _, button in pairs(buttons) do
       button:Destroy()
     end
     buttons = {}
+    
+    -- Remove any lingering highlights
+    if highlightedPlayer and highlightedPlayer.Character then
+      removeGlowEffect(highlightedPlayer.Character)
+    end
+    highlightedPlayer = nil
   end)
 end
 
