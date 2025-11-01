@@ -69,3 +69,4 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Index Auto-Refresh**: Index now automatically refreshes every 3 minutes when open to show current owner counts and stock levels
 -   **Index Bug Fix**: Fixed owners list showing old data - now always fetches fresh owner data from server and updates when index refreshes
 -   **Leaderstats Update**: Renamed "Cases Opened" to "Rolls" and reordered leaderstats to: InvValue, Rolls, Cash
+-   **Head Accessory Fix**: Fixed equipping system to properly handle head accessories (like headless) using Humanoid:AddAccessory() for all accessory types
