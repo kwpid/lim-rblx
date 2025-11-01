@@ -4,22 +4,11 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
-local gui = script.Parent
+local gui = script.Parent -- This is now the "Inventory" Frame inside MainUI
 local buttons = {}
 
--- Get the ScreenGui for enabling/disabling the inventory
-local screenGui = gui
-while screenGui and not screenGui:IsA("ScreenGui") do
-  screenGui = screenGui.Parent
-end
-
-if not screenGui then
-  warn("❌ ScreenGui not found for InventorySystem")
-  return
-end
-
--- Get the main container Frame that we'll animate
-local mainFrame = gui:FindFirstChild("Frame") or gui:FindFirstChild("MainFrame") or gui:FindFirstChild("Container")
+-- The main container Frame that we'll animate is the gui itself (Inventory frame)
+local mainFrame = gui
 
 local handler = gui:WaitForChild("Handler", 5)
 if not handler then
@@ -597,23 +586,14 @@ if inventoryUpdatedEvent then
   end)
 end
 
--- Listen for when the inventory GUI is opened
-if screenGui then
-  screenGui:GetPropertyChangedSignal("Enabled"):Connect(function()
-    if screenGui.Enabled then
-      -- Close Index GUI if it's open
-      local playerGui = player:WaitForChild("PlayerGui")
-      local indexGui = playerGui:FindFirstChild("IndexLocal")
-      if indexGui and indexGui:IsA("ScreenGui") and indexGui.Enabled then
-        indexGui.Enabled = false
-      end
-      
-      -- Refresh and animate in when opened
-      pcall(refresh)
-      showInventory()
-    end
-  end)
-end
+-- Listen for when the inventory frame becomes visible
+gui:GetPropertyChangedSignal("Visible"):Connect(function()
+  if gui.Visible then
+    -- Refresh and animate in when opened
+    pcall(refresh)
+    showInventory()
+  end
+end)
 
 -- Close button handler
 local closeButton = popup:FindFirstChild("Close")

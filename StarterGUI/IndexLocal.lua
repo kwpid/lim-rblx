@@ -2,17 +2,11 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
-local gui = script.Parent
+local gui = script.Parent -- This is now the "Index" Frame inside MainUI
 local buttons = {}
 
 -- Load the ItemRarityModule
 local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
-
--- Get the actual ScreenGui (parent of the frame the script is in)
-local screenGui = gui
-while screenGui and not screenGui:IsA("ScreenGui") do
-  screenGui = screenGui.Parent
-end
 
 local handler = gui:WaitForChild("Handler", 5)
 if not handler then
@@ -502,28 +496,19 @@ pcall(refresh)
 task.spawn(function()
   while true do
     task.wait(180) -- 3 minutes
-    if screenGui and screenGui.Enabled then
+    if gui.Visible then
       pcall(refresh)
     end
   end
 end)
 
--- Listen for when the GUI is opened (Enabled property changes to true)
-if screenGui then
-  screenGui:GetPropertyChangedSignal("Enabled"):Connect(function()
-    if screenGui.Enabled then
-      -- Close Inventory GUI if it's open
-      local playerGui = player:WaitForChild("PlayerGui")
-      local inventoryGui = playerGui:FindFirstChild("InventorySystem")
-      if inventoryGui and inventoryGui:IsA("ScreenGui") and inventoryGui.Enabled then
-        inventoryGui.Enabled = false
-      end
-      
-      -- Refresh data whenever the index is opened
-      pcall(refresh)
-    end
-  end)
-end
+-- Listen for when the index frame becomes visible
+gui:GetPropertyChangedSignal("Visible"):Connect(function()
+  if gui.Visible then
+    -- Refresh data whenever the index is opened
+    pcall(refresh)
+  end
+end)
 
 -- Listen for item database updates (when new items are created)
 local createItemEvent = remoteEvents:FindFirstChild("CreateItemEvent")

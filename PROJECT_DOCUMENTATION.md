@@ -391,17 +391,23 @@ For the game to work properly in Roblox, you need:
      - Player_Id TextBox
      - GiveItem button
 
-2. **IndexLocal ScreenGui** with structure:
-   - Handler folder
-   - Popup (previously Frame) with ItemName, Value, TotalOwners (TextLabel), ImageLabel, OwnerListText (TextLabel), OwnerList (ScrollingFrame), and Close button
-   - Sample button template
-   - UserTemplate for owner list entries
-   - SearchBar TextBox
-   - **Note:** The Popup should be set to Visible = false by default in the Roblox Studio GUI properties
-   - **TotalOwners TextLabel:** Always visible, shows "Total Owners: X" for all items
-   - **OwnerListText TextLabel:** Only visible for serial items, hidden for regular items
-   - **OwnerList ScrollingFrame:** Only visible for serial items, hidden for regular items
-   - **ImageLabel:** Should have a UICorner child that is preserved when changing images
+2. **MainUI ScreenGui** (Combined Inventory and Index) with structure:
+   - **Inventory** (Frame) - Contains entire inventory system:
+     - Handler folder
+     - Popup with ItemName, Value, TotalValue, ImageLabel, SerialOwner (TextLabel), Equip, Sell, SellAll, and Close buttons
+     - Sample button template
+     - SearchBar TextBox
+     - **Note:** Set Inventory.Visible = false by default
+   - **Index** (Frame) - Contains entire index system:
+     - Handler folder
+     - Popup with ItemName, Value, TotalOwners (TextLabel), ImageLabel, OwnerListText (TextLabel), OwnerList (ScrollingFrame), and Close button
+     - Sample button template
+     - UserTemplate for owner list entries
+     - SearchBar TextBox
+     - **Note:** Set Index.Visible = false by default
+   - **InventoryOpen** (TextButton) - Opens Inventory, closes Index
+   - **IndexOpen** (TextButton) - Opens Index, closes Inventory
+   - **MainUIToggle** (LocalScript) - Handles toggling between Inventory and Index
 
 3. **OpenedCrateGui ScreenGui** with structure:
    - CrateFrame
@@ -409,15 +415,7 @@ For the game to work properly in Roblox, you need:
    - ContinueButton
    - OpeningCrateItemFrame template
 
-4. **InventorySystem ScreenGui** with structure:
-   - Handler folder
-   - Popup (previously Frame) with ItemName, Value, TotalValue, ImageLabel, SerialOwner (TextLabel), Equip, Sell, SellAll, and Close buttons
-   - Sample button template
-   - SearchBar TextBox
-   - **Note:** The Popup should be set to Visible = false by default in the Roblox Studio GUI properties
-   - **SerialOwner TextLabel:** Shows "Original Owner: @username" for serial items only, hidden for regular items
-
-5. **MainUI ScreenGui** with:
+4. **Other UI Elements:**
    - Roll button
 
 ---

@@ -10,7 +10,12 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 1, 2025)
-- **QoL: Auto-Close GUIs**: Opening Inventory now auto-closes Index, and opening Index auto-closes Inventory to prevent overlapping GUIs
+- **Unified MainUI System**: Combined Inventory and Index into a single MainUI ScreenGui with toggle buttons:
+  - MainUI contains: Inventory (Frame), Index (Frame), InventoryOpen (Button), IndexOpen (Button)
+  - Clicking InventoryOpen shows Inventory and hides Index
+  - Clicking IndexOpen shows Index and hides Inventory
+  - Only one can be visible at a time, preventing overlapping GUIs
+  - Both frames start hidden by default
 - **Index Popup UI System**: Updated Index to use a popup system matching the inventory:
   - Renamed "Frame" to "Popup" and set to invisible by default
   - Selected items have bigger borders (BorderSizePixel = 3) that return to normal (1) when unselected
