@@ -34,7 +34,7 @@ function DataStoreAPI:AddItem(player, itemData)
       ObtainedAt = os.time()
     })
     isNewOwner = true -- Stock items always count as new owner
-    
+
     -- Record the owner of this serial number in the ItemDatabase
     ItemDatabase:RecordSerialOwner(
       itemData.RobloxId,
@@ -78,7 +78,7 @@ function DataStoreAPI:AddItem(player, itemData)
     local newOwnerCount = ItemDatabase:IncrementOwners(itemData.RobloxId)
     if not newOwnerCount then
       warn("⚠️ Failed to increment owners for item: " ..
-      itemData.Name .. " (RobloxId: " .. tostring(itemData.RobloxId) .. ")")
+        itemData.Name .. " (RobloxId: " .. tostring(itemData.RobloxId) .. ")")
     else
     end
   end
@@ -276,56 +276,6 @@ function DataStoreAPI:GetAutoRoll(player)
     return data.AutoRoll or false
   end
   return false
-end
-
--- Set HideRolls state
-function DataStoreAPI:SetHideRolls(player, enabled)
-  local data = self:GetPlayerData(player)
-  if not data then
-    return false
-  end
-
-  data.HideRolls = enabled
-  return true
-end
-
--- Get HideRolls state
-function DataStoreAPI:GetHideRolls(player)
-  local data = self:GetPlayerData(player)
-  if data then
-    return data.HideRolls or false
-  end
-  return false
-end
-
--- Set player Luck multiplier
-function DataStoreAPI:SetLuck(player, luckValue)
-  local data = self:GetPlayerData(player)
-  if not data then
-    return false
-  end
-
-  -- Validate luck value (must be positive number)
-  if type(luckValue) ~= "number" or luckValue <= 0 then
-    warn("❌ Invalid luck value: " .. tostring(luckValue))
-    return false
-  end
-
-  data.Luck = luckValue
-  
-  -- Also update the player attribute for real-time use
-  player:SetAttribute("Luck", luckValue)
-  
-  return true
-end
-
--- Get player Luck multiplier
-function DataStoreAPI:GetLuck(player)
-  local data = self:GetPlayerData(player)
-  if data then
-    return data.Luck or 1.0
-  end
-  return 1.0
 end
 
 -- Get another player's inventory by UserId (for viewing other players)
