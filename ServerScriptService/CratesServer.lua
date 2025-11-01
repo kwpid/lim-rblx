@@ -92,11 +92,16 @@ local FAST_ROLL_GAMEPASS_ID = 1242040274 -- Old game's fast roll gamepass
 
 -- 🍀 LUCK MULTIPLIER CONFIGURATION
 -- Change this value in Studio to give all players a global luck boost for updates/events
--- 1.0 = normal luck, 2.0 = double luck (better odds), 0.5 = half luck (worse odds)
-local GLOBAL_LUCK_MULTIPLIER = 1.0
+-- 1.0 = normal luck, 1.5 = 50% better odds for Epic+ items (recommended for events), 2.0 = double luck
+local GLOBAL_LUCK_MULTIPLIER = 1.5
+
+-- 🎃 LUCK RARITY THRESHOLD
+-- Luck only applies to items of this rarity or higher (Epic = 250,000 Robux)
+local LUCK_MIN_VALUE = 250000 -- Epic rarity and above
 
 -- Helper function to pick random item based on value (inverse probability)
 -- luckMultiplier: Player's luck multiplier (1.0 = normal, higher = better odds for rare items)
+-- Luck ONLY affects items with value >= LUCK_MIN_VALUE (Epic rarity or higher)
 function pickRandomItem(items, luckMultiplier)
   if #items == 0 then
     return nil
@@ -104,53 +109,88 @@ function pickRandomItem(items, luckMultiplier)
 
   luckMultiplier = luckMultiplier or 1.0
   
+  -- Clamp luck near 1.0 to prevent floating-point rounding issues
+  local LUCK_EPSILON = 0.001
+  if math.abs(luckMultiplier - 1.0) < LUCK_EPSILON then
+    luckMultiplier = 1.0
+  end
+  
   -- Calculate total inverse value using power of 0.75
   local totalInverseValue = 0
   for _, item in ipairs(items) do
     totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.75))
   end
-
-  -- Pick random item (weighted by inverse value - higher value = lower chance)
-  -- Luck multiplier shifts probability distribution
-  local randomValue = rnd:NextNumber() * totalInverseValue
   
-  -- Apply luck modifier
+  -- Helper function to pick a single item from the full list
+  local function pickSingleItem()
+    local randomValue = rnd:NextNumber() * totalInverseValue
+    local cumulative = 0
+    for _, item in ipairs(items) do
+      cumulative = cumulative + (1 / (item.Value ^ 0.75))
+      if randomValue <= cumulative then
+        return item
+      end
+    end
+    -- Fallback
+    return items[#items]
+  end
+  
+  -- If luck is exactly 1.0 (neutral), just do a single roll
+  if luckMultiplier == 1.0 then
+    return pickSingleItem()
+  end
+  
+  -- Apply luck: perform multiple rolls and apply selection logic ONLY if an Epic+ item is rolled
+  local numRolls = 1
   if luckMultiplier > 1.0 then
-    -- Higher luck: roll multiple times and pick the LOWEST value (favors rare/high-value items)
-    -- Use ceiling to ensure ANY luck > 1.0 has an effect
-    -- luckMultiplier of 1.1 = 2 rolls; 2.0 = 2 rolls; 2.1 = 3 rolls, etc.
-    local numRolls = math.min(math.ceil(luckMultiplier), 10)
-    for i = 2, numRolls do
-      local altValue = rnd:NextNumber() * totalInverseValue
-      if altValue < randomValue then
-        randomValue = altValue
-      end
-    end
+    -- Higher luck = more rolls (ceiling ensures any luck > 1.0 has effect)
+    numRolls = math.min(math.ceil(luckMultiplier), 10)
   elseif luckMultiplier < 1.0 then
-    -- Lower luck: roll multiple times and pick the HIGHEST value (favors common/low-value items)
-    -- Use ceiling to ensure ANY luck < 1.0 has an effect
-    -- luckMultiplier of 0.9 = 2 rolls; 0.5 = 2 rolls; 0.33 = 3 rolls; 0.25 = 4 rolls, etc.
-    local numRolls = math.min(math.ceil(1.0 / luckMultiplier), 10)
-    for i = 2, numRolls do
-      local altValue = rnd:NextNumber() * totalInverseValue
-      if altValue > randomValue then
-        randomValue = altValue
-      end
-    end
+    -- Lower luck = more rolls (inverted)
+    numRolls = math.min(math.ceil(1.0 / luckMultiplier), 10)
   end
-  -- If luckMultiplier == 1.0, use the single randomValue (no modification)
   
-  local cumulative = 0
-
-  for _, item in ipairs(items) do
-    cumulative = cumulative + (1 / (item.Value ^ 0.75))
-    if randomValue <= cumulative then
-      return item
+  -- Perform all rolls
+  local allRolls = {}
+  local epicPlusRolls = {}
+  
+  for i = 1, numRolls do
+    local rolledItem = pickSingleItem()
+    table.insert(allRolls, rolledItem)
+    
+    -- Track Epic+ rolls separately
+    if rolledItem.Value >= LUCK_MIN_VALUE then
+      table.insert(epicPlusRolls, rolledItem)
     end
   end
-
-  -- Fallback (shouldn't happen)
-  return items[#items]
+  
+  -- Decision logic based on luck and what was rolled
+  if #epicPlusRolls > 0 then
+    -- At least one Epic+ item was rolled - apply luck selection logic
+    if luckMultiplier > 1.0 then
+      -- Higher luck: pick the HIGHEST value Epic+ item (most rare)
+      local bestItem = epicPlusRolls[1]
+      for _, item in ipairs(epicPlusRolls) do
+        if item.Value > bestItem.Value then
+          bestItem = item
+        end
+      end
+      return bestItem
+    elseif luckMultiplier < 1.0 then
+      -- Lower luck: pick the LOWEST value Epic+ item (least rare in Epic+ tier)
+      local worstItem = epicPlusRolls[1]
+      for _, item in ipairs(epicPlusRolls) do
+        if item.Value < worstItem.Value then
+          worstItem = item
+        end
+      end
+      return worstItem
+    end
+  end
+  
+  -- No Epic+ items were rolled, so luck doesn't apply
+  -- Just return the first roll (luck has no effect on common items)
+  return allRolls[1]
 end
 
 -- Helper function to get color tag based on item value

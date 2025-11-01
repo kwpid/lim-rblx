@@ -56,15 +56,20 @@ This project is a Roblox crate opening/unboxing game where players can open crat
 -   **Roblox MessagingService**: Used for cross-server notifications when ultra-rare items (5M+) are unboxed.
 
 ## Recent Updates (November 1, 2025)
--   **Luck Multiplier System**: Added comprehensive luck system with both global and per-player control:
-    - **Global Luck Modifier**: `GLOBAL_LUCK_MODIFIER` constant in CratesServer.lua (easy to change in Studio for events/updates, default 1.0)
+-   **🎃 Halloween Event Luck System** (Updated November 1, 2025): Modified luck system to only affect Epic+ rarity items:
+    - **Global Luck Modifier**: `GLOBAL_LUCK_MULTIPLIER` constant in CratesServer.lua (currently set to 1.5 for Halloween event)
+    - **Rarity Threshold**: Luck ONLY applies to Epic rarity or higher (items worth 250,000+ Robux)
+      - Epic (250k-750k), Ultra Epic (750k-2.5M), Mythic (2.5M-10M), Insane (10M+) are affected by luck
+      - Common, Uncommon, Rare, and Ultra Rare items are NOT affected by luck (always use normal probability)
     - **Player Luck Attribute**: Each player has a "Luck" attribute (default 1.0) that persists across sessions in DataStore
-    - **Bidirectional Effect**: ANY deviation from 1.0 affects probability distribution
-      - Luck > 1.0: Uses ceiling-based multi-roll system, picks LOWEST value → Favors rare/high-value items (e.g., 1.1 = 2 rolls, 2.5 = 3 rolls)
-      - Luck < 1.0: Uses ceiling-based multi-roll system, picks HIGHEST value → Favors common/low-value items (e.g., 0.9 = 2 rolls, 0.5 = 2 rolls, 0.33 = 3 rolls)
+    - **How It Works**: Multi-roll system that increases chance of Epic+ items:
+      - Luck > 1.0: Performs multiple rolls (e.g., 1.5 = 2 rolls, 2.0 = 2 rolls). If ANY roll hits an Epic+ item, picks the HIGHEST value one → More chances to get Epic+ items AND better quality when you do
+      - Luck < 1.0: Performs multiple rolls (e.g., 0.5 = 2 rolls). If ANY roll hits an Epic+ item, picks the LOWEST value one → More chances to get Epic+ items but lower quality
       - Luck = 1.0: Normal single roll, no modification
+      - If no Epic+ items are rolled in any attempt, luck has no effect (returns first roll)
     - **Performance Cap**: Maximum 10 rolls to prevent performance issues
     - **Total Luck Calculation**: Player's Luck × Global Modifier = Final luck used for rolls
+    - **Event Benefit**: 1.5x luck gives players 2 chances to hit Epic+ items per roll, significantly increasing Epic+ drop rates
     - **API Methods**: `SetLuck(player, value)` and `GetLuck(player)` in DataStoreAPI.lua with validation (must be positive number)
 -   **Hide Rolls Feature with Persistence**: Added HideRolls toggle button in MainUI (next to Roll and AutoRoll buttons). When OFF (default, darker red RGB 170,0,0), the rolling animation is shown normally. When ON (brighter red RGB 255,0,0), the rolling frame is hidden but items are still awarded. Speeds up auto-rolling when hidden (0.5s delay vs 1.5s). Players can toggle visibility mid-roll for faster unboxing experience. HideRolls state now persists across sessions - when a player rejoins, their preference is automatically restored.
 -   **View Player Inventory Fix**: Fixed issue where players could only view one person's inventory. Now properly resets search bar and highlight state when opening/closing, allowing unlimited consecutive player inventory views without requiring page refresh.
