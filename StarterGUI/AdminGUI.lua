@@ -236,6 +236,11 @@ createButton.MouseButton1Click:Connect(function()
   end
   createButton.Active = false
 
+  -- Debug logging
+  print("🔧 CLIENT DEBUG: Sending to server:")
+  print("  - isLimitedEnabled:", isLimitedEnabled, "type:", type(isLimitedEnabled))
+  print("  - isEditMode:", isEditMode)
+
   -- Send to server with edit mode flag and Limited status
   createItemEvent:FireServer(itemId, itemName, itemValue, itemStock, isLimitedEnabled, isEditMode)
 end)

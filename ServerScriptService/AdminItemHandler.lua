@@ -71,9 +71,11 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
   
   if isEditMode then
     -- EDIT MODE - Update existing item
+    print("🔧 DEBUG: Editing item with isLimited =", isLimited, "type =", type(isLimited))
     success, result = ItemDatabase:EditItem(robloxId, itemName, itemValue, itemStock, isLimited)
     
     if success then
+      print("🔧 DEBUG: Edit successful, result.Limited =", result.Limited)
       local stockText = itemStock > 0 and " [Stock: " .. itemStock .. "]" or ""
       local limitedText = isLimited and " [Limited]" or ""
       print("✅ Admin " .. player.Name .. " edited item: " .. itemName .. stockText .. limitedText)

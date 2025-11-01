@@ -257,9 +257,13 @@ function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited)
   itemToEdit.Rarity = rarity
   itemToEdit.Stock = stock
   itemToEdit.Limited = isLimited
+  
+  print("🔧 DEBUG EditItem: Set item.Limited to", isLimited, "| item.Limited is now", itemToEdit.Limited)
 
   -- Save to DataStore
   local saveSuccess = self:SaveItems()
+  
+  print("🔧 DEBUG EditItem: After save, item.Limited =", itemToEdit.Limited)
 
   if saveSuccess then
     local stockText = stock > 0 and " [Stock: " .. stock .. "]" or ""
