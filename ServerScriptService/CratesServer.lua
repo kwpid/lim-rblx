@@ -4,6 +4,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
+local TextChatService = game:GetService("TextChatService")
 
 local ItemDatabase = require(script.Parent.ItemDatabase)
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
@@ -46,10 +47,10 @@ function pickRandomItem(items)
     return nil
   end
 
-  -- Calculate total inverse value
+  -- Calculate total inverse value using power of 0.6
   local totalInverseValue = 0
   for _, item in ipairs(items) do
-    totalInverseValue = totalInverseValue + (1 / item.Value)
+    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.6))
   end
 
   -- Pick random item (weighted by inverse value - higher value = lower chance)
@@ -57,7 +58,7 @@ function pickRandomItem(items)
   local cumulative = 0
 
   for _, item in ipairs(items) do
-    cumulative = cumulative + (1 / item.Value)
+    cumulative = cumulative + (1 / (item.Value ^ 0.6))
     if randomValue <= cumulative then
       return item
     end
@@ -65,6 +66,74 @@ function pickRandomItem(items)
 
   -- Fallback (shouldn't happen)
   return items[#items]
+end
+
+-- Helper function to get color tag based on item value
+function getValueColorTag(value)
+  if value >= 10000000 then
+    return "<font color=\"#FF00FF\">" -- Insane (Magenta)
+  elseif value >= 2500000 then
+    return "<font color=\"#FF0000\">" -- Mythic (Red)
+  elseif value >= 750000 then
+    return "<font color=\"#FF5500\">" -- Ultra Epic (Red-Orange)
+  elseif value >= 250000 then
+    return "<font color=\"#FFAA00\">" -- Epic (Orange)
+  elseif value >= 50000 then
+    return "<font color=\"#AA55FF\">" -- Ultra Rare (Purple)
+  elseif value >= 10000 then
+    return "<font color=\"#5555FF\">" -- Rare (Blue)
+  elseif value >= 2500 then
+    return "<font color=\"#55AA55\">" -- Uncommon (Green)
+  else
+    return "<font color=\"#AAAAAA\">" -- Common (Gray)
+  end
+end
+
+-- Helper function to send chat message about unboxed item
+function sendUnboxChatMessage(player, item, serialNumber, isGlobal)
+  local success, err = pcall(function()
+    -- Format the item value with commas
+    local function formatNumber(n)
+      local formatted = tostring(n)
+      while true do
+        formatted, k = formatted:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
+        if k == 0 then break end
+      end
+      return formatted
+    end
+    
+    -- Build the message
+    local colorTag = getValueColorTag(item.Value)
+    local closeTag = "</font>"
+    
+    local message = colorTag .. player.Name .. " unboxed " .. item.Name
+    
+    if serialNumber then
+      message = message .. " #" .. serialNumber
+    end
+    
+    message = message .. " (R$" .. formatNumber(item.Value) .. ")" .. closeTag
+    
+    -- Get the general chat channel
+    local generalChannel = TextChatService:FindFirstChild("TextChannels"):FindFirstChild("RBXGeneral")
+    
+    if generalChannel then
+      if isGlobal then
+        -- Send to everyone
+        generalChannel:DisplaySystemMessage(message)
+      else
+        -- Send only to the player
+        local textSource = generalChannel:AddUserAsync(player.UserId)
+        if textSource then
+          generalChannel:DisplaySystemMessage(message)
+        end
+      end
+    end
+  end)
+  
+  if not success then
+    warn("⚠️ Failed to send chat message: " .. tostring(err))
+  end
 end
 
 -- Generate random items for animation
@@ -208,6 +277,15 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
 
   DataStoreAPI:AddItem(player, itemToAdd)
   DataStoreAPI:IncrementRolls(player)
+
+  -- Send chat notification for high-value items
+  if chosenItem.Value >= 5000000 then
+    -- 5M+ = Global notification (everyone in server)
+    sendUnboxChatMessage(player, chosenItem, serialNumber, true)
+  elseif chosenItem.Value >= 250000 then
+    -- 250k+ = Local notification (player only)
+    sendUnboxChatMessage(player, chosenItem, serialNumber, false)
+  end
 
   playersRolling[player] = nil
 end)

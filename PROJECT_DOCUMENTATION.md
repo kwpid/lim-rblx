@@ -28,15 +28,19 @@ Items are automatically assigned rarity based on their value:
 
 ### 3. Probability System
 - Higher value items = lower chance to win
-- Uses inverse probability weighting
-- Formula: Chance = (1/ItemValue) / TotalInverseValue
-- Example: A 1,000 Robux item is 10x more likely than a 10,000 Robux item
+- Uses inverse probability weighting with power of 0.6
+- Formula: Chance = (1/ItemValue^0.6) / TotalInverseValue
+- Balanced scaling ensures rare items are still obtainable while maintaining rarity
 
 ### 4. Crate Opening Mechanics
 - **Roll Cost**: FREE (currently set to 0)
-- **Roll Time**: 5 seconds animation
+- **Roll Time**: 5 seconds animation (2 seconds with Fast Roll gamepass)
 - **Animation**: Scrolling items with chosen item landing in view
 - **Stock Protection**: If a stock item sells out during animation, automatically rerolls
+- **Chat Notifications**: 
+  - Items worth 250k+ Robux: Colored chat message to the player
+  - Items worth 5M+ Robux: Global announcement to entire server
+  - Shows item name, value (formatted), serial # (for stock items), color-coded by rarity
 - Players can only roll one crate at a time
 
 ### 5. Admin System
