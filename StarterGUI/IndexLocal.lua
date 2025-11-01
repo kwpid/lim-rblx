@@ -172,8 +172,10 @@ function refresh()
         rarityLabel.Visible = false
       else
         rarityLabel.Visible = true
-        -- Format percentage with 2 decimal places
-        local percentText = string.format("%.2f%%", item.RollPercentage or 0)
+        -- Format percentage with up to 10 decimal places, removing trailing zeros
+        local percentText = string.format("%.10f%%", item.RollPercentage or 0)
+        -- Remove trailing zeros and trailing decimal point
+        percentText = percentText:gsub("0+%%", "%%"):gsub("%.%%", "%%")
         rarityLabel.Text = item.Rarity .. " | " .. percentText
         rarityLabel.TextColor3 = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
       end
