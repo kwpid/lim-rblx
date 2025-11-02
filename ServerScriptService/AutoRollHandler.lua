@@ -1,11 +1,7 @@
--- AutoRollHandler.lua
--- Handles AutoRoll and HideRolls state persistence and server shutdown auto-enable
-
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
 
--- Setup remote events
 local remoteEventsFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
 if not remoteEventsFolder then
   remoteEventsFolder = Instance.new("Folder")
@@ -48,7 +44,6 @@ if not getHideRollsFunction then
   getHideRollsFunction.Parent = remoteEventsFolder
 end
 
--- Handle setting AutoRoll state
 setAutoRollEvent.OnServerEvent:Connect(function(player, enabled)
   if type(enabled) ~= "boolean" then
     return
@@ -57,12 +52,10 @@ setAutoRollEvent.OnServerEvent:Connect(function(player, enabled)
   DataStoreAPI:SetAutoRoll(player, enabled)
 end)
 
--- Handle getting AutoRoll state
 getAutoRollFunction.OnServerInvoke = function(player)
   return DataStoreAPI:GetAutoRoll(player)
 end
 
--- Handle setting HideRolls state
 setHideRollsEvent.OnServerEvent:Connect(function(player, enabled)
   if type(enabled) ~= "boolean" then
     return
@@ -71,25 +64,21 @@ setHideRollsEvent.OnServerEvent:Connect(function(player, enabled)
   DataStoreAPI:SetHideRolls(player, enabled)
 end)
 
--- Handle getting HideRolls state
 getHideRollsFunction.OnServerInvoke = function(player)
   return DataStoreAPI:GetHideRolls(player)
 end
 
--- Detect server shutdown and enable AutoRoll for all players
 game:BindToClose(function()
   print("Server is shutting down - enabling AutoRoll for all players")
   
   for _, player in pairs(Players:GetPlayers()) do
     DataStoreAPI:SetAutoRoll(player, true)
     
-    -- Notify client about shutdown
     pcall(function()
       serverShutdownEvent:FireClient(player)
     end)
   end
   
-  -- Give time for events to fire before shutdown
   wait(1)
 end)
 

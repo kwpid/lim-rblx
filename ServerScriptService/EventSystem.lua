@@ -1,6 +1,3 @@
--- EventSystem.lua
--- Manages random events that occur in the game
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
@@ -17,11 +14,10 @@ local EventSystem = {}
 EventSystem.ActiveEvents = {}
 EventSystem.EventModules = {}
 
--- Random event spawn configuration
-local MIN_EVENT_INTERVAL = 5 * 60 -- 5 minutes
-local MAX_EVENT_INTERVAL = 10 * 60 -- 10 minutes
+-- Config: Random events spawn every 5-10 minutes
+local MIN_EVENT_INTERVAL = 5 * 60
+local MAX_EVENT_INTERVAL = 10 * 60
 
--- Load event modules
 function EventSystem:LoadEventModules()
   local eventFolder = script.Parent:FindFirstChild("Events")
   if not eventFolder then
@@ -42,7 +38,6 @@ function EventSystem:LoadEventModules()
   end
 end
 
--- Start an event by name
 function EventSystem:StartEvent(eventName)
   local eventModule = self.EventModules[eventName]
   if not eventModule then
@@ -50,7 +45,6 @@ function EventSystem:StartEvent(eventName)
     return false
   end
   
-  -- Check if event is already running
   if self.ActiveEvents[eventName] then
     warn("⚠️ Event already running: " .. eventName)
     return false
@@ -58,7 +52,6 @@ function EventSystem:StartEvent(eventName)
   
   print("🎉 Starting event: " .. eventName)
   
-  -- Notify all players about the event
   local success, eventInfo = pcall(function()
     return eventModule.GetEventInfo()
   end)
@@ -81,14 +74,11 @@ function EventSystem:StartEvent(eventName)
     warn("❌ Failed to get event info: " .. tostring(eventInfo))
   end
   
-  -- Mark event as active
   self.ActiveEvents[eventName] = true
   
-  -- Start the event
   task.spawn(function()
     local success, err = pcall(function()
       eventModule.Start(function()
-        -- Event end callback
         self:EndEvent(eventName)
       end)
     end)
@@ -102,7 +92,6 @@ function EventSystem:StartEvent(eventName)
   return true
 end
 
--- End an event
 function EventSystem:EndEvent(eventName)
   if not self.ActiveEvents[eventName] then
     return
@@ -111,7 +100,6 @@ function EventSystem:EndEvent(eventName)
   print("✅ Event ended: " .. eventName)
   self.ActiveEvents[eventName] = nil
   
-  -- Notify all players that the event ended
   sendNotificationEvent:FireAllClients({
     Type = "EVENT_END",
     Title = "Event Ended",
@@ -120,15 +108,12 @@ function EventSystem:EndEvent(eventName)
   })
 end
 
--- Start random event spawning
 function EventSystem:StartRandomEventSpawner()
   task.spawn(function()
     while true do
-      -- Random wait between events
       local waitTime = math.random(MIN_EVENT_INTERVAL, MAX_EVENT_INTERVAL)
       task.wait(waitTime)
       
-      -- Pick a random event from loaded modules
       local eventNames = {}
       for eventName, _ in pairs(self.EventModules) do
         table.insert(eventNames, eventName)
@@ -144,14 +129,12 @@ function EventSystem:StartRandomEventSpawner()
   print("✅ Random event spawner started")
 end
 
--- Initialize the event system
 function EventSystem:Initialize()
   self:LoadEventModules()
   self:StartRandomEventSpawner()
   print("✅ EventSystem initialized")
 end
 
--- Auto-initialize when the module is loaded
 EventSystem:Initialize()
 
 return EventSystem

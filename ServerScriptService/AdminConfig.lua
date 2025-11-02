@@ -1,15 +1,10 @@
--- AdminConfig.lua
--- Configuration for admin users
-
 local AdminConfig = {}
 
--- Whitelisted admin user IDs
+-- Add admin User IDs here
 AdminConfig.AdminUserIds = {
-  1547280148,  -- First admin
-  -- Add more admin IDs here
+  1547280148,
 }
 
--- Check if a player is an admin
 function AdminConfig:IsAdmin(player)
   for _, adminId in ipairs(self.AdminUserIds) do
     if player.UserId == adminId then
