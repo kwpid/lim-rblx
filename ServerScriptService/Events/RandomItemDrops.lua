@@ -288,7 +288,7 @@ function RandomItemDrops.Start(onEventEnd)
         
         -- Check if stock item and claim serial number
         if randomItem.Stock and randomItem.Stock > 0 then
-          local serialNumber = ItemDatabase:ClaimNextSerial(randomItem.RobloxId)
+          local serialNumber = ItemDatabase:IncrementStock(randomItem)
           if serialNumber then
             itemData.SerialNumber = serialNumber
             print("  📦 Dropping stock item: " .. itemData.Name .. " #" .. serialNumber)

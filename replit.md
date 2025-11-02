@@ -9,10 +9,11 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - Iterative development: User tests → Reports bugs/requests → Agent implements → Repeat
 - User wants a living documentation file that tracks game details
 
-## Recent Changes (November 1, 2025)
-- **BUGFIX - Event System**: Fixed two critical bugs in the event system:
+## Recent Changes (November 2, 2025)
+- **BUGFIX - Event System**: Fixed three critical bugs in the event system:
   - Fixed RandomItemDrops event crash: `ItemDatabase.IsReady` is a boolean property, not a function
   - Fixed chat command admin verification: Now properly uses `AdminConfig:IsAdmin(player)` instead of passing just the UserId
+  - Fixed stock item claiming in events: Changed `ClaimNextSerial()` to correct method `IncrementStock()`
   - Event spawning with `/spawn event_RandomItemDrops` now works correctly for whitelisted admins
 - **Random Event System**: Added dynamic event system with Random Item Drops event:
   - Events spawn automatically every 5-10 minutes
