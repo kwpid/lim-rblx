@@ -610,10 +610,6 @@ function ItemDatabase:ResetOwnershipData()
   end
 end
 
-_G.ResetOwnershipData = function()
-  return ItemDatabase:ResetOwnershipData()
-end
-
 game:BindToClose(function()
   print("🛑 Server shutdown - Force saving ItemDatabase...")
   ItemDatabase._saveQueued = false
