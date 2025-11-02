@@ -512,10 +512,14 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                 if item.SerialNumber then
                                                         table.remove(senderData.Inventory, inventoryIndex)
                                                 else
-                                                        if inventoryItem.Amount and inventoryItem.Amount > item.Amount then
-                                                                inventoryItem.Amount = inventoryItem.Amount - item.Amount
+                                                        local actualItem = senderData.Inventory[inventoryIndex]
+                                                        if actualItem.Amount and actualItem.Amount > item.Amount then
+                                                                actualItem.Amount = actualItem.Amount - item.Amount
+                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId, item.Amount)
                                                         else
                                                                 table.remove(senderData.Inventory, inventoryIndex)
+                                                                ItemDatabase:DecrementOwners(item.RobloxId)
+                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId, actualItem.Amount or 1)
                                                         end
                                                 end
                                                 
@@ -536,10 +540,14 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                 if item.SerialNumber then
                                                         table.remove(receiverData.Inventory, inventoryIndex)
                                                 else
-                                                        if inventoryItem.Amount and inventoryItem.Amount > item.Amount then
-                                                                inventoryItem.Amount = inventoryItem.Amount - item.Amount
+                                                        local actualItem = receiverData.Inventory[inventoryIndex]
+                                                        if actualItem.Amount and actualItem.Amount > item.Amount then
+                                                                actualItem.Amount = actualItem.Amount - item.Amount
+                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId, item.Amount)
                                                         else
                                                                 table.remove(receiverData.Inventory, inventoryIndex)
+                                                                ItemDatabase:DecrementOwners(item.RobloxId)
+                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId, actualItem.Amount or 1)
                                                         end
                                                 end
                                                 
