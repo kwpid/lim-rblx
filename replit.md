@@ -3,6 +3,9 @@
 ## Overview
 This project is a Roblox crate opening/unboxing game designed to provide an engaging unboxing experience. Players can open virtual crates to acquire items of varying rarities and values, managed by a weighted probability system. Key features include a player-to-player trading system, comprehensive admin tools for item management, robust data persistence, an interactive inventory, Discord webhook notifications, and the ability to equip virtual goods. The project aims to offer a feature-rich and dynamic virtual economy within Roblox.
 
+## Recent Changes
+- **2025-11-02**: Fixed critical race condition in trading system where TradeClient would hang indefinitely if it loaded before TradeServer created required folders. Added 30-second timeouts to all WaitForChild calls and comprehensive debug logging to both TradeServer and TradeClient for easier diagnosis.
+
 ## User Preferences
 - User will test the game in Roblox and provide feedback
 - Agent cannot test in Roblox, so user is responsible for testing
