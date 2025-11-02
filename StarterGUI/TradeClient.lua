@@ -135,6 +135,8 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                 end)
 
                 local inventoryList = tradeFrame.InventoryFrame.InventoryList
+                local searchBox = tradeFrame.InventoryFrame:FindFirstChild("SearchInv")
+                
                 for _, child in pairs(inventoryList:GetChildren()) do
                         if child:IsA("TextButton") or child:IsA("ImageButton") or child:IsA("Frame") then
                                 child:Destroy()
@@ -157,6 +159,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                 end
 
                 local itemsToDisplay = {}
+                local allItemsData = {}
 
                 for _, item in ipairs(inventory) do
                         if item.SerialNumber then
@@ -193,7 +196,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         end
                 end
 
-                for _, displayItem in ipairs(itemsToDisplay) do
+                local function createItemButton(displayItem)
                         local newItemButton = script:WaitForChild("ItemButton"):Clone()
                         local uniqueId = displayItem.RobloxId .. "_" .. (displayItem.SerialNumber or "regular")
                         newItemButton.Name = uniqueId
@@ -214,7 +217,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 amountLabel.BackgroundTransparency = 0.5
                                 amountLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
                                 amountLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-                                amountLabel.Text = "0/" .. displayItem.MaxAmount
+                                amountLabel.Text = (displayItem.Amount or 0) .. "/" .. displayItem.MaxAmount
                                 amountLabel.TextScaled = true
                                 amountLabel.Font = Enum.Font.GothamBold
                                 amountLabel.Parent = newItemButton
@@ -253,8 +256,39 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 end
                         end)
 
-                        newItemButton.Parent = inventoryList
-                        table.insert(currentInventoryButtons, newItemButton)
+                        return newItemButton
+                end
+                
+                local function updateInventoryDisplay(searchQuery)
+                        for _, child in pairs(inventoryList:GetChildren()) do
+                                if child:IsA("TextButton") or child:IsA("ImageButton") or child:IsA("Frame") then
+                                        child:Destroy()
+                                end
+                        end
+                        currentInventoryButtons = {}
+                        
+                        local query = searchQuery and searchQuery:lower() or ""
+                        
+                        for _, displayItem in ipairs(allItemsData) do
+                                local itemName = displayItem.Name:lower()
+                                if query == "" or itemName:find(query, 1, true) then
+                                        local newItemButton = createItemButton(displayItem)
+                                        newItemButton.Parent = inventoryList
+                                        table.insert(currentInventoryButtons, newItemButton)
+                                end
+                        end
+                end
+                
+                for _, displayItem in ipairs(itemsToDisplay) do
+                        table.insert(allItemsData, displayItem)
+                end
+                
+                updateInventoryDisplay("")
+                
+                if searchBox then
+                        searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+                                updateInventoryDisplay(searchBox.Text)
+                        end)
                 end
 
                 local clientOffer = child[clientValue.Value .. "'s offer"]
@@ -552,5 +586,25 @@ tradeEvent.OnClientEvent:Connect(function(instruction, data)
                         
                         historyFrame.Parent = scrollFrame
                 end
+                
+        elseif instruction == "countdown update" then
+                if tradeFrame.Visible then
+                        tradeFrame.TradingFrame.PlayerAccepted.Text = "Trade completing in " .. tostring(data) .. "..."
+                end
+                
+        elseif instruction == "countdown cancelled" then
+                if tradeFrame.Visible then
+                        tradeFrame.TradingFrame.PlayerAccepted.Text = ""
+                end
+                
+        elseif instruction == "trade completed" then
+                tradeFrame.Visible = false
+                openBtn.Visible = true
+                for _, btn in pairs(currentInventoryButtons) do
+                        if btn then
+                                btn:Destroy()
+                        end
+                end
+                currentInventoryButtons = {}
         end
 end)

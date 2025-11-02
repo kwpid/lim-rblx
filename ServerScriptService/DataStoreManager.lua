@@ -39,9 +39,6 @@ function DataStoreManager:LoadData(player)
 
     if jsonData then
       data = HttpService:JSONDecode(jsonData)
-      if data.DataVersion ~= DATA_VERSION then
-        data = self:GetDefaultData()
-      end
     else
       data = self:GetDefaultData()
     end
@@ -66,7 +63,7 @@ function DataStoreManager:LoadData(player)
   if not data.EquippedItems then data.EquippedItems = {} end
   if data.AutoRoll == nil then data.AutoRoll = false end
   if not data.TradeHistory then data.TradeHistory = {} end
-  if not data.DataVersion then data.DataVersion = DATA_VERSION end
+  data.DataVersion = DATA_VERSION
 
   return data
 end

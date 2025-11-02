@@ -345,9 +345,29 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                 end
 
                 if currentTrade.Sender:FindFirstChild("ACCEPTED") and currentTrade.Receiver:FindFirstChild("ACCEPTED") then
-                        task.wait(config.TimeBeforeTradeConfirmed)
+                        local senderPlr = Players:FindFirstChild(currentTrade.Sender.Value)
+                        local receiverPlr = Players:FindFirstChild(currentTrade.Receiver.Value)
+                        
+                        if not senderPlr or not receiverPlr then
+                                currentTrade:Destroy()
+                                return
+                        end
+                        
+                        local countdownTime = 3
+                        for i = countdownTime, 1, -1 do
+                                if not currentTrade or not currentTrade.Parent then break end
+                                if not currentTrade.Sender:FindFirstChild("ACCEPTED") or not currentTrade.Receiver:FindFirstChild("ACCEPTED") then
+                                        tradeEvent:FireClient(senderPlr, "countdown cancelled")
+                                        tradeEvent:FireClient(receiverPlr, "countdown cancelled")
+                                        return
+                                end
+                                
+                                tradeEvent:FireClient(senderPlr, "countdown update", i)
+                                tradeEvent:FireClient(receiverPlr, "countdown update", i)
+                                task.wait(1)
+                        end
 
-                        if currentTrade.Sender:FindFirstChild("ACCEPTED") and currentTrade.Receiver:FindFirstChild("ACCEPTED") then
+                        if currentTrade and currentTrade.Parent and currentTrade.Sender:FindFirstChild("ACCEPTED") and currentTrade.Receiver:FindFirstChild("ACCEPTED") then
                                 local senderPlr = Players:FindFirstChild(currentTrade.Sender.Value)
                                 local receiverPlr = Players:FindFirstChild(currentTrade.Receiver.Value)
 
@@ -506,6 +526,9 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                         table.remove(receiverData.TradeHistory)
                                 end
 
+                                tradeEvent:FireClient(senderPlr, "trade completed")
+                                tradeEvent:FireClient(receiverPlr, "trade completed")
+                                
                                 currentTrade:Destroy()
                         end
                 end
