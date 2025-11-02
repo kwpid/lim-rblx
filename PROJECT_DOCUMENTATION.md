@@ -150,10 +150,15 @@ Items are automatically assigned rarity based on their value:
   - DATA_LOADED: "Welcome Back!" when data loads successfully
   - DATA_ERROR: Error message if data fails to load
   - GIFT: When admin creates new item (all players notified)
+  - EVENT_START: When a random event begins
+  - EVENT_END: When a random event finishes
+  - EVENT_COLLECT: When player collects an item from an event (shows item name, rarity, and serial #)
   - ERROR, VICTORY: Pre-existing notification types
 - **Notification Features:**
-  - Shows item thumbnail image for equip/unequip/sell notifications
+  - Shows item thumbnail image for equip/unequip/sell/event_collect notifications
   - Displays cash earned for sell notifications
+  - Event collection notifications show item name, rarity, and serial number (if applicable)
+  - Notification color matches item rarity for event collection notifications
   - 2-second delay on data load notifications to ensure client is ready
   - Queued system handles multiple notifications gracefully
 

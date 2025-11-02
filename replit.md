@@ -10,6 +10,11 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 2, 2025)
+- **NEW - Event Collection Notifications**: Players now receive a notification when they collect items from events:
+  - Shows item name, rarity, and serial number (if the item is a stock item)
+  - Notification color matches the item's rarity color
+  - Displays the item's thumbnail image
+  - Uses the EVENT_COLLECT notification preset
 - **IMPROVED - Event Item Drops**: Enhanced the Random Item Drops event:
   - Dropped items now use actual Roblox item models (via InsertService) with rarity-colored Highlight effect
   - Improved model loading with better error handling and fallback to colored neon parts if loading fails

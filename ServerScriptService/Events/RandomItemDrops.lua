@@ -35,9 +35,10 @@ local RARITY_MULTIPLIERS = {
   ["Insane"] = 12        -- 12x (lower multiplier = still rare even in events)
 }
 
--- Chat notification
+-- Chat notification and notification system
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local chatNotificationEvent = remoteEvents:FindFirstChild("ChatNotificationEvent")
+local createNotificationEvent = remoteEvents:FindFirstChild("CreateNotification")
 
 -- Helper function to get color tag based on item value
 local function getValueColorTag(value)
@@ -305,6 +306,37 @@ local function handleItemCollection(player, itemData)
   end
   
   print("✅ " .. player.Name .. " collected " .. itemData.Name .. " from event")
+  
+  -- Send notification to the player who collected the item
+  if createNotificationEvent then
+    -- Build the notification body with item name, rarity, and serial (if available)
+    local notificationBody = itemData.Name .. "\n" .. itemData.Rarity
+    if itemData.SerialNumber then
+      notificationBody = notificationBody .. " #" .. itemData.SerialNumber
+    end
+    
+    -- Get rarity color for the notification
+    local rarityColors = {
+      ["Common"] = Color3.fromRGB(170, 170, 170),
+      ["Uncommon"] = Color3.fromRGB(85, 170, 85),
+      ["Rare"] = Color3.fromRGB(85, 85, 255),
+      ["Ultra Rare"] = Color3.fromRGB(170, 85, 255),
+      ["Epic"] = Color3.fromRGB(255, 170, 0),
+      ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
+      ["Mythic"] = Color3.fromRGB(255, 0, 0),
+      ["Insane"] = Color3.fromRGB(255, 0, 255)
+    }
+    local notificationColor = rarityColors[itemData.Rarity] or Color3.fromRGB(255, 215, 0)
+    
+    -- Fire notification to the specific player
+    createNotificationEvent:FireClient(player, {
+      Type = "EVENT_COLLECT",
+      Title = "Event Item Collected!",
+      Body = notificationBody,
+      ImageId = "rbxthumb://type=Asset&id=" .. itemData.RobloxId .. "&w=150&h=150",
+      Color = notificationColor
+    })
+  end
   
   -- Send chat notifications for high-value items (250k+)
   if itemData.Value >= 250000 then

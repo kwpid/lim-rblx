@@ -92,6 +92,15 @@ notificationPresets.EVENT_END = {
   DEFAULT_COLOR = Color3.fromRGB(170, 170, 170),
 }
 
+notificationPresets.EVENT_COLLECT = {
+
+  DEFAULT_TITLE = "Event Item Collected!",
+  DEFAULT_BODY = "You collected an item from the event!",
+  DEFAULT_IMAGE = "rbxassetid://8150337440",
+  DEFAULT_SOUND = "rbxassetid://10066947742",
+  DEFAULT_COLOR = Color3.fromRGB(255, 215, 0),
+}
+
 
 
 return notificationPresets
