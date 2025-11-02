@@ -118,6 +118,7 @@ end
 
 local currentInventoryButtons = {}
 local viewInventoryButtons = {}
+local viewInventorySearchConnection = nil
 
 local function populateViewInventory(targetPlayer)
         local sample = script:FindFirstChild("Sample")
@@ -293,6 +294,29 @@ local function populateViewInventory(targetPlayer)
                 end
                 
                 table.insert(viewInventoryButtons, button)
+        end
+        
+        -- Set up search bar functionality
+        local searchBar = viewInventoryFrame:FindFirstChild("SearchBar")
+        if searchBar and searchBar:IsA("TextBox") then
+                -- Disconnect previous connection if it exists
+                if viewInventorySearchConnection then
+                        viewInventorySearchConnection:Disconnect()
+                end
+                
+                -- Clear search text
+                searchBar.Text = ""
+                
+                -- Connect new search functionality
+                viewInventorySearchConnection = searchBar:GetPropertyChangedSignal("Text"):Connect(function()
+                        local filterText = searchBar.Text:lower()
+                        for _, button in pairs(viewInventoryButtons) do
+                                if button and button.Parent then
+                                        local itemName = button.Name:lower()
+                                        button.Visible = filterText == "" or itemName:find(filterText, 1, true) ~= nil
+                                end
+                        end
+                end)
         end
         
         viewInventoryFrame.Visible = true
@@ -781,6 +805,12 @@ local viewInvCloseBtn = viewInventoryFrame:FindFirstChild("Close")
 if viewInvCloseBtn then
         viewInvCloseBtn.MouseButton1Click:Connect(function()
                 viewInventoryFrame.Visible = false
+                
+                -- Disconnect search connection
+                if viewInventorySearchConnection then
+                        viewInventorySearchConnection:Disconnect()
+                        viewInventorySearchConnection = nil
+                end
                 
                 for _, btn in pairs(viewInventoryButtons) do
                         if btn then
