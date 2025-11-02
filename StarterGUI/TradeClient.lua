@@ -545,7 +545,12 @@ tradeEvent.OnClientEvent:Connect(function(instruction, data)
                         local historyFrame = script.HistoryFrame:Clone()
                         
                         historyFrame.PlayerUser.Text = "@" .. historyEntry.OtherPlayer
-                        historyFrame.Data.Text = historyEntry.Date
+                        
+                        local dateLabel = historyFrame:FindFirstChild("Data")
+                        if dateLabel then
+                                dateLabel.Text = historyEntry.Date
+                        end
+                        
                         historyFrame.ForValue.Text = "+" .. tostring(historyEntry.ReceivedValue)
                         historyFrame.GaveValue.Text = "-" .. tostring(historyEntry.GaveValue)
                         
