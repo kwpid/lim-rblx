@@ -65,11 +65,14 @@ function ItemDatabase:LoadItems()
       self.Items = items
 
       if savedVersion ~= DATA_VERSION then
+        print("🔄 DATA_VERSION changed - Resetting all ownership data to fresh state...")
         for _, item in ipairs(self.Items) do
           item.CurrentStock = 0
           item.Owners = 0
+          item.TotalCopies = 0
           item.SerialOwners = {}
         end
+        print("✅ All items reset: 0 owners, 0 copies, 0 stock, empty owner lists")
 
         self.DataVersion = DATA_VERSION
         self:SaveItems()
