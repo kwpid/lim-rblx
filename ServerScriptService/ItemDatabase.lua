@@ -64,8 +64,9 @@ function ItemDatabase:LoadItems()
 
       self.Items = items
 
-      if savedVersion ~= DATA_VERSION then
-        print("🔄 DATA_VERSION changed - Resetting all ownership data to fresh state...")
+      if savedVersion and savedVersion ~= DATA_VERSION then
+        print("🔄 DATA_VERSION changed from " .. tostring(savedVersion) .. " to " .. DATA_VERSION)
+        print("🔄 Resetting all ownership data to fresh state...")
         for _, item in ipairs(self.Items) do
           item.CurrentStock = 0
           item.Owners = 0
@@ -77,7 +78,10 @@ function ItemDatabase:LoadItems()
         self.DataVersion = DATA_VERSION
         self:SaveItems()
       else
-        self.DataVersion = savedVersion
+        self.DataVersion = DATA_VERSION
+        if not savedVersion then
+          print("ℹ️ No previous DATA_VERSION found - using current version: " .. DATA_VERSION)
+        end
       end
       for _, item in ipairs(self.Items) do
         if item.Stock == nil then
