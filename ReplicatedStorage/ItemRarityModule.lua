@@ -38,11 +38,11 @@ function ItemRarityModule:GetRarityInfo(value)
   return nil
 end
 
--- Power of 0.9 = steeper rarity curve (rare items more rare)
+-- Power of 1.0 = steeper rarity curve (rare items more rare)
 function ItemRarityModule:GetRollPercentage(value, totalValue)
   if totalValue == 0 then return 0 end
 
-  local inverseValue = 1 / (value ^ 0.9)
+  local inverseValue = 1 / (value ^ 1.0)
   local percentage = (inverseValue / totalValue) * 100
 
   return percentage
@@ -51,7 +51,7 @@ end
 function ItemRarityModule:CalculateAllRollPercentages(items)
   local totalInverseValue = 0
   for _, item in ipairs(items) do
-    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
+    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 1.0))
   end
 
   local itemsWithPercentages = {}
