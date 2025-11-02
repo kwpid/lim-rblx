@@ -116,10 +116,10 @@ function pickRandomItem(items, luckMultiplier)
     luckMultiplier = 1.0
   end
   
-  -- Calculate total inverse value using power of 1.0 (steeper curve = rarer items)
+  -- Calculate total inverse value using power of 0.9 (steeper curve = rarer items)
   local totalInverseValue = 0
   for _, item in ipairs(items) do
-    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 1.0))
+    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
   end
   
   -- Helper function to pick a single item from the full list
@@ -127,7 +127,7 @@ function pickRandomItem(items, luckMultiplier)
     local randomValue = rnd:NextNumber() * totalInverseValue
     local cumulative = 0
     for _, item in ipairs(items) do
-      cumulative = cumulative + (1 / (item.Value ^ 1.0))
+      cumulative = cumulative + (1 / (item.Value ^ 0.9))
       if randomValue <= cumulative then
         return item
       end

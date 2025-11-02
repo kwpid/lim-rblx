@@ -77,13 +77,13 @@ local function pickRandomEventItem(items)
   if #items == 0 then return nil end
 
   -- Calculate weights using normal roll probability * rarity multiplier
-  -- Normal rolling: weight = 1 / (value ^ 1.0)
-  -- Event rolling: weight = (1 / (value ^ 1.0)) * rarity_multiplier
+  -- Normal rolling: weight = 1 / (value ^ 0.9)
+  -- Event rolling: weight = (1 / (value ^ 0.9)) * rarity_multiplier
   local totalWeight = 0
   local weights = {}
 
   for _, item in ipairs(items) do
-    local normalRollChance = 1 / (item.Value ^ 1.0)
+    local normalRollChance = 1 / (item.Value ^ 0.9)
     local rarity = item.Rarity or ItemRarityModule.GetRarity(item.Value)
     local multiplier = RARITY_MULTIPLIERS[rarity] or 2
     local eventWeight = normalRollChance * multiplier
