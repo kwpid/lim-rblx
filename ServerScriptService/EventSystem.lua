@@ -59,13 +59,27 @@ function EventSystem:StartEvent(eventName)
   print("🎉 Starting event: " .. eventName)
   
   -- Notify all players about the event
-  local eventInfo = eventModule.GetEventInfo()
-  sendNotificationEvent:FireAllClients({
-    Type = "EVENT_START",
-    Title = eventInfo.Name,
-    Body = eventInfo.Description,
-    ImageId = eventInfo.Image
-  })
+  local success, eventInfo = pcall(function()
+    return eventModule.GetEventInfo()
+  end)
+  
+  if success and eventInfo then
+    print("📢 Sending event notification to all clients...")
+    print("   Type: EVENT_START")
+    print("   Title: " .. tostring(eventInfo.Name))
+    print("   Body: " .. tostring(eventInfo.Description))
+    
+    sendNotificationEvent:FireAllClients({
+      Type = "EVENT_START",
+      Title = eventInfo.Name,
+      Body = eventInfo.Description,
+      ImageId = eventInfo.Image
+    })
+    
+    print("✅ Event notification sent!")
+  else
+    warn("❌ Failed to get event info: " .. tostring(eventInfo))
+  end
   
   -- Mark event as active
   self.ActiveEvents[eventName] = true

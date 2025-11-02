@@ -23,15 +23,16 @@ local DROP_INTERVAL = EVENT_DURATION / NUM_ITEMS_TO_DROP
 -- Event drop probability system
 -- Instead of using absolute probabilities, events use MULTIPLIERS on normal roll chances
 -- This means events make items X times more likely than normal rolling, based on rarity
+-- Higher multipliers = more common in events, but still respects rarity hierarchy
 local RARITY_MULTIPLIERS = {
-  ["Common"] = 2,        -- 2x normal roll chance
-  ["Uncommon"] = 3,      -- 3x normal roll chance
-  ["Rare"] = 5,          -- 5x normal roll chance
-  ["Ultra Rare"] = 7,    -- 7x normal roll chance
-  ["Epic"] = 10,         -- 10x normal roll chance
-  ["Ultra Epic"] = 12,   -- 12x normal roll chance
-  ["Mythic"] = 15,       -- 15x normal roll chance
-  ["Insane"] = 20        -- 20x normal roll chance
+  ["Common"] = 3,        -- 3x normal roll chance
+  ["Uncommon"] = 6,      -- 6x normal roll chance
+  ["Rare"] = 10,         -- 10x normal roll chance
+  ["Ultra Rare"] = 15,   -- 15x normal roll chance
+  ["Epic"] = 25,         -- 25x normal roll chance (good chance during events)
+  ["Ultra Epic"] = 30,   -- 30x normal roll chance (very good chance)
+  ["Mythic"] = 20,       -- 20x (less than Ultra Epic to keep rare)
+  ["Insane"] = 12        -- 12x (lower multiplier = still rare even in events)
 }
 
 -- Chat notification

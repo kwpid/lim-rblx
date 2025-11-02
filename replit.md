@@ -13,11 +13,13 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - **IMPROVED - Event Item Drops**: Enhanced the Random Item Drops event:
   - Dropped items now use actual Roblox item models (via InsertService) with rarity-colored Highlight effect
   - Improved model loading with better error handling and fallback to colored neon parts if loading fails
-  - **FIXED PROBABILITY SYSTEM**: Events now use rarity-based multipliers on normal roll chances:
-    - Common: 2x normal, Uncommon: 3x, Rare: 5x, Ultra Rare: 7x, Epic: 10x, Ultra Epic: 12x, Mythic: 15x, Insane: 20x
-    - This means getting an Ultra Rare from an event is 7x easier than rolling it normally, keeping rare items special
-  - Fixed item positioning using SetPrimaryPartCFrame to properly position loaded models
-  - Fixed event notifications - now properly shows EVENT_START and EVENT_END notifications to all players
+  - Fixed Accessory/Tool/Hat handling - uses Handle part instead of PrimaryPart for proper positioning
+  - **ADJUSTED PROBABILITY SYSTEM**: Events now use rarity-based multipliers on normal roll chances:
+    - Common: 3x, Uncommon: 6x, Rare: 10x, Ultra Rare: 15x, Epic: 25x, Ultra Epic: 30x, Mythic: 20x, Insane: 12x
+    - Epic and Ultra Epic items have good drop rates during events
+    - Mythic and especially Insane items kept rare even during events (lower multipliers)
+  - Fixed item positioning using CFrame for Accessories/Tools and SetPrimaryPartCFrame for Models
+  - Added debug logging to event notification system to diagnose notification issues
 - **BUGFIX - Event System**: Fixed critical bugs and improved the event system:
   - Fixed RandomItemDrops event crash: `ItemDatabase.IsReady` is a boolean property, not a function
   - Fixed chat command admin verification: Now properly uses `AdminConfig:IsAdmin(player)` instead of passing just the UserId
