@@ -175,7 +175,7 @@ local function createItemDrop(itemData, dropZone, onCollected)
   local highlight = Instance.new("Highlight")
   highlight.Name = "RarityHighlight"
   highlight.Adornee = itemModel
-  highlight.FillTransparency = 0.5
+  highlight.FillTransparency = 0.3
   highlight.OutlineTransparency = 0
 
   -- Set highlight color based on rarity
@@ -189,9 +189,38 @@ local function createItemDrop(itemData, dropZone, onCollected)
     ["Mythic"] = Color3.fromRGB(255, 0, 0),
     ["Insane"] = Color3.fromRGB(255, 0, 255)
   }
-  highlight.FillColor = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
-  highlight.OutlineColor = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
+  local rarityColor = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
+  highlight.FillColor = rarityColor
+  highlight.OutlineColor = rarityColor
   highlight.Parent = itemModel
+  
+  -- Add PointLight for glowing effect (works on all part types)
+  local pointLight = Instance.new("PointLight")
+  pointLight.Name = "GlowLight"
+  pointLight.Color = rarityColor
+  pointLight.Brightness = 2
+  pointLight.Range = 15
+  pointLight.Parent = part
+  
+  -- Pulsing glow animation
+  task.spawn(function()
+    local pulseSpeed = 2
+    local minBrightness = 1
+    local maxBrightness = 3
+    
+    while itemModel and itemModel.Parent and pointLight and pointLight.Parent do
+      for brightness = minBrightness, maxBrightness, 0.1 do
+        if not itemModel or not itemModel.Parent or not pointLight or not pointLight.Parent then break end
+        pointLight.Brightness = brightness
+        task.wait(pulseSpeed / 20)
+      end
+      for brightness = maxBrightness, minBrightness, -0.1 do
+        if not itemModel or not itemModel.Parent or not pointLight or not pointLight.Parent then break end
+        pointLight.Brightness = brightness
+        task.wait(pulseSpeed / 20)
+      end
+    end
+  end)
 
   -- Find the main part for the model (different for different types)
   local part
