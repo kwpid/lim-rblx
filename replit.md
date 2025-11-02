@@ -4,6 +4,9 @@
 This project is a Roblox crate opening/unboxing game designed to provide an engaging unboxing experience. Players can open virtual crates to acquire items of varying rarities and values, managed by a weighted probability system. Key features include a player-to-player trading system, comprehensive admin tools for item management, robust data persistence, an interactive inventory, Discord webhook notifications, and the ability to equip virtual goods. The project aims to offer a feature-rich and dynamic virtual economy within Roblox.
 
 ## Recent Changes
+- **2025-11-02**: Fixed QtySerial display consistency - trade inventory now shows "x0/5" format (amount in trade/total owned) while offer slots show "x2" format (amount being offered). Simplified itemsToDisplay logic to prevent duplicate tracking and item re-adding bugs.
+- **2025-11-02**: Added comprehensive trade notification system - players receive notifications when they receive a trade request (VICTORY type), when their request is accepted (VICTORY type), and when their request is declined (ERROR type). Notifications use the existing CreateNotification RemoteEvent system.
+- **2025-11-02**: Accept button now dynamically changes text - shows "Accepted" when player accepts the trade, and changes back to "Accept" when items are added/removed (leveraging server-side ACCEPTED tag resets).
 - **2025-11-02**: Added 3-second countdown timer to trades - after both players accept, a countdown displays giving them one last chance to decline before the trade completes. Players can un-accept during the countdown to cancel.
 - **2025-11-02**: Fixed trade UI not closing after completion - added explicit "trade completed" events to both clients ensuring the trade UI closes properly after items are transferred.
 - **2025-11-02**: Fixed critical data migration bug - DataStoreManager now preserves existing player data when adding new fields like TradeHistory. Previously, version changes would reset all player data (wiping Player1, Player2 inventories). Now properly migrates data by backfilling missing fields while preserving existing inventory, rolls, equipped items, etc.
@@ -39,15 +42,16 @@ This project is a Roblox crate opening/unboxing game designed to provide an enga
 ### UI/UX Decisions
 -   Item names are color-coded by rarity in animations and inventory.
 -   Admin panel is a graphical interface.
--   Notification system provides feedback for actions.
+-   Notification system provides feedback for actions including trade requests (VICTORY type), acceptances (VICTORY type), and rejections (ERROR type).
 -   Hover effects with yellow glow for viewing other players' inventories.
 -   Unified MainUI system combines Inventory and Index into a single ScreenGui with toggle buttons.
 -   Inventory and Index popups use smooth slide-in/out animations and clear selection states.
 -   AutoRoll and HideRolls buttons have UIStroke colors indicating their state.
 -   Event status is displayed in the MainUI.
--   Trade offers display item images using ItemImage1 element with QtySerial text showing "xN" for quantities or "#N" for serial numbers.
+-   Trade offers display item images using ItemImage1 element with QtySerial text. Inventory items show "x0/5" format (amount in trade/total owned) while offer slots show "x2" format (amount being offered). Serial items display "#1" format.
 -   Real-time value displays (YourValue and TheirValue) update dynamically during trading.
 -   Trade history interface accessible via OpenHistory button shows past trades with player avatars and full trade details.
+-   Accept button dynamically changes text to "Accepted" when the player accepts, reverting to "Accept" when items are added/removed.
 
 ### Technical Implementations
 -   `RemoteEvents` and `RemoteFunctions` for client-server communication.
