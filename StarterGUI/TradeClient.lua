@@ -104,6 +104,18 @@ local function formatNumber(n)
         return formatted
 end
 
+local function formatValueShort(value)
+        if value >= 1000000000 then
+                return string.format("%.2fB", value / 1000000000)
+        elseif value >= 1000000 then
+                return string.format("%.2fM", value / 1000000)
+        elseif value >= 1000 then
+                return string.format("%.2fK", value / 1000)
+        else
+                return tostring(value)
+        end
+end
+
 local currentInventoryButtons = {}
 local viewInventoryButtons = {}
 
@@ -803,8 +815,8 @@ tradeEvent.OnClientEvent:Connect(function(instruction, data)
                                 dateLabel.Text = historyEntry.Date
                         end
                         
-                        historyFrame.ForValue.Text = "+" .. tostring(historyEntry.ReceivedValue)
-                        historyFrame.GaveValue.Text = "-" .. tostring(historyEntry.GaveValue)
+                        historyFrame.ForValue.Text = "For: " .. formatValueShort(historyEntry.ReceivedValue)
+                        historyFrame.GaveValue.Text = "Gave: " .. formatValueShort(historyEntry.GaveValue)
                         
                         local success, pfp = pcall(function()
                                 return game.Players:GetUserThumbnailAsync(historyEntry.OtherPlayerId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
