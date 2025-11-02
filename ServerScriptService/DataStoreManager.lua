@@ -1,14 +1,12 @@
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
 
--- Config: DATA VERSION - Change this to wipe all player data
-local DATA_VERSION = "DataVersion.15"
+-- REMEMEBR TO MATCH THIS WITH ITEMDATABASE VERSION!
+local DATA_VERSION = "DataVersion.16"
 
 local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
-
 local DataStoreManager = {}
 
--- Config: Default data structure for new players
 local DEFAULT_DATA = {
   Inventory = {},
   Rolls = 0,
@@ -25,13 +23,12 @@ function DataStoreManager:SaveData(player, data)
     PlayerDataStore:SetAsync("Player_" .. player.UserId, jsonData)
   end)
 
-  if success then
-    print("Successfully saved data for " .. player.Name)
-    return true
-  else
+  if not success then
     warn("❌ Failed to save data for " .. player.Name .. ": " .. errorMessage)
     return false
   end
+
+  return true
 end
 
 function DataStoreManager:LoadData(player)
@@ -41,10 +38,8 @@ function DataStoreManager:LoadData(player)
 
     if jsonData then
       data = HttpService:JSONDecode(jsonData)
-
       if data.DataVersion ~= DATA_VERSION then
         data = self:GetDefaultData()
-      else
       end
     else
       data = self:GetDefaultData()
@@ -75,16 +70,7 @@ function DataStoreManager:LoadData(player)
 end
 
 function DataStoreManager:GetDefaultData()
-  local defaultCopy = {
-    Inventory = {},
-    Rolls = 0,
-    Cash = 0,
-    InvValue = 0,
-    EquippedItems = {},
-    AutoRoll = false,
-    DataVersion = DATA_VERSION
-  }
-  return defaultCopy
+  return table.clone(DEFAULT_DATA)
 end
 
 function DataStoreManager:AddItemToInventory(playerData, itemData)
@@ -100,11 +86,11 @@ function DataStoreManager:RemoveItemFromInventory(playerData, index)
 end
 
 function DataStoreManager:AddCash(playerData, amount)
-  playerData.Cash = playerData.Cash + amount
+  playerData.Cash += amount
 end
 
 function DataStoreManager:IncrementRolls(playerData)
-  playerData.Rolls = playerData.Rolls + 1
+  playerData.Rolls += 1
 end
 
 function DataStoreManager:SetInvValue(playerData, value)

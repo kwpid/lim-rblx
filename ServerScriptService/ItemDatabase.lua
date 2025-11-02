@@ -1,5 +1,4 @@
 -- ItemDatabase.lua
--- Manages the global item database (all available items in the game)
 
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
@@ -7,17 +6,16 @@ local HttpService = game:GetService("HttpService")
 local ItemDataStore = DataStoreService:GetDataStore("ItemDatabase_v1")
 local ItemRarityModule = require(game.ReplicatedStorage.ItemRarityModule)
 
--- Lazy load WebhookHandler to avoid circular dependency issues
 local WebhookHandler
 local function getWebhookHandler()
-        if not WebhookHandler then
-                WebhookHandler = require(script.Parent.WebhookHandler)
-        end
-        return WebhookHandler
+  if not WebhookHandler then
+    WebhookHandler = require(script.Parent.WebhookHandler)
+  end
+  return WebhookHandler
 end
 
 -- 🔑 DATA VERSION - Must match DataStoreManager.lua to keep data in sync
-local DATA_VERSION = "DataVersion.15"
+local DATA_VERSION = "DataVersion.16"
 
 local ItemDatabase = {}
 ItemDatabase.Items = {}
@@ -25,14 +23,11 @@ ItemDatabase.DataVersion = DATA_VERSION
 ItemDatabase._saveQueued = false
 ItemDatabase._lastSaveTime = 0
 
--- Debounced save system to prevent DataStore queue overload
--- Instead of saving immediately, queue a save that will happen after a short delay
--- This batches multiple rapid changes into a single save operation
-local SAVE_DEBOUNCE_TIME = 3 -- Wait 3 seconds after last change before saving
+local SAVE_DEBOUNCE_TIME = 3
 
 function ItemDatabase:QueueSave()
   if self._saveQueued then
-    return -- Save already queued
+    return
   end
 
   self._saveQueued = true
@@ -41,56 +36,46 @@ function ItemDatabase:QueueSave()
     self._saveQueued = false
     local timeSinceLastSave = tick() - self._lastSaveTime
 
-    -- Only save if enough time has passed (prevents rapid saves)
     if timeSinceLastSave >= 1 then
       self:SaveItems()
       self._lastSaveTime = tick()
     else
-      -- Too soon, queue another save
       self:QueueSave()
     end
   end)
 end
 
--- Load all items from DataStore
 function ItemDatabase:LoadItems()
   local success, result = pcall(function()
     local jsonData = ItemDataStore:GetAsync("AllItems")
     if jsonData then
       local data = HttpService:JSONDecode(jsonData)
 
-      -- Check if this is old format (just array) or new format (with version)
       local items
       local savedVersion
 
       if data.Items then
-        -- New format with version
         items = data.Items
         savedVersion = data.DataVersion
       else
-        -- Old format (just array of items)
         items = data
         savedVersion = nil
       end
 
       self.Items = items
 
-      -- Check if data version matches
       if savedVersion ~= DATA_VERSION then
-        -- Reset stock and owners for all items
         for _, item in ipairs(self.Items) do
           item.CurrentStock = 0
           item.Owners = 0
+          item.SerialOwners = {}
         end
 
-        -- Save with new version
         self.DataVersion = DATA_VERSION
         self:SaveItems()
       else
         self.DataVersion = savedVersion
       end
-
-      -- Migrate legacy items (add Stock/CurrentStock/Owners/TotalCopies/SerialOwners/Limited if missing)
       for _, item in ipairs(self.Items) do
         if item.Stock == nil then
           item.Stock = 0
@@ -124,10 +109,8 @@ function ItemDatabase:LoadItems()
   end
 end
 
--- Save all items to DataStore
 function ItemDatabase:SaveItems()
   local success, errorMessage = pcall(function()
-    -- Save with data version
     local dataToSave = {
       Items = self.Items,
       DataVersion = self.DataVersion or DATA_VERSION
@@ -144,9 +127,7 @@ function ItemDatabase:SaveItems()
   end
 end
 
--- Add a new item to the database
 function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock, isLimited)
-  -- Validate inputs
   if type(robloxId) ~= "number" then
     return false, "RobloxId must be a number"
   end
@@ -159,43 +140,37 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock, isLimited)
     return false, "Item value must be a positive number"
   end
 
-  -- Validate stock (optional, 0 or nil = regular item, 1-100 = stock item)
   stock = stock or 0
   if type(stock) ~= "number" or stock < 0 or stock > 100 then
     return false, "Stock must be between 0 and 100"
   end
-  
-  -- Default Limited to false if not provided
+
   isLimited = isLimited or false
 
-  -- Check if item already exists
   for _, item in ipairs(self.Items) do
     if item.RobloxId == robloxId then
       return false, "Item with this Roblox ID already exists"
     end
   end
 
-  -- Get rarity from value
   local rarity = ItemRarityModule:GetRarity(itemValue)
 
-  -- Create item
   local newItem = {
     RobloxId = robloxId,
     Name = itemName,
     Value = itemValue,
     Rarity = rarity,
-    Stock = stock,     -- 0 = regular, 1-100 = stock item
-    CurrentStock = 0,  -- How many have been rolled (stock items)
-    Owners = 0,        -- How many unique players own this item (for backwards compatibility)
-    TotalCopies = 0,   -- Total copies across all players (regular items)
-    SerialOwners = {}, -- Array of {UserId, SerialNumber, Username} for stock items
-    Limited = isLimited, -- true = Limited item (shows LimText)
+    Stock = stock,
+    CurrentStock = 0,
+    Owners = 0,
+    TotalCopies = 0,
+    SerialOwners = {},
+    Limited = isLimited,
     CreatedAt = os.time()
   }
 
   table.insert(self.Items, newItem)
 
-  -- Save to DataStore
   local saveSuccess = self:SaveItems()
 
   if saveSuccess then
@@ -203,15 +178,12 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock, isLimited)
 
     return true, newItem
   else
-    -- Remove from memory if save failed
     table.remove(self.Items, #self.Items)
     return false, "Failed to save item to database"
   end
 end
 
--- Edit an existing item in the database
 function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited)
-  -- Validate inputs
   if type(robloxId) ~= "number" then
     return false, "RobloxId must be a number"
   end
@@ -224,18 +196,15 @@ function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited)
     return false, "Item value must be a positive number"
   end
 
-  -- Validate stock (optional, 0 or nil = regular item, 1-100 = stock item)
   stock = stock or 0
   if type(stock) ~= "number" or stock < 0 or stock > 100 then
     return false, "Stock must be between 0 and 100"
   end
-  
-  -- Default Limited to false if not provided
+
   if isLimited == nil then
     isLimited = false
   end
 
-  -- Find the item to edit
   local itemToEdit = nil
   for _, item in ipairs(self.Items) do
     if item.RobloxId == robloxId then
@@ -248,21 +217,18 @@ function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited)
     return false, "Item with this Roblox ID does not exist"
   end
 
-  -- Get rarity from new value
   local rarity = ItemRarityModule:GetRarity(itemValue)
 
-  -- Update item properties
   itemToEdit.Name = itemName
   itemToEdit.Value = itemValue
   itemToEdit.Rarity = rarity
   itemToEdit.Stock = stock
   itemToEdit.Limited = isLimited
-  
+
   print("🔧 DEBUG EditItem: Set item.Limited to", isLimited, "| item.Limited is now", itemToEdit.Limited)
 
-  -- Save to DataStore
   local saveSuccess = self:SaveItems()
-  
+
   print("🔧 DEBUG EditItem: After save, item.Limited =", itemToEdit.Limited)
 
   if saveSuccess then
@@ -274,20 +240,16 @@ function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited)
   end
 end
 
--- Get all items (only rollable ones - exclude sold out stock items)
 function ItemDatabase:GetAllItems()
   return self.Items
 end
 
--- Get all rollable items (exclude sold out stock items)
 function ItemDatabase:GetRollableItems()
   local rollableItems = {}
   for _, item in ipairs(self.Items) do
-    -- Default to 0 if nil (legacy data)
     local stock = item.Stock or 0
     local currentStock = item.CurrentStock or 0
 
-    -- Include regular items (Stock = 0) or stock items that aren't sold out
     if stock == 0 or currentStock < stock then
       table.insert(rollableItems, item)
     end
@@ -295,22 +257,17 @@ function ItemDatabase:GetRollableItems()
   return rollableItems
 end
 
--- Increment stock for an item (when someone rolls it)
--- Returns serial number on success, nil if sold out or not a stock item
 function ItemDatabase:IncrementStock(item)
-  -- Default to 0 if nil (legacy data)
   local stock = item.Stock or 0
   local currentStock = item.CurrentStock or 0
 
   if stock > 0 and currentStock < stock then
     item.CurrentStock = currentStock + 1
-    self:QueueSave()         -- Use queued save to prevent DataStore overload during rapid rolls
-    
-    -- Check if item just went out of stock
+    self:QueueSave()
+
     if item.CurrentStock >= stock then
       print(string.format("🔴 Item went out of stock: %s (%d/%d)", item.Name, item.CurrentStock, stock))
-      
-      -- Send Discord webhook notification
+
       task.spawn(function()
         local handler = getWebhookHandler()
         if handler then
@@ -318,22 +275,19 @@ function ItemDatabase:IncrementStock(item)
         end
       end)
     end
-    
-    return item.CurrentStock -- Return the serial number
+
+    return item.CurrentStock
   end
   return nil
 end
 
--- Check if item is sold out
 function ItemDatabase:IsSoldOut(item)
   local stock = item.Stock or 0
   local currentStock = item.CurrentStock or 0
   return stock > 0 and currentStock >= stock
 end
 
--- Get item by Roblox ID
 function ItemDatabase:GetItemByRobloxId(robloxId)
-  -- Convert to number to handle both string and number inputs
   local numericId = tonumber(robloxId)
   if not numericId then
     warn("❌ ItemDatabase:GetItemByRobloxId - Invalid RobloxId: " .. tostring(robloxId))
@@ -350,9 +304,7 @@ function ItemDatabase:GetItemByRobloxId(robloxId)
   return nil
 end
 
--- Increment owners count for an item (unique players)
 function ItemDatabase:IncrementOwners(robloxId)
-  -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
     warn("❌ ItemDatabase:IncrementOwners - Invalid RobloxId: " .. tostring(robloxId))
@@ -363,16 +315,14 @@ function ItemDatabase:IncrementOwners(robloxId)
   if item then
     local oldOwners = item.Owners or 0
     item.Owners = oldOwners + 1
-    self:QueueSave() -- Use queued save to prevent DataStore overload during rapid rolls
+    self:QueueSave()
     return item.Owners
   else
     return nil
   end
 end
 
--- Increment total copies for a regular item (increments by amount)
 function ItemDatabase:IncrementTotalCopies(robloxId, amount)
-  -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
     warn("❌ ItemDatabase:IncrementTotalCopies - Invalid RobloxId: " .. tostring(robloxId))
@@ -385,16 +335,14 @@ function ItemDatabase:IncrementTotalCopies(robloxId, amount)
   if item then
     local oldCopies = item.TotalCopies or 0
     item.TotalCopies = oldCopies + amount
-    self:QueueSave() -- Use queued save to prevent DataStore overload during rapid rolls
+    self:QueueSave()
     return item.TotalCopies
   else
     return nil
   end
 end
 
--- Get owners count for an item
 function ItemDatabase:GetOwners(robloxId)
-  -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
     warn("❌ ItemDatabase:GetOwners - Invalid RobloxId: " .. tostring(robloxId))
@@ -408,9 +356,7 @@ function ItemDatabase:GetOwners(robloxId)
   return 0
 end
 
--- Decrement owners count for an item (when a player sells/removes it)
 function ItemDatabase:DecrementOwners(robloxId)
-  -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
     warn("❌ ItemDatabase:DecrementOwners - Invalid RobloxId: " .. tostring(robloxId))
@@ -420,8 +366,8 @@ function ItemDatabase:DecrementOwners(robloxId)
   local item = self:GetItemByRobloxId(numericId)
   if item then
     local oldOwners = item.Owners or 0
-    item.Owners = math.max(0, oldOwners - 1) -- Don't go below 0
-    self:QueueSave()                         -- Use queued save to prevent DataStore overload
+    item.Owners = math.max(0, oldOwners - 1)
+    self:QueueSave()
 
     return item.Owners
   else
@@ -430,9 +376,7 @@ function ItemDatabase:DecrementOwners(robloxId)
   end
 end
 
--- Decrement total copies for a regular item (decrements by amount)
 function ItemDatabase:DecrementTotalCopies(robloxId, amount)
-  -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
     warn("❌ ItemDatabase:DecrementTotalCopies - Invalid RobloxId: " .. tostring(robloxId))
@@ -444,8 +388,8 @@ function ItemDatabase:DecrementTotalCopies(robloxId, amount)
   local item = self:GetItemByRobloxId(numericId)
   if item then
     local oldCopies = item.TotalCopies or 0
-    item.TotalCopies = math.max(0, oldCopies - amount) -- Don't go below 0
-    self:QueueSave()                                   -- Use queued save to prevent DataStore overload
+    item.TotalCopies = math.max(0, oldCopies - amount)
+    self:QueueSave()
 
     return item.TotalCopies
   else
@@ -454,10 +398,7 @@ function ItemDatabase:DecrementTotalCopies(robloxId, amount)
   end
 end
 
--- Decrement stock for an item (when someone sells a stock item)
--- Returns true on success, nil if not a stock item or already at 0
 function ItemDatabase:DecrementStock(robloxId)
-  -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
     warn("❌ ItemDatabase:DecrementStock - Invalid RobloxId: " .. tostring(robloxId))
@@ -470,23 +411,19 @@ function ItemDatabase:DecrementStock(robloxId)
     return nil
   end
 
-  -- Default to 0 if nil (legacy data)
   local stock = item.Stock or 0
   local currentStock = item.CurrentStock or 0
 
   if stock > 0 and currentStock > 0 then
     item.CurrentStock = currentStock - 1
-    self:QueueSave() -- Use queued save to prevent DataStore overload
+    self:QueueSave()
     return true
   end
 
   return nil
 end
 
--- Increase stock limit for an item (when admin gives a sold-out stock item)
--- Increases both Stock and CurrentStock by 1, returns the new serial number
 function ItemDatabase:IncreaseStockLimit(robloxId, userId, username)
-  -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
     warn("❌ ItemDatabase:IncreaseStockLimit - Invalid RobloxId: " .. tostring(robloxId))
@@ -499,15 +436,12 @@ function ItemDatabase:IncreaseStockLimit(robloxId, userId, username)
     return nil
   end
 
-  -- Default to 0 if nil (legacy data)
   local stock = item.Stock or 0
 
   if stock > 0 then
-    -- Increase stock limit by 1
     item.Stock = stock + 1
     item.CurrentStock = (item.CurrentStock or 0) + 1
 
-    -- Record the owner of this new serial
     if userId and username then
       if not item.SerialOwners then
         item.SerialOwners = {}
@@ -519,17 +453,15 @@ function ItemDatabase:IncreaseStockLimit(robloxId, userId, username)
       })
     end
 
-    self:QueueSave()         -- Use queued save to prevent DataStore overload
+    self:QueueSave()
     print("📈 Increased stock limit for " .. item.Name .. " from " .. stock .. " to " .. item.Stock)
-    return item.CurrentStock -- Return the new serial number
+    return item.CurrentStock
   end
 
   return nil
 end
 
--- Record owner for a serial number (when stock item is claimed)
 function ItemDatabase:RecordSerialOwner(robloxId, userId, username, serialNumber)
-  -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
     warn("❌ ItemDatabase:RecordSerialOwner - Invalid RobloxId: " .. tostring(robloxId))
@@ -542,36 +474,30 @@ function ItemDatabase:RecordSerialOwner(robloxId, userId, username, serialNumber
     return false
   end
 
-  -- Initialize SerialOwners if it doesn't exist
   if not item.SerialOwners then
     item.SerialOwners = {}
   end
 
-  -- Check if this serial number is already recorded
   for _, owner in ipairs(item.SerialOwners) do
     if owner.SerialNumber == serialNumber then
-      -- Serial already recorded, update if needed
       owner.UserId = userId
       owner.Username = username
-      self:QueueSave() -- Use queued save to prevent DataStore overload
+      self:QueueSave()
       return true
     end
   end
 
-  -- Add new serial owner record
   table.insert(item.SerialOwners, {
     UserId = userId,
     SerialNumber = serialNumber,
     Username = username
   })
 
-  self:QueueSave() -- Use queued save to prevent DataStore overload
+  self:QueueSave()
   return true
 end
 
--- Get all owners of a stock item (sorted by serial number)
 function ItemDatabase:GetSerialOwners(robloxId)
-  -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
     warn("❌ ItemDatabase:GetSerialOwners - Invalid RobloxId: " .. tostring(robloxId))
@@ -584,12 +510,10 @@ function ItemDatabase:GetSerialOwners(robloxId)
     return {}
   end
 
-  -- Return empty if not a stock item or no owners
   if not item.SerialOwners or #item.SerialOwners == 0 then
     return {}
   end
 
-  -- Sort by serial number (lowest first)
   local sorted = {}
   for _, owner in ipairs(item.SerialOwners) do
     table.insert(sorted, {
@@ -606,16 +530,12 @@ function ItemDatabase:GetSerialOwners(robloxId)
   return sorted
 end
 
--- Delete an item from the database
--- Returns success (true/false), message, itemData (deleted item info)
 function ItemDatabase:DeleteItem(robloxId)
-  -- Convert to number to ensure proper lookup
   local numericId = tonumber(robloxId)
   if not numericId then
     return false, "Invalid RobloxId: " .. tostring(robloxId), nil
   end
 
-  -- Find the item index
   local itemIndex = nil
   local itemData = nil
   for i, item in ipairs(self.Items) do
@@ -630,26 +550,21 @@ function ItemDatabase:DeleteItem(robloxId)
     return false, "Item with ID " .. numericId .. " does not exist", nil
   end
 
-  -- Remove item from database
   table.remove(self.Items, itemIndex)
 
-  -- Save to DataStore
   local saveSuccess = self:SaveItems()
 
   if saveSuccess then
     print("🗑️ Deleted item: " .. itemData.Name .. " (RobloxId: " .. numericId .. ")")
     return true, "Item deleted successfully", itemData
   else
-    -- Restore item if save failed (failsafe)
     table.insert(self.Items, itemIndex, itemData)
     return false, "Failed to save deletion to database", nil
   end
 end
 
--- Async initialization flag
 ItemDatabase.IsReady = false
 
--- Initialize database asynchronously (non-blocking)
 task.spawn(function()
   local startTime = tick()
   print("⏳ Loading ItemDatabase...")
@@ -661,18 +576,15 @@ task.spawn(function()
   print(string.format("✅ ItemDatabase ready! Loaded %d items in %.2f seconds", #ItemDatabase.Items, loadTime))
 end)
 
--- Force save on server shutdown to ensure no data loss from queued saves
 game:BindToClose(function()
   print("🛑 Server shutdown - Force saving ItemDatabase...")
-  ItemDatabase._saveQueued = false -- Cancel any pending queued save
-  ItemDatabase:SaveItems()         -- Force immediate save
+  ItemDatabase._saveQueued = false
+  ItemDatabase:SaveItems()
   print("✅ ItemDatabase saved on shutdown")
 end)
 
--- Set up RemoteFunction for clients to get all items
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Create RemoteEvents folder if it doesn't exist
 local remoteEventsFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
 if not remoteEventsFolder then
   remoteEventsFolder = Instance.new("Folder")
@@ -680,7 +592,6 @@ if not remoteEventsFolder then
   remoteEventsFolder.Parent = ReplicatedStorage
 end
 
--- Create RemoteFunction if it doesn't exist
 local getAllItemsFunction = remoteEventsFolder:FindFirstChild("GetAllItemsFunction")
 if not getAllItemsFunction then
   getAllItemsFunction = Instance.new("RemoteFunction")
@@ -688,9 +599,7 @@ if not getAllItemsFunction then
   getAllItemsFunction.Parent = remoteEventsFolder
 end
 
--- Set up the function to return all items to clients
 getAllItemsFunction.OnServerInvoke = function(player)
-  -- Return a copy of all items
   local itemsCopy = {}
   for i, item in ipairs(ItemDatabase.Items) do
     itemsCopy[i] = {
@@ -709,7 +618,6 @@ getAllItemsFunction.OnServerInvoke = function(player)
   return itemsCopy
 end
 
--- Create RemoteFunction for getting item owners
 local getItemOwnersFunction = remoteEventsFolder:FindFirstChild("GetItemOwnersFunction")
 if not getItemOwnersFunction then
   getItemOwnersFunction = Instance.new("RemoteFunction")
@@ -717,7 +625,6 @@ if not getItemOwnersFunction then
   getItemOwnersFunction.Parent = remoteEventsFolder
 end
 
--- Set up the function to return item owners to clients
 getItemOwnersFunction.OnServerInvoke = function(player, robloxId)
   return ItemDatabase:GetSerialOwners(robloxId)
 end
