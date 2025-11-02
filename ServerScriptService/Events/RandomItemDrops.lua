@@ -191,10 +191,26 @@ local function createItemDrop(itemData, dropZone, onCollected)
   highlight.OutlineColor = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
   highlight.Parent = itemModel
   
-  -- Find or create a primary part for the model
-  local part = itemModel.PrimaryPart or itemModel:FindFirstChildWhichIsA("BasePart")
+  -- Find the main part for the model (different for different types)
+  local part
+  if itemModel:IsA("Accoutrement") or itemModel:IsA("Hat") then
+    -- Accessories and hats have a Handle part
+    part = itemModel:FindFirstChild("Handle")
+  elseif itemModel:IsA("Tool") then
+    -- Tools also have a Handle
+    part = itemModel:FindFirstChild("Handle")
+  elseif itemModel:IsA("Model") then
+    -- Models have PrimaryPart or we find the first BasePart
+    part = itemModel.PrimaryPart or itemModel:FindFirstChildWhichIsA("BasePart", true)
+  end
+  
+  -- Fallback: search for any BasePart if we still don't have one
   if not part then
-    -- If the loaded model has no parts, create one
+    part = itemModel:FindFirstChildWhichIsA("BasePart", true)
+  end
+  
+  -- Last resort: create a part if nothing exists
+  if not part then
     part = Instance.new("Part")
     part.Name = "ItemPart"
     part.Size = Vector3.new(3, 3, 3)
@@ -211,11 +227,6 @@ local function createItemDrop(itemData, dropZone, onCollected)
   proximityPrompt.RequiresLineOfSight = false
   proximityPrompt.Parent = part
   
-  -- Set primary part if not already set
-  if not itemModel.PrimaryPart then
-    itemModel.PrimaryPart = part
-  end
-  
   -- Spawn at dropzone
   local spawnPosition = dropZone.Position + Vector3.new(
     math.random(-dropZone.Size.X/2, dropZone.Size.X/2),
@@ -223,9 +234,17 @@ local function createItemDrop(itemData, dropZone, onCollected)
     math.random(-dropZone.Size.Z/2, dropZone.Size.Z/2)
   )
   
-  -- Parent first, then position using SetPrimaryPartCFrame
+  -- Parent to workspace first
   itemModel.Parent = workspace
-  itemModel:SetPrimaryPartCFrame(CFrame.new(spawnPosition))
+  
+  -- Position the model based on its type
+  if itemModel:IsA("Model") and itemModel.PrimaryPart then
+    -- Use SetPrimaryPartCFrame for models with PrimaryPart
+    itemModel:SetPrimaryPartCFrame(CFrame.new(spawnPosition))
+  else
+    -- For Accessories, Tools, or models without PrimaryPart, position the main part directly
+    part.CFrame = CFrame.new(spawnPosition)
+  end
   
   -- Add BodyVelocity for slow fall
   local bodyVelocity = Instance.new("BodyVelocity")
