@@ -220,6 +220,8 @@ if not getInventoryFunction then
 end
 
 getInventoryFunction.OnServerInvoke = function(player)
+  print("🔍 GetInventory called by: " .. player.Name .. " (UserId: " .. player.UserId .. ")")
+  
   local attempts = 0
   while not _G.PlayerData[player.UserId] and attempts < 10 do
     attempts = attempts + 1
@@ -239,6 +241,7 @@ getInventoryFunction.OnServerInvoke = function(player)
     return {}
   end
 
+  print("✅ Returning " .. #result .. " items to " .. player.Name)
   return result
 end
 

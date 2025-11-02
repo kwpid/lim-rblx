@@ -214,6 +214,7 @@ function DataStoreAPI:UpdateInventoryValue(player)
   if remoteEvents then
     local inventoryUpdatedEvent = remoteEvents:FindFirstChild("InventoryUpdatedEvent")
     if inventoryUpdatedEvent then
+      print("📢 Firing InventoryUpdatedEvent to: " .. player.Name .. " (UserId: " .. player.UserId .. ")")
       inventoryUpdatedEvent:FireClient(player)
     end
   end
