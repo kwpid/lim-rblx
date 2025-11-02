@@ -76,11 +76,17 @@ function ItemDatabase:LoadItems()
         print("✅ All items reset: 0 owners, 0 copies, 0 stock, empty owner lists")
 
         self.DataVersion = DATA_VERSION
-        self:SaveItems()
+        local saveResult = self:SaveItems()
+        if saveResult then
+          print("💾 Saved new DATA_VERSION to DataStore: " .. DATA_VERSION)
+        else
+          warn("❌ Failed to save new DATA_VERSION!")
+        end
       else
         self.DataVersion = DATA_VERSION
         if not savedVersion then
           print("ℹ️ No previous DATA_VERSION found - using current version: " .. DATA_VERSION)
+          self:SaveItems()
         end
       end
       for _, item in ipairs(self.Items) do
