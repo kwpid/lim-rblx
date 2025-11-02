@@ -275,8 +275,15 @@ function RandomItemDrops.Start(onEventEnd)
   -- Spawn items over time
   task.spawn(function()
     for i = 1, NUM_ITEMS_TO_DROP do
+      -- Get fresh rollable items (in case stock changed)
+      local currentRollableItems = ItemDatabase:GetRollableItems()
+      if #currentRollableItems == 0 then
+        warn("⚠️ No rollable items available, ending event early")
+        break
+      end
+      
       -- Pick random item (with event probability)
-      local randomItem = pickRandomEventItem(allItems)
+      local randomItem = pickRandomEventItem(currentRollableItems)
       if randomItem then
         -- Handle stock items
         local itemData = {
@@ -293,24 +300,31 @@ function RandomItemDrops.Start(onEventEnd)
             itemData.SerialNumber = serialNumber
             print("  📦 Dropping stock item: " .. itemData.Name .. " #" .. serialNumber)
           else
-            -- Stock sold out, pick a different item
+            -- Stock sold out, pick a different item from fresh rollable list
             print("  ⚠️ Stock sold out for " .. itemData.Name .. ", picking different item")
-            randomItem = pickRandomEventItem(allItems)
-            if randomItem then
-              itemData = {
-                RobloxId = randomItem.RobloxId,
-                Name = randomItem.Name,
-                Value = randomItem.Value,
-                Rarity = randomItem.Rarity or ItemRarityModule.GetRarity(randomItem.Value)
-              }
+            currentRollableItems = ItemDatabase:GetRollableItems()
+            if #currentRollableItems > 0 then
+              randomItem = pickRandomEventItem(currentRollableItems)
+              if randomItem then
+                itemData = {
+                  RobloxId = randomItem.RobloxId,
+                  Name = randomItem.Name,
+                  Value = randomItem.Value,
+                  Rarity = randomItem.Rarity or ItemRarityModule.GetRarity(randomItem.Value)
+                }
+              end
+            else
+              warn("⚠️ No rollable items left, skipping this drop")
+              randomItem = nil
             end
           end
         end
         
-        -- Create the item drop
-        createItemDrop(itemData, dropZone, handleItemCollection)
-        
-        print("  🎁 Dropped item " .. i .. "/" .. NUM_ITEMS_TO_DROP .. ": " .. itemData.Name)
+        -- Only create drop if we have a valid item
+        if randomItem then
+          createItemDrop(itemData, dropZone, handleItemCollection)
+          print("  🎁 Dropped item " .. i .. "/" .. NUM_ITEMS_TO_DROP .. ": " .. itemData.Name)
+        end
       else
         warn("⚠️ Failed to pick random item for event drop")
       end
