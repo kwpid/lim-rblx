@@ -472,15 +472,15 @@ function ItemDatabase:RecordSerialOwner(robloxId, userId, username, serialNumber
     item.SerialOwners = {}
   end
 
+  -- Check if this serial already has an owner (preserve original owner)
   for _, owner in ipairs(item.SerialOwners) do
     if owner.SerialNumber == serialNumber then
-      owner.UserId = userId
-      owner.Username = username
-      self:QueueSave()
+      -- Serial already has an owner, preserve it (don't update)
       return true
     end
   end
 
+  -- Serial doesn't have an owner yet, record this as the original owner
   table.insert(item.SerialOwners, {
     UserId = userId,
     SerialNumber = serialNumber,
