@@ -13,8 +13,9 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - **IMPROVED - Event Item Drops**: Enhanced the Random Item Drops event:
   - Dropped items now use actual Roblox item models (via InsertService) instead of placeholder parts
   - Fallback to colored neon parts with thumbnails if model loading fails
-  - Adjusted drop probability power from 0.5 to 0.2 for better balance (rare items still have increased chance but not extreme)
-  - Drop rates now follow a more reasonable curve - rare items are still special but not guaranteed
+  - Adjusted drop probability power to 0.17 for proper balance (10M item is ~5x more likely than 1k item, not extreme)
+  - Fixed item positioning using SetPrimaryPartCFrame to properly position loaded models
+  - Fixed event notifications - now properly shows EVENT_START and EVENT_END notifications to all players
 - **BUGFIX - Event System**: Fixed critical bugs and improved the event system:
   - Fixed RandomItemDrops event crash: `ItemDatabase.IsReady` is a boolean property, not a function
   - Fixed chat command admin verification: Now properly uses `AdminConfig:IsAdmin(player)` instead of passing just the UserId

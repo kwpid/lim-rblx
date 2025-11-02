@@ -6,10 +6,10 @@ local Players = game:GetService("Players")
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 
-local sendNotificationEvent = remoteEvents:FindFirstChild("SendNotificationEvent")
+local sendNotificationEvent = remoteEvents:FindFirstChild("CreateNotification")
 if not sendNotificationEvent then
   sendNotificationEvent = Instance.new("RemoteEvent")
-  sendNotificationEvent.Name = "SendNotificationEvent"
+  sendNotificationEvent.Name = "CreateNotification"
   sendNotificationEvent.Parent = remoteEvents
 end
 
@@ -60,10 +60,11 @@ function EventSystem:StartEvent(eventName)
   
   -- Notify all players about the event
   local eventInfo = eventModule.GetEventInfo()
-  sendNotificationEvent:FireAllClients("EVENT_START", {
+  sendNotificationEvent:FireAllClients({
+    Type = "EVENT_START",
     Title = eventInfo.Name,
     Body = eventInfo.Description,
-    Image = eventInfo.Image
+    ImageId = eventInfo.Image
   })
   
   -- Mark event as active
@@ -97,10 +98,11 @@ function EventSystem:EndEvent(eventName)
   self.ActiveEvents[eventName] = nil
   
   -- Notify all players that the event ended
-  sendNotificationEvent:FireAllClients("EVENT_END", {
+  sendNotificationEvent:FireAllClients({
+    Type = "EVENT_END",
     Title = "Event Ended",
     Body = eventName .. " has ended!",
-    Image = "rbxassetid://8150337440"
+    ImageId = "rbxassetid://8150337440"
   })
 end
 

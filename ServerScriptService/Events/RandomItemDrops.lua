@@ -23,9 +23,9 @@ local DROP_INTERVAL = EVENT_DURATION / NUM_ITEMS_TO_DROP
 -- Increased probability power for event drops (higher value = higher chance)
 -- For events, we use VALUE ^ POWER instead of 1/VALUE ^ POWER
 -- This makes higher-value items MORE likely to drop (opposite of normal rolling)
--- Power of 0.2 gives a gentle boost to rare items without making them too common
--- Normal rolling uses 1/(value^0.9), so events are still better but not extreme
-local EVENT_DROP_POWER = 0.2 -- Power to apply to item value
+-- Power of 0.17 makes a 10M item about 5x more likely than a 1k item
+-- Normal rolling uses 1/(value^0.9), so events give a modest boost to rare items
+local EVENT_DROP_POWER = 0.17 -- Power to apply to item value
 
 -- Chat notification
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
@@ -163,8 +163,10 @@ local function createItemDrop(itemData, dropZone, onCollected)
   proximityPrompt.RequiresLineOfSight = false
   proximityPrompt.Parent = part
   
-  -- Set primary part
-  itemModel.PrimaryPart = part
+  -- Set primary part if not already set
+  if not itemModel.PrimaryPart then
+    itemModel.PrimaryPart = part
+  end
   
   -- Spawn at dropzone
   local spawnPosition = dropZone.Position + Vector3.new(
@@ -172,8 +174,10 @@ local function createItemDrop(itemData, dropZone, onCollected)
     10,
     math.random(-dropZone.Size.Z/2, dropZone.Size.Z/2)
   )
-  part.Position = spawnPosition
+  
+  -- Parent first, then position using SetPrimaryPartCFrame
   itemModel.Parent = workspace
+  itemModel:SetPrimaryPartCFrame(CFrame.new(spawnPosition))
   
   -- Add BodyVelocity for slow fall
   local bodyVelocity = Instance.new("BodyVelocity")
