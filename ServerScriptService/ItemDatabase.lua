@@ -576,6 +576,33 @@ task.spawn(function()
   print(string.format("✅ ItemDatabase ready! Loaded %d items in %.2f seconds", #ItemDatabase.Items, loadTime))
 end)
 
+function ItemDatabase:ResetOwnershipData()
+  print("🔄 Resetting all ownership data (CurrentStock, Owners, SerialOwners)...")
+  
+  local resetCount = 0
+  for _, item in ipairs(self.Items) do
+    item.CurrentStock = 0
+    item.Owners = 0
+    item.TotalCopies = 0
+    item.SerialOwners = {}
+    resetCount = resetCount + 1
+  end
+  
+  local saveSuccess = self:SaveItems()
+  
+  if saveSuccess then
+    print(string.format("✅ Reset ownership data for %d items successfully!", resetCount))
+    return true, string.format("Reset ownership data for %d items", resetCount)
+  else
+    print("❌ Failed to save reset data")
+    return false, "Failed to save reset data"
+  end
+end
+
+_G.ResetOwnershipData = function()
+  return ItemDatabase:ResetOwnershipData()
+end
+
 game:BindToClose(function()
   print("🛑 Server shutdown - Force saving ItemDatabase...")
   ItemDatabase._saveQueued = false
