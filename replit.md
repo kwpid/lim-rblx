@@ -10,6 +10,9 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 2, 2025)
+- **QOL - Button UIStroke Colors**: AutoRoll and HideRolls buttons now have UIStroke colors that match their text colors:
+  - AutoRoll: Green stroke when ON, red stroke when OFF
+  - HideRolls: Bright red stroke when ON, dark red stroke when OFF
 - **NEW - Event Collection Notifications**: Players now receive a notification when they collect items from events:
   - Shows item name, rarity, and serial number (if the item is a stock item)
   - Notification color matches the item's rarity color

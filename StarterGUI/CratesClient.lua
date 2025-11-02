@@ -68,6 +68,11 @@ local function stopAutoRoll()
   autoRollButton.Text = "[AUTOROLL: OFF]"
   autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red when off
   
+  -- Update UIStroke color to match text
+  if autoRollButton:FindFirstChild("UIStroke") then
+    autoRollButton.UIStroke.Color = Color3.fromRGB(255, 0, 0)
+  end
+  
   -- Save AutoRoll state
   if setAutoRollEvent then
     setAutoRollEvent:FireServer(false)
@@ -79,6 +84,11 @@ local function startAutoRoll()
   shouldStopAutoRoll = false
   autoRollButton.Text = "[AUTOROLL: ON]"
   autoRollButton.TextColor3 = Color3.fromRGB(0, 255, 0) -- Green when on
+  
+  -- Update UIStroke color to match text
+  if autoRollButton:FindFirstChild("UIStroke") then
+    autoRollButton.UIStroke.Color = Color3.fromRGB(0, 255, 0)
+  end
   
   -- Save AutoRoll state
   if setAutoRollEvent then
@@ -152,6 +162,11 @@ autoRollButton.MouseButton1Click:Connect(function()
       autoRollButton.Text = "[AUTOROLL: OFF]"
       autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red when off
       
+      -- Update UIStroke color to match text
+      if autoRollButton:FindFirstChild("UIStroke") then
+        autoRollButton.UIStroke.Color = Color3.fromRGB(255, 0, 0)
+      end
+      
       -- Save state
       if setAutoRollEvent then
         setAutoRollEvent:FireServer(false)
@@ -172,10 +187,20 @@ hideRollsButton.MouseButton1Click:Connect(function()
     -- State is ON - rolls are hidden (brighter red)
     hideRollsButton.Text = "[HIDE ROLLS: ON]"
     hideRollsButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- Brighter red when on
+    
+    -- Update UIStroke color to match text
+    if hideRollsButton:FindFirstChild("UIStroke") then
+      hideRollsButton.UIStroke.Color = Color3.fromRGB(255, 0, 0)
+    end
   else
     -- State is OFF - rolls are shown (darker red, default state)
     hideRollsButton.Text = "[HIDE ROLLS: OFF]"
     hideRollsButton.TextColor3 = Color3.fromRGB(170, 0, 0) -- Darker red when off
+    
+    -- Update UIStroke color to match text
+    if hideRollsButton:FindFirstChild("UIStroke") then
+      hideRollsButton.UIStroke.Color = Color3.fromRGB(170, 0, 0)
+    end
   end
   
   -- Save HideRolls state to server
@@ -375,10 +400,16 @@ end)
 
 -- Initialize autoroll button color to red (off state)
 autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+if autoRollButton:FindFirstChild("UIStroke") then
+  autoRollButton.UIStroke.Color = Color3.fromRGB(255, 0, 0)
+end
 
 -- Initialize hide rolls button to off state (darker red)
 hideRollsButton.Text = "[HIDE ROLLS: OFF]"
 hideRollsButton.TextColor3 = Color3.fromRGB(170, 0, 0)
+if hideRollsButton:FindFirstChild("UIStroke") then
+  hideRollsButton.UIStroke.Color = Color3.fromRGB(170, 0, 0)
+end
 
 -- Handle chat notifications (server-wide and cross-server)
 local chatNotificationEvent = remoteEvents:WaitForChild("ChatNotificationEvent")
@@ -428,12 +459,24 @@ task.spawn(function()
       hideRollsEnabled = true
       hideRollsButton.Text = "[HIDE ROLLS: ON]"
       hideRollsButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+      
+      -- Update UIStroke color to match text
+      if hideRollsButton:FindFirstChild("UIStroke") then
+        hideRollsButton.UIStroke.Color = Color3.fromRGB(255, 0, 0)
+      end
+      
       print("✓ Restored HideRolls state: ON")
     else
       -- Default state (OFF - showing rolls)
       hideRollsEnabled = false
       hideRollsButton.Text = "[HIDE ROLLS: OFF]"
       hideRollsButton.TextColor3 = Color3.fromRGB(170, 0, 0)
+      
+      -- Update UIStroke color to match text
+      if hideRollsButton:FindFirstChild("UIStroke") then
+        hideRollsButton.UIStroke.Color = Color3.fromRGB(170, 0, 0)
+      end
+      
       print("✓ HideRolls state: OFF (default)")
     end
   end
