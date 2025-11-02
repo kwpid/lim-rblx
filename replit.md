@@ -10,6 +10,7 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 2, 2025)
+- **QOL - Event Status Display**: Added EventText to MainUI that displays when events are happening. Shows "[EventName] Ongoing!" when an event starts and hides when the event ends. Provides clear visual feedback that an event is active.
 - **CRITICAL FIX - Shared Inventory Bug**: Fixed critical bug where all players were seeing the same inventory. The issue was in `DataStoreManager:GetDefaultData()` which used `table.clone()` to create a shallow copy of DEFAULT_DATA. This meant the nested `Inventory` and `EquippedItems` arrays were shared references across all players who loaded default data. Now each player gets completely fresh arrays with their own independent data.
 
 ## Previous Changes
@@ -136,7 +137,7 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 -   `ReplicatedStorage/`: `ItemRarityModule.lua`, `NotificationPresets.lua`
 -   `ServerScriptService/`: `AdminConfig.lua`, `AdminItemHandler.lua`, `AntiAFKHandler.lua`, `AutoRollHandler.lua`, `ChatCommandHandler.lua`, `CratesServer.lua`, `DataStoreAPI.lua`, `DataStoreManager.lua`, `EquipSellHandler.lua`, `EventSystem.lua`, `ItemDatabase.lua`, `PlayerDataHandler.lua`, `ServerShutdownHandler.lua`, `WebhookHandler.lua`
 -   `ServerScriptService/Events/`: `RandomItemDrops.lua` (event modules are loaded automatically)
--   `StarterGUI/`: `AdminGUI.lua`, `CratesClient.lua`, `IndexLocal.lua`, `InventorySystem.lua`, `MainUIToggle.lua`, `NotificationHandler.lua`, `ViewPlayerInventory.lua`
+-   `StarterGUI/`: `AdminGUI.lua`, `CratesClient.lua`, `EventTextHandler.lua`, `IndexLocal.lua`, `InventorySystem.lua`, `MainUIToggle.lua`, `NotificationHandler.lua`, `ViewPlayerInventory.lua`
 
 ## External Dependencies
 -   **Roblox DataStore Service**: Persistent data storage for player data and global item database.
