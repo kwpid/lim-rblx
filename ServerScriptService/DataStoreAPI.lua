@@ -12,6 +12,7 @@ function DataStoreAPI:AddItem(player, itemData)
   if not data then return false end
 
   local isNewOwner = false
+  local amountToAdd = itemData.Amount or 1
 
   if itemData.SerialNumber then
     table.insert(data.Inventory, {
@@ -34,7 +35,7 @@ function DataStoreAPI:AddItem(player, itemData)
     local found = false
     for _, invItem in ipairs(data.Inventory) do
       if invItem.RobloxId == itemData.RobloxId and not invItem.SerialNumber then
-        invItem.Amount = (invItem.Amount or 1) + 1
+        invItem.Amount = (invItem.Amount or 1) + amountToAdd
         found = true
         break
       end
@@ -46,7 +47,7 @@ function DataStoreAPI:AddItem(player, itemData)
         Name = itemData.Name,
         Value = itemData.Value,
         Rarity = itemData.Rarity,
-        Amount = 1,
+        Amount = amountToAdd,
         ObtainedAt = os.time()
       })
       isNewOwner = true
@@ -64,7 +65,7 @@ function DataStoreAPI:AddItem(player, itemData)
   end
 
   if not itemData.SerialNumber then
-    ItemDatabase:IncrementTotalCopies(itemData.RobloxId, 1)
+    ItemDatabase:IncrementTotalCopies(itemData.RobloxId, amountToAdd)
   end
 
   return true
@@ -190,7 +191,7 @@ function DataStoreAPI:CalculateInventoryValue(player)
 
   local totalValue = 0
   for _, item in ipairs(data.Inventory) do
-    totalValue += (item.Value or 0) * (item.Amount or 1)
+    totalValue = totalValue + ((item.Value or 0) * (item.Amount or 1))
   end
   return totalValue
 end
