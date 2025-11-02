@@ -42,10 +42,12 @@ local openBtn = gui:WaitForChild("OpenSendTrades")
 local sendTradesFrame = gui:WaitForChild("SendTradesFrame")
 local tradeRequestFrame = gui:WaitForChild("TradeRequestFrame")
 local tradeFrame = gui:WaitForChild("TradeFrame")
+local tradeHistoryFrame = gui:WaitForChild("TradeHistoryFrame")
 
 sendTradesFrame.Visible = false
 tradeRequestFrame.Visible = false
 tradeFrame.Visible = false
+tradeHistoryFrame.Visible = false
 
 tradeRequestsFolder.ChildAdded:Connect(function(child)
         if child.Value == client.Name then
@@ -256,9 +258,38 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                 end
 
                 local clientOffer = child[clientValue.Value .. "'s offer"]
+                local otherPlrOffer = child[otherPlrValue.Value .. "'s offer"]
+                
+                local function updateYourValue()
+                        local totalValue = 0
+                        for _, offerItem in pairs(clientOffer:GetChildren()) do
+                                local value = offerItem:FindFirstChild("Value")
+                                local amount = offerItem:FindFirstChild("Amount")
+                                if value then
+                                        local multiplier = amount and amount.Value or 1
+                                        totalValue = totalValue + (value.Value * multiplier)
+                                end
+                        end
+                        tradeFrame.TradingFrame.YourOfferFrame.YourValue.Text = "Value: " .. tostring(totalValue)
+                end
+                
+                local function updateTheirValue()
+                        local totalValue = 0
+                        for _, offerItem in pairs(otherPlrOffer:GetChildren()) do
+                                local value = offerItem:FindFirstChild("Value")
+                                local amount = offerItem:FindFirstChild("Amount")
+                                if value then
+                                        local multiplier = amount and amount.Value or 1
+                                        totalValue = totalValue + (value.Value * multiplier)
+                                end
+                        end
+                        tradeFrame.TradingFrame.TheirOfferFrame.TheirValue.Text = "Value: " .. tostring(totalValue)
+                end
 
                 clientOffer.ChildAdded:Connect(function(slotChild)
                         task.wait()
+                        updateYourValue()
+                        
                         local robloxId = slotChild:FindFirstChild("RobloxId")
                         local serialNumber = slotChild:FindFirstChild("SerialNumber")
                         local amount = slotChild:FindFirstChild("Amount")
@@ -293,6 +324,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 if child.Name == "Amount" then
                                         task.wait(0.1)
                                         newToolButton.QtySerial.Text = "x" .. child.Value
+                                        updateYourValue()
                                 end
                         end)
 
@@ -305,22 +337,28 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         else
                                                 newToolButton:Destroy()
                                         end
+                                        updateYourValue()
                                 end
                         end)
 
                         slotChild:GetPropertyChangedSignal("Parent"):Connect(function()
                                 if slotChild.Parent == nil then
                                         newToolButton:Destroy()
+                                        updateYourValue()
                                 end
                         end)
 
                         newToolButton.Parent = tradeFrame.TradingFrame.YourOfferFrame.Slots
                 end)
-
-                local otherPlrOffer = child[otherPlrValue.Value .. "'s offer"]
+                
+                clientOffer.ChildRemoved:Connect(function()
+                        updateYourValue()
+                end)
 
                 otherPlrOffer.ChildAdded:Connect(function(slotChild)
                         task.wait()
+                        updateTheirValue()
+                        
                         local robloxId = slotChild:FindFirstChild("RobloxId")
                         local serialNumber = slotChild:FindFirstChild("SerialNumber")
                         local amount = slotChild:FindFirstChild("Amount")
@@ -348,6 +386,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 if child.Name == "Amount" then
                                         task.wait(0.1)
                                         newToolButton.QtySerial.Text = "x" .. child.Value
+                                        updateTheirValue()
                                 end
                         end)
 
@@ -360,16 +399,22 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         else
                                                 newToolButton:Destroy()
                                         end
+                                        updateTheirValue()
                                 end
                         end)
 
                         slotChild:GetPropertyChangedSignal("Parent"):Connect(function()
                                 if slotChild.Parent == nil then
                                         newToolButton:Destroy()
+                                        updateTheirValue()
                                 end
                         end)
 
                         newToolButton.Parent = tradeFrame.TradingFrame.TheirOfferFrame.Slots
+                end)
+                
+                otherPlrOffer.ChildRemoved:Connect(function()
+                        updateTheirValue()
                 end)
 
                 tradeFrame.Visible = true
@@ -432,5 +477,80 @@ tradeFrame.TradingFrame.AcceptButton.MouseButton1Click:Connect(function()
                 tradeFrame.TradingFrame.AcceptButton.BackgroundColor3 = Color3.fromRGB(40, 109, 152)
         else
                 tradeFrame.TradingFrame.AcceptButton.BackgroundColor3 = Color3.fromRGB(58, 191, 232)
+        end
+end)
+
+sendTradesFrame.OpenHistory.MouseButton1Click:Connect(function()
+        if tradeHistoryFrame.Visible then
+                tradeHistoryFrame.Visible = false
+        else
+                tradeEvent:FireServer("get trade history")
+                tradeHistoryFrame.Visible = true
+        end
+end)
+
+tradeHistoryFrame.CloseButton.MouseButton1Click:Connect(function()
+        tradeHistoryFrame.Visible = false
+end)
+
+tradeEvent.OnClientEvent:Connect(function(instruction, data)
+        if instruction == "load trade history" then
+                local scrollFrame = tradeHistoryFrame.Main.ScrollingFrame
+                
+                for _, child in pairs(scrollFrame:GetChildren()) do
+                        if child:IsA("Frame") then
+                                child:Destroy()
+                        end
+                end
+                
+                if not data or #data == 0 then
+                        return
+                end
+                
+                for _, historyEntry in ipairs(data) do
+                        local historyFrame = script.HistoryFrame:Clone()
+                        
+                        historyFrame.PlayerUser.Text = "@" .. historyEntry.OtherPlayer
+                        historyFrame.Data.Text = historyEntry.Date
+                        historyFrame.ForValue.Text = "+" .. tostring(historyEntry.ReceivedValue)
+                        historyFrame.GaveValue.Text = "-" .. tostring(historyEntry.GaveValue)
+                        
+                        local success, pfp = pcall(function()
+                                return game.Players:GetUserThumbnailAsync(historyEntry.OtherPlayerId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+                        end)
+                        if success then
+                                historyFrame.PlayerImage1.Image = pfp
+                        end
+                        
+                        for _, item in ipairs(historyEntry.ReceivedItems) do
+                                local itemBtn = script.ItemButton:Clone()
+                                itemBtn.ItemName.Text = item.Name
+                                itemBtn.ItemImage1.Image = getItemThumbnail(item.RobloxId)
+                                if item.SerialNumber then
+                                        itemBtn.QtySerial.Text = "#" .. item.SerialNumber
+                                elseif item.Amount and item.Amount > 1 then
+                                        itemBtn.QtySerial.Text = "x" .. item.Amount
+                                else
+                                        itemBtn.QtySerial.Text = ""
+                                end
+                                itemBtn.Parent = historyFrame.For
+                        end
+                        
+                        for _, item in ipairs(historyEntry.GaveItems) do
+                                local itemBtn = script.ItemButton:Clone()
+                                itemBtn.ItemName.Text = item.Name
+                                itemBtn.ItemImage1.Image = getItemThumbnail(item.RobloxId)
+                                if item.SerialNumber then
+                                        itemBtn.QtySerial.Text = "#" .. item.SerialNumber
+                                elseif item.Amount and item.Amount > 1 then
+                                        itemBtn.QtySerial.Text = "x" .. item.Amount
+                                else
+                                        itemBtn.QtySerial.Text = ""
+                                end
+                                itemBtn.Parent = historyFrame.Gave
+                        end
+                        
+                        historyFrame.Parent = scrollFrame
+                end
         end
 end)

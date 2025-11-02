@@ -14,6 +14,7 @@ local DEFAULT_DATA = {
   InvValue = 0,
   EquippedItems = {},
   AutoRoll = false,
+  TradeHistory = {},
   DataVersion = DATA_VERSION
 }
 
@@ -64,6 +65,7 @@ function DataStoreManager:LoadData(player)
   if not data.InvValue then data.InvValue = 0 end
   if not data.EquippedItems then data.EquippedItems = {} end
   if data.AutoRoll == nil then data.AutoRoll = false end
+  if not data.TradeHistory then data.TradeHistory = {} end
   if not data.DataVersion then data.DataVersion = DATA_VERSION end
 
   return data
@@ -77,6 +79,7 @@ function DataStoreManager:GetDefaultData()
     InvValue = 0,
     EquippedItems = {},
     AutoRoll = false,
+    TradeHistory = {},
     DataVersion = DATA_VERSION
   }
 end
@@ -94,11 +97,11 @@ function DataStoreManager:RemoveItemFromInventory(playerData, index)
 end
 
 function DataStoreManager:AddCash(playerData, amount)
-  playerData.Cash += amount
+  playerData.Cash = playerData.Cash + amount
 end
 
 function DataStoreManager:IncrementRolls(playerData)
-  playerData.Rolls += 1
+  playerData.Rolls = playerData.Rolls + 1
 end
 
 function DataStoreManager:SetInvValue(playerData, value)

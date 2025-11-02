@@ -463,6 +463,48 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
 
                                 DataStoreAPI:UpdateInventoryValue(senderPlr)
                                 DataStoreAPI:UpdateInventoryValue(receiverPlr)
+                                
+                                local senderGaveValue = 0
+                                for _, item in ipairs(senderItems) do
+                                        senderGaveValue = senderGaveValue + (item.Value * item.Amount)
+                                end
+                                
+                                local senderReceivedValue = 0
+                                for _, item in ipairs(receiverItems) do
+                                        senderReceivedValue = senderReceivedValue + (item.Value * item.Amount)
+                                end
+                                
+                                local receiverGaveValue = senderReceivedValue
+                                local receiverReceivedValue = senderGaveValue
+                                
+                                local timestamp = os.date("%m/%d/%Y %I:%M %p")
+                                
+                                table.insert(senderData.TradeHistory, 1, {
+                                        OtherPlayer = receiverPlr.Name,
+                                        OtherPlayerId = receiverPlr.UserId,
+                                        Date = timestamp,
+                                        GaveItems = senderItems,
+                                        ReceivedItems = receiverItems,
+                                        GaveValue = senderGaveValue,
+                                        ReceivedValue = senderReceivedValue
+                                })
+                                
+                                table.insert(receiverData.TradeHistory, 1, {
+                                        OtherPlayer = senderPlr.Name,
+                                        OtherPlayerId = senderPlr.UserId,
+                                        Date = timestamp,
+                                        GaveItems = receiverItems,
+                                        ReceivedItems = senderItems,
+                                        GaveValue = receiverGaveValue,
+                                        ReceivedValue = receiverReceivedValue
+                                })
+                                
+                                if #senderData.TradeHistory > 50 then
+                                        table.remove(senderData.TradeHistory)
+                                end
+                                if #receiverData.TradeHistory > 50 then
+                                        table.remove(receiverData.TradeHistory)
+                                end
 
                                 currentTrade:Destroy()
                         end
@@ -474,6 +516,14 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 trade:Destroy()
                                 break
                         end
+                end
+        
+        elseif instruction == "get trade history" then
+                local playerData = _G.PlayerData[plr.UserId]
+                if playerData and playerData.TradeHistory then
+                        tradeEvent:FireClient(plr, "load trade history", playerData.TradeHistory)
+                else
+                        tradeEvent:FireClient(plr, "load trade history", {})
                 end
         end
 end)
