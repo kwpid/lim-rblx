@@ -4,7 +4,7 @@
 This project is a Roblox crate opening/unboxing game designed to provide an engaging unboxing experience. Players can open virtual crates to acquire items of varying rarities and values, managed by a weighted probability system. Key features include a player-to-player trading system, comprehensive admin tools for item management, robust data persistence, an interactive inventory, Discord webhook notifications, and the ability to equip virtual goods. The project aims to offer a feature-rich and dynamic virtual economy within Roblox.
 
 ## Recent Changes
-- **2025-11-02**: Updated trade system UI to improve item display in trade offers. Item images now correctly use Roblox asset IDs. Added quantity labels on the top right corner of item buttons showing "xN" for stackable items. Items in the trade can be clicked to remove them. Serial items show their serial number in the item name without quantity labels.
+- **2025-11-02**: Updated trade system UI to fix image display and quantity/serial numbering. Item images now correctly reference ItemImage1 element. Trade offers use QtySerial text to display "xN" for stackable items or "#N" for serial items. Items in the trade can be clicked to remove them. Item names show cleanly without embedded quantity/serial text.
 - **2025-11-02**: Fixed critical race condition in trading system where TradeClient would hang indefinitely if it loaded before TradeServer created required folders. Added 30-second timeouts to all WaitForChild calls and comprehensive debug logging to both TradeServer and TradeClient for easier diagnosis.
 
 ## User Preferences
@@ -39,7 +39,7 @@ This project is a Roblox crate opening/unboxing game designed to provide an enga
 -   Inventory and Index popups use smooth slide-in/out animations and clear selection states.
 -   AutoRoll and HideRolls buttons have UIStroke colors indicating their state.
 -   Event status is displayed in the MainUI.
--   Trade offers display item images using Roblox asset IDs with quantity labels on the top right corner for stackable items.
+-   Trade offers display item images using ItemImage1 element with QtySerial text showing "xN" for quantities or "#N" for serial numbers.
 
 ### Technical Implementations
 -   `RemoteEvents` and `RemoteFunctions` for client-server communication.
