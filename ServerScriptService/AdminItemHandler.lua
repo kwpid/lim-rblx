@@ -596,3 +596,30 @@ _G.CheckPlayerLuck = function(username)
   end
 end
 
+_G.StartEvent = function(eventName)
+  if not eventName then
+    print("❌ Usage: StartEvent(\"eventName\")")
+    print("   Example: StartEvent(\"RandomItemDrops\")")
+    print("")
+    print("📋 Available Events:")
+    print("   - RandomItemDrops")
+    return
+  end
+
+  local EventSystem = require(script.Parent.EventSystem)
+  local success = EventSystem:StartEvent(eventName)
+
+  if success then
+    print("╔═══════════════════════════════════════╗")
+    print("║      EVENT STARTED                    ║")
+    print("╚═══════════════════════════════════════╝")
+    print("  Event: " .. eventName)
+    print("")
+    print("🎉 " .. eventName .. " event is now running!")
+  else
+    print("❌ Failed to start event: " .. eventName)
+    print("   Make sure the event name is correct.")
+    print("   Available events: RandomItemDrops")
+  end
+end
+

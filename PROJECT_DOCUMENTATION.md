@@ -65,6 +65,7 @@ Items are automatically assigned rarity based on their value:
   - `SetPlayerLuck(username, multiplier)` - Set a specific player's luck multiplier (e.g., `SetPlayerLuck("2kwpid", 300)` for 300x luck)
   - `ResetPlayerLuck(username)` - Reset a player's luck multiplier to 1.0 (default/normal)
   - `CheckPlayerLuck(username)` - View a player's current luck multiplier
+  - `StartEvent(eventName)` - Manually start a random event (e.g., `StartEvent("RandomItemDrops")`)
 
 ### 6. Data Persistence (DataStore)
 - **Player Data Saved:**
