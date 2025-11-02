@@ -64,31 +64,12 @@ function ItemDatabase:LoadItems()
 
       self.Items = items
 
+      -- Just update version, don't auto-reset data
       if savedVersion and savedVersion ~= DATA_VERSION then
-        print("🔄 DATA_VERSION changed from " .. tostring(savedVersion) .. " to " .. DATA_VERSION)
-        print("🔄 Resetting all ownership data to fresh state...")
-        for _, item in ipairs(self.Items) do
-          item.CurrentStock = 0
-          item.Owners = 0
-          item.TotalCopies = 0
-          item.SerialOwners = {}
-        end
-        print("✅ All items reset: 0 owners, 0 copies, 0 stock, empty owner lists")
-
-        self.DataVersion = DATA_VERSION
-        local saveResult = self:SaveItems()
-        if saveResult then
-          print("💾 Saved new DATA_VERSION to DataStore: " .. DATA_VERSION)
-        else
-          warn("❌ Failed to save new DATA_VERSION!")
-        end
-      else
-        self.DataVersion = DATA_VERSION
-        if not savedVersion then
-          print("ℹ️ No previous DATA_VERSION found - using current version: " .. DATA_VERSION)
-          self:SaveItems()
-        end
+        print("ℹ️ DATA_VERSION updated from " .. tostring(savedVersion) .. " to " .. DATA_VERSION .. " (no reset)")
       end
+      
+      self.DataVersion = DATA_VERSION
       for _, item in ipairs(self.Items) do
         if item.Stock == nil then
           item.Stock = 0

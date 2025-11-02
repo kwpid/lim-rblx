@@ -11,7 +11,7 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 
 ## Recent Changes (November 2, 2025)
 - **NEW - Reset Ownership Data Command**: Added console command `ResetOwnershipData()` that clears all ownership data (CurrentStock, Owners, TotalCopies, SerialOwners) while preserving all items. This allows you to do a fresh reset without changing DATA_VERSION or deleting items. The command automatically refreshes the Index UI for all players after reset.
-- **BUGFIX - Complete Data Reset on Version Change**: When DATA_VERSION changes, all ownership data is now completely reset: CurrentStock = 0, Owners = 0, TotalCopies = 0, SerialOwners = {} (empty). This gives a completely fresh slate for testing while preserving all item definitions.
+- **CHANGED - Manual Reset Only**: Removed automatic data reset on version change. Use the `ResetOwnershipData()` console command when you want to manually reset ownership data. Version changes now just update the version number without affecting data.
 - **QOL - Button UIStroke Colors**: AutoRoll and HideRolls buttons now have UIStroke colors that match their text colors:
   - AutoRoll: Green stroke when ON, red stroke when OFF
   - HideRolls: Bright red stroke when ON, dark red stroke when OFF
