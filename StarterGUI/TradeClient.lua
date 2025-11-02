@@ -43,11 +43,13 @@ local sendTradesFrame = gui:WaitForChild("SendTradesFrame")
 local tradeRequestFrame = gui:WaitForChild("TradeRequestFrame")
 local tradeFrame = gui:WaitForChild("TradeFrame")
 local tradeHistoryFrame = gui:WaitForChild("TradeHistoryFrame")
+local viewInventoryFrame = gui:WaitForChild("ViewInventoryFrame")
 
 sendTradesFrame.Visible = false
 tradeRequestFrame.Visible = false
 tradeFrame.Visible = false
 tradeHistoryFrame.Visible = false
+viewInventoryFrame.Visible = false
 
 tradeRequestsFolder.ChildAdded:Connect(function(child)
         if child.Value == client.Name then
@@ -82,7 +84,114 @@ local function getItemThumbnail(robloxId)
         end
 end
 
+local rarityColors = {
+        ["Common"] = Color3.fromRGB(170, 170, 170),
+        ["Uncommon"] = Color3.fromRGB(85, 170, 85),
+        ["Rare"] = Color3.fromRGB(85, 85, 255),
+        ["Ultra Rare"] = Color3.fromRGB(170, 85, 255),
+        ["Epic"] = Color3.fromRGB(255, 170, 0),
+        ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
+        ["Mythic"] = Color3.fromRGB(255, 0, 0),
+        ["Insane"] = Color3.fromRGB(255, 0, 255)
+}
+
+local function formatNumber(n)
+        local formatted = tostring(n)
+        while true do
+                formatted, k = formatted:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
+                if k == 0 then break end
+        end
+        return formatted
+end
+
 local currentInventoryButtons = {}
+local viewInventoryButtons = {}
+
+local function populateViewInventory(targetPlayer)
+        local sample = viewInventoryFrame:FindFirstChild("Sample")
+        local handler = viewInventoryFrame:FindFirstChild("Handler")
+        local title = viewInventoryFrame:FindFirstChild("Title")
+        
+        if not sample or not handler then
+                warn("❌ TradeClient: ViewInventoryFrame missing required elements")
+                return
+        end
+        
+        if title then
+                title.Text = targetPlayer.Name .. "'s Inventory"
+        end
+        
+        for _, btn in pairs(viewInventoryButtons) do
+                if btn then
+                        btn:Destroy()
+                end
+        end
+        viewInventoryButtons = {}
+        
+        local getPlayerInventoryFunction = remoteEvents:FindFirstChild("GetPlayerInventoryFunction")
+        if not getPlayerInventoryFunction then
+                warn("❌ TradeClient: GetPlayerInventoryFunction not found")
+                return
+        end
+        
+        local success, response = pcall(function()
+                return getPlayerInventoryFunction:InvokeServer(targetPlayer.UserId)
+        end)
+        
+        if not success or not response or type(response) ~= "table" or not response.success then
+                warn("❌ TradeClient: Failed to get inventory for", targetPlayer.Name)
+                viewInventoryFrame.Visible = false
+                return
+        end
+        
+        local inventory = response.inventory
+        
+        table.sort(inventory, function(a, b)
+                return a.Value > b.Value
+        end)
+        
+        for i, item in ipairs(inventory) do
+                local button = sample:Clone()
+                button.Name = item.Name or "Item_" .. i
+                button.LayoutOrder = i
+                button.Visible = true
+                button.Parent = handler
+                
+                local itemImage = button:FindFirstChild("ItemImage1")
+                if itemImage then
+                        itemImage.Image = getItemThumbnail(item.RobloxId)
+                end
+                
+                local itemName = button:FindFirstChild("ItemName")
+                if itemName then
+                        local displayName = item.Name
+                        if #displayName > 20 then
+                                displayName = string.sub(displayName, 1, 17) .. "..."
+                        end
+                        itemName.Text = displayName
+                end
+                
+                local qtySerial = button:FindFirstChild("QtySerial")
+                if qtySerial then
+                        if item.SerialNumber then
+                                qtySerial.Text = "#" .. item.SerialNumber
+                        elseif item.Amount then
+                                qtySerial.Text = item.Amount .. "x"
+                        else
+                                qtySerial.Text = "1x"
+                        end
+                end
+                
+                local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+                if button:IsA("ImageButton") or button:IsA("TextButton") then
+                        button.BorderColor3 = rarityColor
+                end
+                
+                table.insert(viewInventoryButtons, button)
+        end
+        
+        viewInventoryFrame.Visible = true
+end
 
 ongoingTradesFolder.ChildAdded:Connect(function(child)
         if child:WaitForChild("Sender").Value == client.Name or child:WaitForChild("Receiver").Value == client.Name then
@@ -329,6 +438,11 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 newToolButton.QtySerial.Text = "#" .. serialNumber.Value
                         elseif amount then
                                 newToolButton.QtySerial.Text = "x" .. amount.Value
+                                
+                                amount:GetPropertyChangedSignal("Value"):Connect(function()
+                                        newToolButton.QtySerial.Text = "x" .. amount.Value
+                                        updateYourValue()
+                                end)
                         else
                                 newToolButton.QtySerial.Text = ""
                         end
@@ -346,6 +460,11 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         task.wait(0.1)
                                         newToolButton.QtySerial.Text = "x" .. child.Value
                                         updateYourValue()
+                                        
+                                        child:GetPropertyChangedSignal("Value"):Connect(function()
+                                                newToolButton.QtySerial.Text = "x" .. child.Value
+                                                updateYourValue()
+                                        end)
                                 end
                         end)
 
@@ -421,6 +540,11 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 newToolButton.QtySerial.Text = "#" .. serialNumber.Value
                         elseif amount then
                                 newToolButton.QtySerial.Text = "x" .. amount.Value
+                                
+                                amount:GetPropertyChangedSignal("Value"):Connect(function()
+                                        newToolButton.QtySerial.Text = "x" .. amount.Value
+                                        updateTheirValue()
+                                end)
                         else
                                 newToolButton.QtySerial.Text = ""
                         end
@@ -430,6 +554,11 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         task.wait(0.1)
                                         newToolButton.QtySerial.Text = "x" .. child.Value
                                         updateTheirValue()
+                                        
+                                        child:GetPropertyChangedSignal("Value"):Connect(function()
+                                                newToolButton.QtySerial.Text = "x" .. child.Value
+                                                updateTheirValue()
+                                        end)
                                 end
                         end)
 
@@ -488,6 +617,13 @@ openBtn.MouseButton1Click:Connect(function()
                                                 tradeEvent:FireServer("send trade request", { plr })
                                         end
                                 end)
+                                
+                                local viewInvBtn = playerFrame:FindFirstChild("ViewInventory")
+                                if viewInvBtn then
+                                        viewInvBtn.MouseButton1Click:Connect(function()
+                                                populateViewInventory(plr)
+                                        end)
+                                end
 
                                 playerFrame.Parent = sendTradesFrame.PlayerList
                         end
@@ -535,6 +671,20 @@ end)
 tradeHistoryFrame.CloseButton.MouseButton1Click:Connect(function()
         tradeHistoryFrame.Visible = false
 end)
+
+local viewInvCloseBtn = viewInventoryFrame:FindFirstChild("Close")
+if viewInvCloseBtn then
+        viewInvCloseBtn.MouseButton1Click:Connect(function()
+                viewInventoryFrame.Visible = false
+                
+                for _, btn in pairs(viewInventoryButtons) do
+                        if btn then
+                                btn:Destroy()
+                        end
+                end
+                viewInventoryButtons = {}
+        end)
+end
 
 tradeEvent.OnClientEvent:Connect(function(instruction, data)
         if instruction == "load trade history" then

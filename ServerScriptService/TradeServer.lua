@@ -570,6 +570,17 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
         elseif instruction == "reject trade" then
                 for _, trade in pairs(ongoingTradesFolder:GetChildren()) do
                         if trade.Sender.Value == plr.Name or trade.Receiver.Value == plr.Name then
+                                local otherPlayerName = trade.Sender.Value == plr.Name and trade.Receiver.Value or trade.Sender.Value
+                                local otherPlayer = Players:FindFirstChild(otherPlayerName)
+                                
+                                if createNotificationEvent and otherPlayer then
+                                        createNotificationEvent:FireClient(otherPlayer, {
+                                                Type = "ERROR",
+                                                Title = "Trade Cancelled",
+                                                Body = plr.Name .. " cancelled the trade."
+                                        })
+                                end
+                                
                                 trade:Destroy()
                                 break
                         end
