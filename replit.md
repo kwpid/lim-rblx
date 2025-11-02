@@ -10,6 +10,20 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 2, 2025)
+- **NEW - Trading System**: Implemented player-to-player trading that integrates with the current inventory data system:
+  - Players can send trade requests to other players in the same server
+  - **Stacked Items**: Regular items stack in trade inventory - clicking adds +1 to the trade, multiple clicks add more until max amount reached
+  - **Serial Items**: Stock/serial items are displayed separately with their unique serial numbers (#1, #2, etc.)
+  - **Left Click**: Add item to trade (for serial items, toggles add/remove; for stacked items, adds +1)
+  - **Right Click**: Remove stacked items from trade (-1 at a time)
+  - **Max Trade Slots**: 8 items per player per trade
+  - **Accept/Reject**: Both players must accept before trade completes (0.5 second confirmation delay)
+  - **Serial Number Preservation**: Serial numbers transfer correctly with no data loss - original ownership tracking maintained
+  - **Inventory Integration**: Uses DataStoreAPI for all item transfers, ensuring proper inventory value updates and owner tracking
+  - **Trade Cancellation**: Trades auto-cancel if either player dies or leaves the server
+  - **Acceptance Reset**: Any change to trade offer resets both players' acceptance states
+  - **UI Structure**: TradeFrame contains InventoryFrame (player's items), YourOfferFrame (your trade offer), TheirOfferFrame (other player's offer)
+  - Viewports will be changed to ImageLabels (paths/names remain the same)
 - **NEW - Three-Tier Luck System**: Completely separate luck multipliers for different rarity tiers:
   - **Regular Luck**: Affects Epic+ items (250k+ Robux) - for normal gameplay
   - **Mythic Luck**: Affects ONLY Mythic items (2.5M-9.9M Robux) - admin-only for testing
@@ -131,6 +145,7 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 -   **Equipping Items**: Players can equip/unequip items (accessories, hats, tools) which persist across sessions and are visible to other players. Headless items are handled by setting head transparency. Tools are placed in the player's Backpack.
 -   **Selling Items**: Players can sell regular items for 80% of their value with confirmation. Stock items cannot be sold.
 -   **Index System**: Displays all game items with details, owner lists for stock items (with serial numbers), and refresh capabilities. Includes roll percentage display with smart decimal handling. RareText shows for items with 25 copies or less. LimText shows for Limited items.
+-   **Trading System**: Player-to-player trading system fully integrated with inventory data. Players send trade requests, add items to trade offers (stacked items click to add +1, serial items toggle), both players must accept, then items transfer using DataStoreAPI. Serial numbers and ownership tracking preserved. Trades cancel on death/leave. Max 8 items per player per trade. 0.5s confirmation delay before completion.
 -   **Halloween Event Luck System**: A temporary luck system affecting Epic+ rarity items (value 250k+). Player Luck attribute and a Global Luck Modifier combine. Luck > 1.0 performs multiple rolls and picks the highest value Epic+ item; Luck < 1.0 picks the lowest. Maximum 10 rolls for performance.
 
 ### UI/UX Decisions
@@ -155,10 +170,10 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 -   Equipping accessories uses `Humanoid:AddAccessory()`.
 
 ### File Structure (Key Directories)
--   `ReplicatedStorage/`: `ItemRarityModule.lua`, `NotificationPresets.lua`
--   `ServerScriptService/`: `AdminConfig.lua`, `AdminItemHandler.lua`, `AntiAFKHandler.lua`, `AutoRollHandler.lua`, `ChatCommandHandler.lua`, `CratesServer.lua`, `DataStoreAPI.lua`, `DataStoreManager.lua`, `EquipSellHandler.lua`, `EventSystem.lua`, `ItemDatabase.lua`, `PlayerDataHandler.lua`, `ServerShutdownHandler.lua`, `WebhookHandler.lua`
+-   `ReplicatedStorage/`: `ItemRarityModule.lua`, `NotificationPresets.lua`, `TradeConfiguration.lua`
+-   `ServerScriptService/`: `AdminConfig.lua`, `AdminItemHandler.lua`, `AntiAFKHandler.lua`, `AutoRollHandler.lua`, `ChatCommandHandler.lua`, `CratesServer.lua`, `DataStoreAPI.lua`, `DataStoreManager.lua`, `EquipSellHandler.lua`, `EventSystem.lua`, `ItemDatabase.lua`, `PlayerDataHandler.lua`, `ServerShutdownHandler.lua`, `TradeServer.lua`, `WebhookHandler.lua`
 -   `ServerScriptService/Events/`: `RandomItemDrops.lua` (event modules are loaded automatically)
--   `StarterGUI/`: `AdminGUI.lua`, `CratesClient.lua`, `EventTextHandler.lua`, `IndexLocal.lua`, `InventorySystem.lua`, `MainUIToggle.lua`, `NotificationHandler.lua`, `ViewPlayerInventory.lua`
+-   `StarterGUI/`: `AdminGUI.lua`, `CratesClient.lua`, `EventTextHandler.lua`, `IndexLocal.lua`, `InventorySystem.lua`, `MainUIToggle.lua`, `NotificationHandler.lua`, `TradeClient.lua`, `ViewPlayerInventory.lua`
 
 ## External Dependencies
 -   **Roblox DataStore Service**: Persistent data storage for player data and global item database.
