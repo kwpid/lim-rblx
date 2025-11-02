@@ -98,6 +98,49 @@ function findItemInInventory(player, robloxId, serialNumber)
         return nil, nil
 end
 
+function unequipItemFromCharacter(player, robloxId)
+        local character = player.Character
+        if not character then
+                return
+        end
+
+        local head = character:FindFirstChild("Head")
+        if head then
+                local headlessId = head:FindFirstChild("HeadlessRobloxId")
+                if headlessId and headlessId.Value == robloxId then
+                        head.Transparency = 0
+                        
+                        local face = head:FindFirstChildOfClass("Decal")
+                        if face then
+                                face.Transparency = 0
+                        end
+                        
+                        headlessId:Destroy()
+                end
+        end
+        
+        for _, child in ipairs(character:GetChildren()) do
+                if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
+                        local storedId = child:FindFirstChild("OriginalRobloxId")
+                        if storedId and storedId.Value == robloxId then
+                                child:Destroy()
+                        end
+                end
+        end
+        
+        local backpack = player:FindFirstChild("Backpack")
+        if backpack then
+                for _, child in ipairs(backpack:GetChildren()) do
+                        if child:IsA("Tool") then
+                                local storedId = child:FindFirstChild("OriginalRobloxId")
+                                if storedId and storedId.Value == robloxId then
+                                        child:Destroy()
+                                end
+                        end
+                end
+        end
+end
+
 print("✅ TradeServer: Event listener connected and ready")
 
 tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
@@ -475,6 +518,15 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                                 table.remove(senderData.Inventory, inventoryIndex)
                                                         end
                                                 end
+                                                
+                                                if senderData.EquippedItems then
+                                                        for i = #senderData.EquippedItems, 1, -1 do
+                                                                if senderData.EquippedItems[i] == item.RobloxId then
+                                                                        table.remove(senderData.EquippedItems, i)
+                                                                        unequipItemFromCharacter(senderPlr, item.RobloxId)
+                                                                end
+                                                        end
+                                                end
                                         end
                                 end
 
@@ -488,6 +540,15 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                                 inventoryItem.Amount = inventoryItem.Amount - item.Amount
                                                         else
                                                                 table.remove(receiverData.Inventory, inventoryIndex)
+                                                        end
+                                                end
+                                                
+                                                if receiverData.EquippedItems then
+                                                        for i = #receiverData.EquippedItems, 1, -1 do
+                                                                if receiverData.EquippedItems[i] == item.RobloxId then
+                                                                        table.remove(receiverData.EquippedItems, i)
+                                                                        unequipItemFromCharacter(receiverPlr, item.RobloxId)
+                                                                end
                                                         end
                                                 end
                                         end
