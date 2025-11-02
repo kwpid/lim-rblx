@@ -11,6 +11,7 @@ local ItemDatabase = require(script.Parent.ItemDatabase)
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
 local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
 local WebhookHandler = require(script.Parent.WebhookHandler)
+local EventSystem = require(script.Parent.EventSystem)
 
 -- Create RemoteEvents if they don't exist
 local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
