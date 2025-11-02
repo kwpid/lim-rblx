@@ -10,6 +10,11 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 2, 2025)
+- **IMPROVED - Event Item Drops**: Enhanced the Random Item Drops event:
+  - Dropped items now use actual Roblox item models (via InsertService) instead of placeholder parts
+  - Fallback to colored neon parts with thumbnails if model loading fails
+  - Adjusted drop probability power from 0.5 to 0.2 for better balance (rare items still have increased chance but not extreme)
+  - Drop rates now follow a more reasonable curve - rare items are still special but not guaranteed
 - **BUGFIX - Event System**: Fixed critical bugs and improved the event system:
   - Fixed RandomItemDrops event crash: `ItemDatabase.IsReady` is a boolean property, not a function
   - Fixed chat command admin verification: Now properly uses `AdminConfig:IsAdmin(player)` instead of passing just the UserId
@@ -77,7 +82,7 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 ### Core Game Systems
 -   **Item System**: Supports regular and limited stock items with up to 8 rarity tiers. Weighted probability governs item drops. Items can be marked as "Limited" which displays special LimText indicator.
 -   **Crate Opening**: Features weighted random selection, visual scrolling animation with rarity-colored item names, and serial number display for stock items. Includes "Fast Roll" for gamepass owners and "AutoRoll" and "HideRolls" toggles with persistence. High-value unboxes trigger chat notifications (server-wide and cross-server global).
--   **Event System**: Random events spawn every 5-10 minutes with modular event modules. Includes Random Item Drops event where items fall from the sky with proximity prompts for collection. Events use increased probability for rare items (opposite of normal rolling). Admins can manually spawn events with `/spawn event_[event_name]` chat command.
+-   **Event System**: Random events spawn every 5-10 minutes with modular event modules. Includes Random Item Drops event where actual Roblox item models (or fallback visuals) fall from the sky with proximity prompts for collection. Events use increased probability for rare items (value^0.2 weighting instead of normal rolling's 1/value^0.9). Admins can manually spawn events with `/spawn event_[event_name]` chat command.
 -   **Admin Tools**: Whitelisted admin GUI for creating, editing, giving, and deleting items with live previews, auto-fill for item names, and confirmation dialogs. Edit mode auto-detects existing items when pasting item IDs. Includes global "New Item" and "Item Updated" notifications. LimitedToggle button allows marking items as Limited (green = ON, red = OFF). Admins can use `/spawn event_[event_name]` to manually trigger events.
 -   **Data Persistence**: Uses Roblox DataStore Service for player inventories (with auto-stacking), rolls, cash, inventory value, AutoRoll state, HideRolls state, and Luck multiplier. Features auto-save, data versioning, and automatic cleanup of deleted items.
 -   **Anti-AFK System**: Automatically rejoins players every 15 minutes to prevent AFK disconnection. Perfect for overnight AutoRoll farming sessions.

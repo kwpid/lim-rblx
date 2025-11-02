@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local ProximityPromptService = game:GetService("ProximityPromptService")
+local InsertService = game:GetService("InsertService")
 
 local ItemDatabase = require(script.Parent.Parent.ItemDatabase)
 local DataStoreAPI = require(script.Parent.Parent.DataStoreAPI)
@@ -22,7 +23,9 @@ local DROP_INTERVAL = EVENT_DURATION / NUM_ITEMS_TO_DROP
 -- Increased probability power for event drops (higher value = higher chance)
 -- For events, we use VALUE ^ POWER instead of 1/VALUE ^ POWER
 -- This makes higher-value items MORE likely to drop (opposite of normal rolling)
-local EVENT_DROP_POWER = 0.5 -- Power to apply to item value
+-- Power of 0.2 gives a gentle boost to rare items without making them too common
+-- Normal rolling uses 1/(value^0.9), so events are still better but not extreme
+local EVENT_DROP_POWER = 0.2 -- Power to apply to item value
 
 -- Chat notification
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
@@ -86,42 +89,71 @@ end
 
 -- Create a physical item drop
 local function createItemDrop(itemData, dropZone, onCollected)
-  -- Create the item model
-  local itemModel = Instance.new("Model")
-  itemModel.Name = "DroppedItem_" .. itemData.Name
+  -- Try to load the actual Roblox item model
+  local itemModel
+  local success, result = pcall(function()
+    return InsertService:LoadAsset(itemData.RobloxId)
+  end)
   
-  -- Create main part
-  local part = Instance.new("Part")
-  part.Name = "ItemPart"
-  part.Size = Vector3.new(3, 3, 3)
-  part.Anchored = false
-  part.CanCollide = true
-  part.Material = Enum.Material.Neon
+  if success and result then
+    itemModel = result:GetChildren()[1]
+    if itemModel then
+      itemModel.Name = "DroppedItem_" .. itemData.Name
+      itemModel:Clone() -- Clone to detach from the asset container
+      result:Destroy() -- Clean up the asset container
+    end
+  end
   
-  -- Set color based on rarity
-  local rarityColors = {
-    ["Common"] = Color3.fromRGB(170, 170, 170),
-    ["Uncommon"] = Color3.fromRGB(85, 170, 85),
-    ["Rare"] = Color3.fromRGB(85, 85, 255),
-    ["Ultra Rare"] = Color3.fromRGB(170, 85, 255),
-    ["Epic"] = Color3.fromRGB(255, 170, 0),
-    ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
-    ["Mythic"] = Color3.fromRGB(255, 0, 0),
-    ["Insane"] = Color3.fromRGB(255, 0, 255)
-  }
-  part.Color = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
-  part.Parent = itemModel
+  -- Fallback: Create a simple visual if loading fails
+  if not itemModel or not itemModel:IsA("Model") then
+    warn("⚠️ Failed to load item model for " .. itemData.Name .. ", using fallback visual")
+    itemModel = Instance.new("Model")
+    itemModel.Name = "DroppedItem_" .. itemData.Name
+    
+    local part = Instance.new("Part")
+    part.Name = "ItemPart"
+    part.Size = Vector3.new(3, 3, 3)
+    part.Anchored = false
+    part.CanCollide = true
+    part.Material = Enum.Material.Neon
+    
+    -- Set color based on rarity
+    local rarityColors = {
+      ["Common"] = Color3.fromRGB(170, 170, 170),
+      ["Uncommon"] = Color3.fromRGB(85, 170, 85),
+      ["Rare"] = Color3.fromRGB(85, 85, 255),
+      ["Ultra Rare"] = Color3.fromRGB(170, 85, 255),
+      ["Epic"] = Color3.fromRGB(255, 170, 0),
+      ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
+      ["Mythic"] = Color3.fromRGB(255, 0, 0),
+      ["Insane"] = Color3.fromRGB(255, 0, 255)
+    }
+    part.Color = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
+    part.Parent = itemModel
+    
+    -- Add mesh/texture to show item
+    local surfaceGui = Instance.new("SurfaceGui")
+    surfaceGui.Face = Enum.NormalId.Top
+    surfaceGui.Parent = part
+    
+    local imageLabel = Instance.new("ImageLabel")
+    imageLabel.Size = UDim2.new(1, 0, 1, 0)
+    imageLabel.BackgroundTransparency = 1
+    imageLabel.Image = "rbxthumb://type=Asset&id=" .. itemData.RobloxId .. "&w=150&h=150"
+    imageLabel.Parent = surfaceGui
+  end
   
-  -- Add mesh/texture to show item
-  local surfaceGui = Instance.new("SurfaceGui")
-  surfaceGui.Face = Enum.NormalId.Top
-  surfaceGui.Parent = part
-  
-  local imageLabel = Instance.new("ImageLabel")
-  imageLabel.Size = UDim2.new(1, 0, 1, 0)
-  imageLabel.BackgroundTransparency = 1
-  imageLabel.Image = "rbxthumb://type=Asset&id=" .. itemData.RobloxId .. "&w=150&h=150"
-  imageLabel.Parent = surfaceGui
+  -- Find or create a primary part for the model
+  local part = itemModel.PrimaryPart or itemModel:FindFirstChildWhichIsA("BasePart")
+  if not part then
+    -- If the loaded model has no parts, create one
+    part = Instance.new("Part")
+    part.Name = "ItemPart"
+    part.Size = Vector3.new(3, 3, 3)
+    part.Anchored = false
+    part.CanCollide = true
+    part.Parent = itemModel
+  end
   
   -- Add proximity prompt
   local proximityPrompt = Instance.new("ProximityPrompt")
