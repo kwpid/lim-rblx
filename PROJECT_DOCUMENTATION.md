@@ -62,9 +62,14 @@ Items are automatically assigned rarity based on their value:
   - `CheckDatabase()` - View all items sorted by value
   - `CheckRarities()` - View item count by rarity tier
   - `ResetOwnershipData()` - Reset all ownership data (CurrentStock, Owners, TotalCopies, SerialOwners) while keeping all items intact. Use this for a fresh reset during testing. Automatically refreshes the Index UI for all players.
-  - `SetPlayerLuck(username, multiplier)` - Set a specific player's luck multiplier (e.g., `SetPlayerLuck("2kwpid", 300)` for 300x luck)
-  - `ResetPlayerLuck(username)` - Reset a player's luck multiplier to 1.0 (default/normal)
-  - `CheckPlayerLuck(username)` - View a player's current luck multiplier
+  - **Regular Luck (Epic+ items, 250k+):**
+    - `SetPlayerLuck(username, multiplier)` - Set a player's luck multiplier (e.g., `SetPlayerLuck("2kwpid", 300)`)
+    - `ResetPlayerLuck(username)` - Reset a player's luck to 1.0 (default/normal)
+    - `CheckPlayerLuck(username)` - View a player's current luck multiplier
+  - **Ultra Luck (Mythic/Insane items, 2.5M+):**
+    - `SetUltraLuck(username, multiplier)` - Set ultra luck for Mythic/Insane items (e.g., `SetUltraLuck("2kwpid", 1000)`)
+    - `ResetUltraLuck(username)` - Reset ultra luck to 1.0 (default/normal)
+    - `CheckUltraLuck(username)` - View both luck values and combined effect
   - `StartEvent(eventName)` - Manually start a random event (e.g., `StartEvent("RandomItemDrops")`)
 
 ### 6. Data Persistence (DataStore)

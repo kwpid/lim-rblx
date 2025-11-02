@@ -623,3 +623,104 @@ _G.StartEvent = function(eventName)
   end
 end
 
+_G.SetUltraLuck = function(username, multiplier)
+  if not username or not multiplier then
+    print("❌ Usage: SetUltraLuck(\"username\", multiplier)")
+    print("   Example: SetUltraLuck(\"2kwpid\", 1000)")
+    print("")
+    print("💎 Ultra Luck boosts ONLY Mythic/Insane items (2.5M+ Robux)")
+    print("   This stacks with regular Luck for extreme testing!")
+    return
+  end
+
+  if type(multiplier) ~= "number" or multiplier <= 0 then
+    print("❌ Multiplier must be a positive number!")
+    return
+  end
+
+  local Players = game:GetService("Players")
+  local targetPlayer = Players:FindFirstChild(username)
+
+  if not targetPlayer then
+    print("❌ Player '" .. username .. "' is not in the server!")
+    print("   Make sure the player is online and spell their username exactly.")
+    return
+  end
+
+  local oldUltraLuck = targetPlayer:GetAttribute("UltraLuck") or 1.0
+  targetPlayer:SetAttribute("UltraLuck", multiplier)
+
+  print("╔═══════════════════════════════════════╗")
+  print("║   ULTRA LUCK MULTIPLIER UPDATED       ║")
+  print("╚═══════════════════════════════════════╝")
+  print("  Player: " .. targetPlayer.Name)
+  print("  Old Ultra Luck: " .. string.format("%.1fx", oldUltraLuck))
+  print("  New Ultra Luck: " .. string.format("%.1fx", multiplier))
+  print("")
+  print("💎 " .. targetPlayer.Name .. " now has " .. multiplier .. "x ULTRA luck for Mythic/Insane items!")
+  print("   This multiplies on top of regular Luck for Epic+ items.")
+end
+
+_G.ResetUltraLuck = function(username)
+  if not username then
+    print("❌ Usage: ResetUltraLuck(\"username\")")
+    print("   Example: ResetUltraLuck(\"2kwpid\")")
+    return
+  end
+
+  local Players = game:GetService("Players")
+  local targetPlayer = Players:FindFirstChild(username)
+
+  if not targetPlayer then
+    print("❌ Player '" .. username .. "' is not in the server!")
+    return
+  end
+
+  local oldUltraLuck = targetPlayer:GetAttribute("UltraLuck") or 1.0
+  targetPlayer:SetAttribute("UltraLuck", 1.0)
+
+  print("╔═══════════════════════════════════════╗")
+  print("║   ULTRA LUCK MULTIPLIER RESET         ║")
+  print("╚═══════════════════════════════════════╝")
+  print("  Player: " .. targetPlayer.Name)
+  print("  Old Ultra Luck: " .. string.format("%.1fx", oldUltraLuck))
+  print("  New Ultra Luck: 1.0x (default)")
+  print("")
+  print("🔄 " .. targetPlayer.Name .. "'s ultra luck has been reset to normal!")
+end
+
+_G.CheckUltraLuck = function(username)
+  if not username then
+    print("❌ Usage: CheckUltraLuck(\"username\")")
+    print("   Example: CheckUltraLuck(\"2kwpid\")")
+    return
+  end
+
+  local Players = game:GetService("Players")
+  local targetPlayer = Players:FindFirstChild(username)
+
+  if not targetPlayer then
+    print("❌ Player '" .. username .. "' is not in the server!")
+    return
+  end
+
+  local playerUltraLuck = targetPlayer:GetAttribute("UltraLuck") or 1.0
+  local playerLuck = targetPlayer:GetAttribute("Luck") or 1.0
+
+  print("╔═══════════════════════════════════════╗")
+  print("║   PLAYER LUCK STATUS (FULL)           ║")
+  print("╚═══════════════════════════════════════╝")
+  print("  Player: " .. targetPlayer.Name)
+  print("  Regular Luck (Epic+): " .. string.format("%.1fx", playerLuck))
+  print("  Ultra Luck (Mythic/Insane): " .. string.format("%.1fx", playerUltraLuck))
+  print("")
+  print("  💡 Combined effect on Mythic/Insane:")
+  print("     Total multiplier = " .. string.format("%.1fx", playerLuck * playerUltraLuck))
+  print("")
+  if playerUltraLuck > 1.0 then
+    print("💎 " .. targetPlayer.Name .. " has ULTRA LUCK for Mythic/Insane items!")
+  else
+    print("➖ " .. targetPlayer.Name .. " has NORMAL ultra luck")
+  end
+end
+
