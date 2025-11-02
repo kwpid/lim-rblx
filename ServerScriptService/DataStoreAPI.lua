@@ -3,6 +3,18 @@ local ItemDatabase = require(script.Parent.ItemDatabase)
 
 local DataStoreAPI = {}
 
+local MAX_REGULAR_ITEM_STACK = 100
+
+local function shouldHaveStackLimit(rarity)
+  local limitedRarities = {
+    ["Common"] = true,
+    ["Uncommon"] = true,
+    ["Rare"] = true,
+    ["Ultra Rare"] = true
+  }
+  return limitedRarities[rarity] == true
+end
+
 function DataStoreAPI:GetPlayerData(player)
   return _G.PlayerData[player.UserId]
 end
@@ -36,9 +48,11 @@ function DataStoreAPI:AddItem(player, itemData, preserveSerialOwner)
     end
   else
     local found = false
+    local currentAmount = 0
     for _, invItem in ipairs(data.Inventory) do
       if invItem.RobloxId == itemData.RobloxId and not invItem.SerialNumber then
-        invItem.Amount = (invItem.Amount or 1) + amountToAdd
+        currentAmount = invItem.Amount or 1
+        invItem.Amount = currentAmount + amountToAdd
         found = true
         break
       end
@@ -54,6 +68,34 @@ function DataStoreAPI:AddItem(player, itemData, preserveSerialOwner)
         ObtainedAt = os.time()
       })
       isNewOwner = true
+      currentAmount = 0
+    end
+    
+    if shouldHaveStackLimit(itemData.Rarity) then
+      local newTotal = currentAmount + amountToAdd
+      if newTotal > MAX_REGULAR_ITEM_STACK then
+        local excessAmount = newTotal - MAX_REGULAR_ITEM_STACK
+        local sellValue = math.floor(itemData.Value * 0.8 * excessAmount)
+        
+        for _, invItem in ipairs(data.Inventory) do
+          if invItem.RobloxId == itemData.RobloxId and not invItem.SerialNumber then
+            invItem.Amount = MAX_REGULAR_ITEM_STACK
+            break
+          end
+        end
+        
+        ItemDatabase:DecrementTotalCopies(itemData.RobloxId, excessAmount)
+        
+        DataStoreManager:AddCash(data, sellValue)
+        if player:FindFirstChild("leaderstats") then
+          local cash = player.leaderstats:FindFirstChild("Cash")
+          if cash then
+            cash.Value = data.Cash
+          end
+        end
+        
+        print("📦 Auto-sold " .. excessAmount .. "x " .. itemData.Name .. " (max 100) for R$" .. sellValue .. " to " .. player.Name)
+      end
     end
   end
 

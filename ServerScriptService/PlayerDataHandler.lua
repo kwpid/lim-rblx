@@ -100,6 +100,78 @@ local function setupPlayer(player)
     end
   end
 
+  -- ═══════════════════════════════════════════════════
+  -- STACK LIMIT MIGRATION: Auto-sell excess regular items (Common to Ultra Rare)
+  -- Max 100 copies per regular item, sells excess at 80% value
+  -- ═══════════════════════════════════════════════════
+  local MAX_REGULAR_ITEM_STACK = 100
+  local function shouldHaveStackLimit(rarity)
+    local limitedRarities = {
+      ["Common"] = true,
+      ["Uncommon"] = true,
+      ["Rare"] = true,
+      ["Ultra Rare"] = true
+    }
+    return limitedRarities[rarity] == true
+  end
+  
+  if data.Inventory then
+    local totalAutoSellValue = 0
+    local itemsAutoSold = {}
+    
+    for _, invItem in ipairs(data.Inventory) do
+      if not invItem.SerialNumber and shouldHaveStackLimit(invItem.Rarity) then
+        local currentAmount = invItem.Amount or 1
+        if currentAmount > MAX_REGULAR_ITEM_STACK then
+          local excessAmount = currentAmount - MAX_REGULAR_ITEM_STACK
+          local sellValue = math.floor(invItem.Value * 0.8 * excessAmount)
+          
+          invItem.Amount = MAX_REGULAR_ITEM_STACK
+          totalAutoSellValue = totalAutoSellValue + sellValue
+          
+          local itemDatabase = require(script.Parent.ItemDatabase)
+          itemDatabase:DecrementTotalCopies(invItem.RobloxId, excessAmount)
+          
+          table.insert(itemsAutoSold, {
+            name = invItem.Name,
+            amount = excessAmount,
+            value = sellValue
+          })
+          
+          print("📦 Migration: Auto-sold " .. excessAmount .. "x " .. invItem.Name .. " (exceeded max 100) for R$" .. sellValue)
+        end
+      end
+    end
+    
+    if totalAutoSellValue > 0 then
+      data.Cash = (data.Cash or 0) + totalAutoSellValue
+      print("💰 Migration: Gave " .. player.Name .. " R$" .. totalAutoSellValue .. " from auto-selling " .. #itemsAutoSold .. " excess items")
+      
+      task.delay(3, function()
+        local itemsList = ""
+        for i, item in ipairs(itemsAutoSold) do
+          if i <= 3 then
+            itemsList = itemsList .. item.amount .. "x " .. item.name
+            if i < math.min(#itemsAutoSold, 3) then
+              itemsList = itemsList .. ", "
+            end
+          end
+        end
+        
+        if #itemsAutoSold > 3 then
+          itemsList = itemsList .. " and " .. (#itemsAutoSold - 3) .. " more"
+        end
+        
+        local notificationData = {
+          Type = "SELL",
+          Title = "Auto-Sold Excess Items",
+          Body = itemsList .. " (max 100 per item)\nReceived R$" .. totalAutoSellValue
+        }
+        notificationEvent:FireClient(player, notificationData)
+      end)
+    end
+  end
+
   PlayerData[player.UserId] = data
 
   local leaderstats = Instance.new("Folder")

@@ -14,6 +14,12 @@ This is a Roblox crate/case opening game where players can roll for random items
   - Stock: Optional limited quantity (0 = unlimited, 1-100 = stock item)
   - CurrentStock: Tracks how many have been rolled
   - SerialNumber: For stock items (e.g., #1/50)
+- **Stack Limits (Anti-Hoarding System):**
+  - Regular items (Common to Ultra Rare): Maximum 100 copies per item
+  - When adding items would exceed the limit, excess copies are automatically sold at 80% value
+  - Cash from auto-sold items is automatically added to player's account
+  - Epic, Ultra Epic, Mythic, and Insane items: No stack limit (unlimited)
+  - Migration system auto-sells existing excess items when players join the game
 
 ### 2. Rarity System (8 Tiers)
 Items are automatically assigned rarity based on their value:
