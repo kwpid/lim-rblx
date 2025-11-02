@@ -283,6 +283,10 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         table.insert(allItemsData, displayItem)
                 end
                 
+                table.sort(allItemsData, function(a, b)
+                        return a.Value > b.Value
+                end)
+                
                 updateInventoryDisplay("")
                 
                 if searchBox then
@@ -546,7 +550,7 @@ tradeEvent.OnClientEvent:Connect(function(instruction, data)
                         
                         historyFrame.PlayerUser.Text = "@" .. historyEntry.OtherPlayer
                         
-                        local dateLabel = historyFrame:FindFirstChild("Data")
+                        local dateLabel = historyFrame:FindFirstChild("Date")
                         if dateLabel then
                                 dateLabel.Text = historyEntry.Date
                         end
