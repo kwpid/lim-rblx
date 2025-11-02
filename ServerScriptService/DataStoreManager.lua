@@ -70,7 +70,15 @@ function DataStoreManager:LoadData(player)
 end
 
 function DataStoreManager:GetDefaultData()
-  return table.clone(DEFAULT_DATA)
+  return {
+    Inventory = {},
+    Rolls = 0,
+    Cash = 0,
+    InvValue = 0,
+    EquippedItems = {},
+    AutoRoll = false,
+    DataVersion = DATA_VERSION
+  }
 end
 
 function DataStoreManager:AddItemToInventory(playerData, itemData)

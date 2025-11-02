@@ -10,6 +10,9 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 2, 2025)
+- **CRITICAL FIX - Shared Inventory Bug**: Fixed critical bug where all players were seeing the same inventory. The issue was in `DataStoreManager:GetDefaultData()` which used `table.clone()` to create a shallow copy of DEFAULT_DATA. This meant the nested `Inventory` and `EquippedItems` arrays were shared references across all players who loaded default data. Now each player gets completely fresh arrays with their own independent data.
+
+## Previous Changes
 - **NEW - Reset Ownership Data Command**: Added console command `ResetOwnershipData()` that clears all ownership data (CurrentStock, Owners, TotalCopies, SerialOwners) while preserving all items. This allows you to do a fresh reset without changing DATA_VERSION or deleting items. The command automatically refreshes the Index UI for all players after reset.
 - **CHANGED - Manual Reset Only**: Removed automatic data reset on version change. Use the `ResetOwnershipData()` console command when you want to manually reset ownership data. Version changes now just update the version number without affecting data.
 - **QOL - Button UIStroke Colors**: AutoRoll and HideRolls buttons now have UIStroke colors that match their text colors:
