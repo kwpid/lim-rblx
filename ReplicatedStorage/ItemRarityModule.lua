@@ -1,9 +1,4 @@
--- ItemRarityModule.lua
--- Determines rarity based on item value and calculates roll percentages
-
 local ItemRarityModule = {}
-
--- Rarity tiers with value ranges
 ItemRarityModule.RarityTiers = {
   { Name = "Common",     Min = 1,        Max = 2499,      Color = Color3.fromRGB(170, 170, 170) },
   { Name = "Uncommon",   Min = 2500,     Max = 9999,      Color = Color3.fromRGB(85, 170, 85) },
@@ -25,7 +20,6 @@ function ItemRarityModule:GetRarity(value)
   return "Unknown"
 end
 
--- Get rarity color from value
 function ItemRarityModule:GetRarityColor(value)
   for _, tier in ipairs(self.RarityTiers) do
     if value >= tier.Min and value <= tier.Max then
@@ -35,7 +29,6 @@ function ItemRarityModule:GetRarityColor(value)
   return Color3.fromRGB(255, 255, 255)
 end
 
--- Get rarity tier info
 function ItemRarityModule:GetRarityInfo(value)
   for _, tier in ipairs(self.RarityTiers) do
     if value >= tier.Min and value <= tier.Max then
@@ -45,27 +38,22 @@ function ItemRarityModule:GetRarityInfo(value)
   return nil
 end
 
--- Calculate roll percentage (higher value = lower chance)
--- Uses power of 0.9 inverse scaling for steeper rarity curve (makes rare items more rare)
+-- Power of 0.9 = steeper rarity curve (rare items more rare)
 function ItemRarityModule:GetRollPercentage(value, totalValue)
   if totalValue == 0 then return 0 end
 
-  -- Power of 0.9 inverse relationship: higher value = lower percentage
   local inverseValue = 1 / (value ^ 0.9)
   local percentage = (inverseValue / totalValue) * 100
 
   return percentage
 end
 
--- Calculate all roll percentages for a list of items
 function ItemRarityModule:CalculateAllRollPercentages(items)
-  -- Calculate total inverse value using power of 0.9
   local totalInverseValue = 0
   for _, item in ipairs(items) do
     totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
   end
 
-  -- Calculate each item's percentage
   local itemsWithPercentages = {}
   for _, item in ipairs(items) do
     local itemCopy = table.clone(item)
