@@ -25,14 +25,14 @@ local DROP_INTERVAL = EVENT_DURATION / NUM_ITEMS_TO_DROP
 -- This means events make items X times more likely than normal rolling, based on rarity
 -- Higher multipliers = more common in events, but still respects rarity hierarchy
 local RARITY_MULTIPLIERS = {
-  ["Common"] = 3,        -- 3x normal roll chance
-  ["Uncommon"] = 6,      -- 6x normal roll chance
-  ["Rare"] = 10,         -- 10x normal roll chance
-  ["Ultra Rare"] = 15,   -- 15x normal roll chance
-  ["Epic"] = 25,         -- 25x normal roll chance (good chance during events)
-  ["Ultra Epic"] = 30,   -- 30x normal roll chance (very good chance)
-  ["Mythic"] = 20,       -- 20x (less than Ultra Epic to keep rare)
-  ["Insane"] = 12        -- 12x (lower multiplier = still rare even in events)
+  ["Common"] = 1,       
+  ["Uncommon"] = 2,     
+  ["Rare"] = 30,       
+  ["Ultra Rare"] = 50,  
+  ["Epic"] = 75,         
+  ["Ultra Epic"] = 65,   
+  ["Mythic"] =75,       
+  ["Insane"] = 30        
 }
 
 -- Chat notification and notification system
@@ -75,23 +75,23 @@ end
 -- Events use normal roll probability multiplied by rarity-based multipliers
 local function pickRandomEventItem(items)
   if #items == 0 then return nil end
-  
+
   -- Calculate weights using normal roll probability * rarity multiplier
   -- Normal rolling: weight = 1 / (value ^ 0.9)
   -- Event rolling: weight = (1 / (value ^ 0.9)) * rarity_multiplier
   local totalWeight = 0
   local weights = {}
-  
+
   for _, item in ipairs(items) do
     local normalRollChance = 1 / (item.Value ^ 0.9)
     local rarity = item.Rarity or ItemRarityModule.GetRarity(item.Value)
     local multiplier = RARITY_MULTIPLIERS[rarity] or 2
     local eventWeight = normalRollChance * multiplier
-    
+
     table.insert(weights, eventWeight)
     totalWeight = totalWeight + eventWeight
   end
-  
+
   -- Pick random item based on weighted probability
   local randomValue = math.random() * totalWeight
   local cumulative = 0
@@ -101,7 +101,7 @@ local function pickRandomEventItem(items)
       return item
     end
   end
-  
+
   return items[#items]
 end
 
@@ -110,11 +110,11 @@ local function createItemDrop(itemData, dropZone, onCollected)
   -- Try to load the actual Roblox item model
   local itemModel = nil
   local loadSuccess = false
-  
+
   local success, assetContainer = pcall(function()
     return InsertService:LoadAsset(itemData.RobloxId)
   end)
-  
+
   if success and assetContainer then
     -- Get the first child (the actual model)
     for _, child in ipairs(assetContainer:GetChildren()) do
@@ -128,23 +128,23 @@ local function createItemDrop(itemData, dropZone, onCollected)
     end
     assetContainer:Destroy()
   end
-  
+
   if not loadSuccess then
     warn("⚠️ Could not load model for " .. itemData.Name .. " (ID: " .. itemData.RobloxId .. "), using fallback")
   end
-  
+
   -- Fallback: Create a simple visual if loading fails
   if not itemModel then
     itemModel = Instance.new("Model")
     itemModel.Name = "DroppedItem_" .. itemData.Name
-    
+
     local part = Instance.new("Part")
     part.Name = "ItemPart"
     part.Size = Vector3.new(3, 3, 3)
     part.Anchored = false
     part.CanCollide = true
     part.Material = Enum.Material.Neon
-    
+
     -- Set color based on rarity
     local rarityColors = {
       ["Common"] = Color3.fromRGB(170, 170, 170),
@@ -158,26 +158,26 @@ local function createItemDrop(itemData, dropZone, onCollected)
     }
     part.Color = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
     part.Parent = itemModel
-    
+
     -- Add mesh/texture to show item
     local surfaceGui = Instance.new("SurfaceGui")
     surfaceGui.Face = Enum.NormalId.Top
     surfaceGui.Parent = part
-    
+
     local imageLabel = Instance.new("ImageLabel")
     imageLabel.Size = UDim2.new(1, 0, 1, 0)
     imageLabel.BackgroundTransparency = 1
     imageLabel.Image = "rbxthumb://type=Asset&id=" .. itemData.RobloxId .. "&w=150&h=150"
     imageLabel.Parent = surfaceGui
   end
-  
+
   -- Add Highlight to show rarity (works on any model)
   local highlight = Instance.new("Highlight")
   highlight.Name = "RarityHighlight"
   highlight.Adornee = itemModel
   highlight.FillTransparency = 0.5
   highlight.OutlineTransparency = 0
-  
+
   -- Set highlight color based on rarity
   local rarityColors = {
     ["Common"] = Color3.fromRGB(170, 170, 170),
@@ -192,7 +192,7 @@ local function createItemDrop(itemData, dropZone, onCollected)
   highlight.FillColor = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
   highlight.OutlineColor = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
   highlight.Parent = itemModel
-  
+
   -- Find the main part for the model (different for different types)
   local part
   if itemModel:IsA("Accoutrement") or itemModel:IsA("Hat") then
@@ -205,12 +205,12 @@ local function createItemDrop(itemData, dropZone, onCollected)
     -- Models have PrimaryPart or we find the first BasePart
     part = itemModel.PrimaryPart or itemModel:FindFirstChildWhichIsA("BasePart", true)
   end
-  
+
   -- Fallback: search for any BasePart if we still don't have one
   if not part then
     part = itemModel:FindFirstChildWhichIsA("BasePart", true)
   end
-  
+
   -- Last resort: create a part if nothing exists
   if not part then
     part = Instance.new("Part")
@@ -220,7 +220,7 @@ local function createItemDrop(itemData, dropZone, onCollected)
     part.CanCollide = true
     part.Parent = itemModel
   end
-  
+
   -- Add proximity prompt
   local proximityPrompt = Instance.new("ProximityPrompt")
   proximityPrompt.ActionText = "Collect Item"
@@ -228,17 +228,17 @@ local function createItemDrop(itemData, dropZone, onCollected)
   proximityPrompt.MaxActivationDistance = 10
   proximityPrompt.RequiresLineOfSight = false
   proximityPrompt.Parent = part
-  
+
   -- Spawn at dropzone
   local spawnPosition = dropZone.Position + Vector3.new(
     math.random(-dropZone.Size.X/2, dropZone.Size.X/2),
     10,
     math.random(-dropZone.Size.Z/2, dropZone.Size.Z/2)
   )
-  
+
   -- Parent to workspace first
   itemModel.Parent = workspace
-  
+
   -- Position the model based on its type
   if itemModel:IsA("Model") and itemModel.PrimaryPart then
     -- Use SetPrimaryPartCFrame for models with PrimaryPart
@@ -247,13 +247,13 @@ local function createItemDrop(itemData, dropZone, onCollected)
     -- For Accessories, Tools, or models without PrimaryPart, position the main part directly
     part.CFrame = CFrame.new(spawnPosition)
   end
-  
+
   -- Add BodyVelocity for slow fall
   local bodyVelocity = Instance.new("BodyVelocity")
   bodyVelocity.Velocity = Vector3.new(0, -5, 0) -- Slow downward movement
   bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)
   bodyVelocity.Parent = part
-  
+
   -- Rotate the item for visual effect
   task.spawn(function()
     while itemModel and itemModel.Parent do
@@ -261,20 +261,20 @@ local function createItemDrop(itemData, dropZone, onCollected)
       task.wait(0.05)
     end
   end)
-  
+
   -- Handle collection
   local collected = false
   proximityPrompt.Triggered:Connect(function(player)
     if collected then return end
     collected = true
-    
+
     -- Add item to player inventory
     onCollected(player, itemData)
-    
+
     -- Destroy the item
     itemModel:Destroy()
   end)
-  
+
   -- Remove velocity when touching ground
   part.Touched:Connect(function(hit)
     if hit:IsA("BasePart") and not hit:IsDescendantOf(itemModel) then
@@ -284,14 +284,14 @@ local function createItemDrop(itemData, dropZone, onCollected)
       part.Anchored = true
     end
   end)
-  
+
   -- Auto-cleanup after lifetime
   task.delay(ITEM_LIFETIME, function()
     if itemModel and itemModel.Parent and not collected then
       itemModel:Destroy()
     end
   end)
-  
+
   return itemModel
 end
 
@@ -299,14 +299,14 @@ end
 local function handleItemCollection(player, itemData)
   -- Add to inventory (same as rolling)
   local success = DataStoreAPI:AddItem(player, itemData)
-  
+
   if not success then
     warn("❌ Failed to give event item to player: " .. player.Name)
     return
   end
-  
+
   print("✅ " .. player.Name .. " collected " .. itemData.Name .. " from event")
-  
+
   -- Send notification to the player who collected the item
   if createNotificationEvent then
     -- Build the notification body with item name, rarity, and serial (if available)
@@ -314,7 +314,7 @@ local function handleItemCollection(player, itemData)
     if itemData.SerialNumber then
       notificationBody = notificationBody .. " #" .. itemData.SerialNumber
     end
-    
+
     -- Get rarity color for the notification
     local rarityColors = {
       ["Common"] = Color3.fromRGB(170, 170, 170),
@@ -327,7 +327,7 @@ local function handleItemCollection(player, itemData)
       ["Insane"] = Color3.fromRGB(255, 0, 255)
     }
     local notificationColor = rarityColors[itemData.Rarity] or Color3.fromRGB(255, 215, 0)
-    
+
     -- Fire notification to the specific player
     createNotificationEvent:FireClient(player, {
       Type = "EVENT_COLLECT",
@@ -337,26 +337,26 @@ local function handleItemCollection(player, itemData)
       Color = notificationColor
     })
   end
-  
+
   -- Send chat notifications for high-value items (250k+)
   if itemData.Value >= 250000 then
     local colorTag = getValueColorTag(itemData.Value)
     local closeTag = "</font>"
-    
+
     local message = colorTag .. player.Name .. " got " .. itemData.Name
-    
+
     if itemData.SerialNumber then
       message = message .. " #" .. itemData.SerialNumber
     end
-    
+
     message = message .. " (R$" .. formatNumber(itemData.Value) .. ") from the event!" .. closeTag
-    
+
     if chatNotificationEvent then
       -- Send to all clients in this server
       chatNotificationEvent:FireAllClients(message)
     end
   end
-  
+
   -- Send webhook notification for high-value items
   if itemData.Value >= 250000 then
     WebhookHandler:SendHighValueUnbox(player, itemData, "event")
@@ -375,7 +375,7 @@ end
 -- Start the event
 function RandomItemDrops.Start(onEventEnd)
   print("🎁 Starting Random Item Drops event")
-  
+
   -- Find dropzone
   local dropZone = workspace:FindFirstChild("dropzone")
   if not dropZone then
@@ -383,7 +383,7 @@ function RandomItemDrops.Start(onEventEnd)
     if onEventEnd then onEventEnd() end
     return
   end
-  
+
   -- Wait for ItemDatabase to be ready
   local maxWait = 30
   local waited = 0
@@ -391,13 +391,13 @@ function RandomItemDrops.Start(onEventEnd)
     task.wait(0.5)
     waited = waited + 0.5
   end
-  
+
   if not ItemDatabase.IsReady then
     warn("❌ ItemDatabase not ready! Event cancelled.")
     if onEventEnd then onEventEnd() end
     return
   end
-  
+
   -- Get all rollable items
   local allItems = ItemDatabase:GetRollableItems()
   if #allItems == 0 then
@@ -405,9 +405,9 @@ function RandomItemDrops.Start(onEventEnd)
     if onEventEnd then onEventEnd() end
     return
   end
-  
+
   print("✅ Found " .. #allItems .. " items available for event drops")
-  
+
   -- Spawn items over time
   task.spawn(function()
     for i = 1, NUM_ITEMS_TO_DROP do
@@ -417,7 +417,7 @@ function RandomItemDrops.Start(onEventEnd)
         warn("⚠️ No rollable items available, ending event early")
         break
       end
-      
+
       -- Pick random item (with event probability)
       local randomItem = pickRandomEventItem(currentRollableItems)
       if randomItem then
@@ -428,7 +428,7 @@ function RandomItemDrops.Start(onEventEnd)
           Value = randomItem.Value,
           Rarity = randomItem.Rarity or ItemRarityModule.GetRarity(randomItem.Value)
         }
-        
+
         -- Check if stock item and claim serial number
         if randomItem.Stock and randomItem.Stock > 0 then
           local serialNumber = ItemDatabase:IncrementStock(randomItem)
@@ -455,7 +455,7 @@ function RandomItemDrops.Start(onEventEnd)
             end
           end
         end
-        
+
         -- Only create drop if we have a valid item
         if randomItem then
           createItemDrop(itemData, dropZone, handleItemCollection)
@@ -464,15 +464,15 @@ function RandomItemDrops.Start(onEventEnd)
       else
         warn("⚠️ Failed to pick random item for event drop")
       end
-      
+
       -- Wait before next drop
       if i < NUM_ITEMS_TO_DROP then
         task.wait(DROP_INTERVAL)
       end
     end
-    
+
     print("✅ All event items dropped!")
-    
+
     -- Event ends after all items are dropped
     if onEventEnd then
       onEventEnd()
