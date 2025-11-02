@@ -502,3 +502,97 @@ _G.CheckRarities = function()
 
 end
 
+_G.SetPlayerLuck = function(username, multiplier)
+  if not username or not multiplier then
+    print("❌ Usage: SetPlayerLuck(\"username\", multiplier)")
+    print("   Example: SetPlayerLuck(\"2kwpid\", 300)")
+    return
+  end
+
+  if type(multiplier) ~= "number" or multiplier <= 0 then
+    print("❌ Multiplier must be a positive number!")
+    return
+  end
+
+  local Players = game:GetService("Players")
+  local targetPlayer = Players:FindFirstChild(username)
+
+  if not targetPlayer then
+    print("❌ Player '" .. username .. "' is not in the server!")
+    print("   Make sure the player is online and spell their username exactly.")
+    return
+  end
+
+  local oldLuck = targetPlayer:GetAttribute("Luck") or 1.0
+  targetPlayer:SetAttribute("Luck", multiplier)
+
+  print("╔═══════════════════════════════════════╗")
+  print("║      LUCK MULTIPLIER UPDATED          ║")
+  print("╚═══════════════════════════════════════╝")
+  print("  Player: " .. targetPlayer.Name)
+  print("  Old Luck: " .. string.format("%.1fx", oldLuck))
+  print("  New Luck: " .. string.format("%.1fx", multiplier))
+  print("")
+  print("🍀 " .. targetPlayer.Name .. " now has " .. multiplier .. "x luck!")
+end
+
+_G.ResetPlayerLuck = function(username)
+  if not username then
+    print("❌ Usage: ResetPlayerLuck(\"username\")")
+    print("   Example: ResetPlayerLuck(\"2kwpid\")")
+    return
+  end
+
+  local Players = game:GetService("Players")
+  local targetPlayer = Players:FindFirstChild(username)
+
+  if not targetPlayer then
+    print("❌ Player '" .. username .. "' is not in the server!")
+    return
+  end
+
+  local oldLuck = targetPlayer:GetAttribute("Luck") or 1.0
+  targetPlayer:SetAttribute("Luck", 1.0)
+
+  print("╔═══════════════════════════════════════╗")
+  print("║      LUCK MULTIPLIER RESET            ║")
+  print("╚═══════════════════════════════════════╝")
+  print("  Player: " .. targetPlayer.Name)
+  print("  Old Luck: " .. string.format("%.1fx", oldLuck))
+  print("  New Luck: 1.0x (default)")
+  print("")
+  print("🔄 " .. targetPlayer.Name .. "'s luck has been reset to normal!")
+end
+
+_G.CheckPlayerLuck = function(username)
+  if not username then
+    print("❌ Usage: CheckPlayerLuck(\"username\")")
+    print("   Example: CheckPlayerLuck(\"2kwpid\")")
+    return
+  end
+
+  local Players = game:GetService("Players")
+  local targetPlayer = Players:FindFirstChild(username)
+
+  if not targetPlayer then
+    print("❌ Player '" .. username .. "' is not in the server!")
+    return
+  end
+
+  local playerLuck = targetPlayer:GetAttribute("Luck") or 1.0
+
+  print("╔═══════════════════════════════════════╗")
+  print("║      PLAYER LUCK STATUS               ║")
+  print("╚═══════════════════════════════════════╝")
+  print("  Player: " .. targetPlayer.Name)
+  print("  Current Luck: " .. string.format("%.1fx", playerLuck))
+  print("")
+  if playerLuck > 1.0 then
+    print("🍀 " .. targetPlayer.Name .. " has BOOSTED luck!")
+  elseif playerLuck < 1.0 then
+    print("💀 " .. targetPlayer.Name .. " has REDUCED luck!")
+  else
+    print("➖ " .. targetPlayer.Name .. " has NORMAL luck")
+  end
+end
+

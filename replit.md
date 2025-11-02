@@ -10,6 +10,12 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 2, 2025)
+- **NEW - Luck Console Commands**: Added three new console commands for managing player luck multipliers:
+  - `SetPlayerLuck(username, multiplier)` - Set a specific player's luck (e.g., `SetPlayerLuck("2kwpid", 300)`)
+  - `ResetPlayerLuck(username)` - Reset player's luck to 1.0 (default/normal)
+  - `CheckPlayerLuck(username)` - View a player's current luck multiplier
+  - Player must be online in the server for commands to work
+  - Luck affects Epic+ items: >1.0 picks highest value, <1.0 picks lowest value
 - **QOL - Event Status Display**: Added EventText to MainUI that displays when events are happening. Shows "[EventName] Ongoing!" when an event starts and hides when the event ends. Provides clear visual feedback that an event is active.
 - **CRITICAL FIX - Shared Inventory Bug**: Fixed critical bug where all players were seeing the same inventory. The issue was in `DataStoreManager:GetDefaultData()` which used `table.clone()` to create a shallow copy of DEFAULT_DATA. This meant the nested `Inventory` and `EquippedItems` arrays were shared references across all players who loaded default data. Now each player gets completely fresh arrays with their own independent data.
 

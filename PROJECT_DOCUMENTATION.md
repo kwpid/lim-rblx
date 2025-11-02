@@ -62,6 +62,9 @@ Items are automatically assigned rarity based on their value:
   - `CheckDatabase()` - View all items sorted by value
   - `CheckRarities()` - View item count by rarity tier
   - `ResetOwnershipData()` - Reset all ownership data (CurrentStock, Owners, TotalCopies, SerialOwners) while keeping all items intact. Use this for a fresh reset during testing. Automatically refreshes the Index UI for all players.
+  - `SetPlayerLuck(username, multiplier)` - Set a specific player's luck multiplier (e.g., `SetPlayerLuck("2kwpid", 300)` for 300x luck)
+  - `ResetPlayerLuck(username)` - Reset a player's luck multiplier to 1.0 (default/normal)
+  - `CheckPlayerLuck(username)` - View a player's current luck multiplier
 
 ### 6. Data Persistence (DataStore)
 - **Player Data Saved:**
