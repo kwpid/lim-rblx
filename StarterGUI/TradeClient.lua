@@ -110,6 +110,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                 tradeFrame.TradingFrame.TheirOfferFrame.TheirOfferText.Text = otherPlrValue.Value .. "'s offer"
                 tradeFrame.TradingFrame.PlayerAccepted.Text = ""
 
+                tradeFrame.TradingFrame.AcceptButton.Text = "Accept"
                 tradeFrame.TradingFrame.AcceptButton.BackgroundColor3 = Color3.fromRGB(58, 191, 232)
 
                 for _, child in pairs(tradeFrame.TradingFrame.YourOfferFrame.Slots:GetChildren()) do
@@ -131,6 +132,17 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                 otherPlrValue.ChildRemoved:Connect(function(child)
                         if child.Name == "ACCEPTED" then
                                 tradeFrame.TradingFrame.PlayerAccepted.Text = ""
+                        end
+                end)
+                
+                clientValue.ChildAdded:Connect(function(child)
+                        if child.Name == "ACCEPTED" then
+                                tradeFrame.TradingFrame.AcceptButton.Text = "Accepted"
+                        end
+                end)
+                clientValue.ChildRemoved:Connect(function(child)
+                        if child.Name == "ACCEPTED" then
+                                tradeFrame.TradingFrame.AcceptButton.Text = "Accept"
                         end
                 end)
 
@@ -174,25 +186,15 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         isSerial = true
                                 })
                         else
-                                local found = false
-                                for _, displayItem in ipairs(itemsToDisplay) do
-                                        if displayItem.RobloxId == item.RobloxId and not displayItem.isSerial then
-                                                displayItem.MaxAmount = item.Amount or 1
-                                                found = true
-                                                break
-                                        end
-                                end
-                                if not found then
-                                        table.insert(itemsToDisplay, {
-                                                RobloxId = item.RobloxId,
-                                                Name = item.Name,
-                                                Value = item.Value,
-                                                Rarity = item.Rarity,
-                                                Amount = 0,
-                                                MaxAmount = item.Amount or 1,
-                                                isSerial = false
-                                        })
-                                end
+                                table.insert(itemsToDisplay, {
+                                        RobloxId = item.RobloxId,
+                                        Name = item.Name,
+                                        Value = item.Value,
+                                        Rarity = item.Rarity,
+                                        Amount = 0,
+                                        MaxAmount = item.Amount or 1,
+                                        isSerial = false
+                                })
                         end
                 end
 
@@ -201,26 +203,13 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         local uniqueId = displayItem.RobloxId .. "_" .. (displayItem.SerialNumber or "regular")
                         newItemButton.Name = uniqueId
 
-                        if displayItem.isSerial then
-                                newItemButton.ItemName.Text = displayItem.Name .. " #" .. displayItem.SerialNumber
-                        else
-                                newItemButton.ItemName.Text = displayItem.Name
-                        end
-
+                        newItemButton.ItemName.Text = displayItem.Name
                         newItemButton.ItemImage1.Image = getItemThumbnail(displayItem.RobloxId)
-
-                        if not displayItem.isSerial then
-                                local amountLabel = Instance.new("TextLabel")
-                                amountLabel.Name = "AmountLabel"
-                                amountLabel.Size = UDim2.new(1, 0, 0.2, 0)
-                                amountLabel.Position = UDim2.new(0, 0, 0.8, 0)
-                                amountLabel.BackgroundTransparency = 0.5
-                                amountLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-                                amountLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-                                amountLabel.Text = (displayItem.Amount or 0) .. "/" .. displayItem.MaxAmount
-                                amountLabel.TextScaled = true
-                                amountLabel.Font = Enum.Font.GothamBold
-                                amountLabel.Parent = newItemButton
+                        
+                        if displayItem.isSerial then
+                                newItemButton.QtySerial.Text = "#" .. displayItem.SerialNumber
+                        else
+                                newItemButton.QtySerial.Text = "x" .. (displayItem.Amount or 0) .. "/" .. displayItem.MaxAmount
                         end
 
                         newItemButton.MouseButton1Click:Connect(function()
@@ -234,10 +223,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 else
                                         if displayItem.Amount < displayItem.MaxAmount then
                                                 displayItem.Amount = displayItem.Amount + 1
-                                                local amountLabel = newItemButton:FindFirstChild("AmountLabel")
-                                                if amountLabel then
-                                                        amountLabel.Text = displayItem.Amount .. "/" .. displayItem.MaxAmount
-                                                end
+                                                newItemButton.QtySerial.Text = "x" .. displayItem.Amount .. "/" .. displayItem.MaxAmount
                                                 tradeEvent:FireServer("add item to trade", {displayItem.RobloxId, nil, 1})
                                         end
                                 end
@@ -247,10 +233,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 if not displayItem.isSerial then
                                         if displayItem.Amount > 0 then
                                                 displayItem.Amount = displayItem.Amount - 1
-                                                local amountLabel = newItemButton:FindFirstChild("AmountLabel")
-                                                if amountLabel then
-                                                        amountLabel.Text = displayItem.Amount .. "/" .. displayItem.MaxAmount
-                                                end
+                                                newItemButton.QtySerial.Text = "x" .. displayItem.Amount .. "/" .. displayItem.MaxAmount
                                                 tradeEvent:FireServer("remove item from trade", {displayItem.RobloxId, nil, 1})
                                         end
                                 end
@@ -374,6 +357,16 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                                 newToolButton.QtySerial.Text = "x" .. currentAmount.Value
                                         else
                                                 newToolButton:Destroy()
+                                                
+                                                for _, displayItem in ipairs(allItemsData) do
+                                                        if displayItem.RobloxId == robloxId.Value and not displayItem.isSerial then
+                                                                if displayItem.Amount > 0 then
+                                                                        displayItem.Amount = displayItem.Amount - 1
+                                                                        updateInventoryDisplay(searchBox and searchBox.Text or "")
+                                                                end
+                                                                break
+                                                        end
+                                                end
                                         end
                                         updateYourValue()
                                 end
@@ -382,6 +375,18 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         slotChild:GetPropertyChangedSignal("Parent"):Connect(function()
                                 if slotChild.Parent == nil then
                                         newToolButton:Destroy()
+                                        
+                                        if not serialNumber then
+                                                for _, displayItem in ipairs(allItemsData) do
+                                                        if displayItem.RobloxId == robloxId.Value and not displayItem.isSerial then
+                                                                local amtToRemove = amount and amount.Value or 1
+                                                                displayItem.Amount = math.max(0, displayItem.Amount - amtToRemove)
+                                                                updateInventoryDisplay(searchBox and searchBox.Text or "")
+                                                                break
+                                                        end
+                                                end
+                                        end
+                                        
                                         updateYourValue()
                                 end
                         end)

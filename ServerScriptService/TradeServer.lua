@@ -19,6 +19,13 @@ if not tradeEvent then
         tradeEvent.Parent = remoteEvents
 end
 
+local createNotificationEvent = remoteEvents:FindFirstChild("CreateNotification")
+if not createNotificationEvent then
+        createNotificationEvent = Instance.new("RemoteEvent")
+        createNotificationEvent.Name = "CreateNotification"
+        createNotificationEvent.Parent = remoteEvents
+end
+
 local tradeRequestsFolder = ReplicatedStorage:FindFirstChild("TRADE REQUESTS")
 if not tradeRequestsFolder then
         tradeRequestsFolder = Instance.new("Folder")
@@ -123,13 +130,32 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 newRequest.Name = plr.Name
                                 newRequest.Value = playerSent.Name
                                 newRequest.Parent = tradeRequestsFolder
+                                
+                                if createNotificationEvent then
+                                        createNotificationEvent:FireClient(playerSent, {
+                                                Type = "VICTORY",
+                                                Title = "Trade Request",
+                                                Body = plr.Name .. " sent you a trade request!"
+                                        })
+                                end
                         end
                 end
 
         elseif instruction == "reject trade request" then
                 for _, request in pairs(tradeRequestsFolder:GetChildren()) do
                         if request.Name == plr.Name or request.Value == plr.Name then
+                                local otherPlayerName = request.Name == plr.Name and request.Value or request.Name
+                                local otherPlayer = Players:FindFirstChild(otherPlayerName)
+                                
                                 request:Destroy()
+                                
+                                if createNotificationEvent and otherPlayer then
+                                        createNotificationEvent:FireClient(otherPlayer, {
+                                                Type = "ERROR",
+                                                Title = "Trade Declined",
+                                                Body = plr.Name .. " declined your trade request."
+                                        })
+                                end
                                 break
                         end
                 end
@@ -153,6 +179,14 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         end
 
                         requestValue:Destroy()
+                        
+                        if createNotificationEvent then
+                                createNotificationEvent:FireClient(senderPlr, {
+                                        Type = "VICTORY",
+                                        Title = "Trade Accepted",
+                                        Body = receiverPlr.Name .. " accepted your trade request!"
+                                })
+                        end
 
                         local tradeFolder = Instance.new("Folder")
                         tradeFolder.Name = senderPlr.Name .. "_" .. receiverPlr.Name
