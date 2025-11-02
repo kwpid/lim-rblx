@@ -423,7 +423,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         if displayItem.isSerial then
                                 newItemButton.QtySerial.Text = "#" .. displayItem.SerialNumber
                         else
-                                newItemButton.QtySerial.Text = "x" .. (displayItem.Amount or 0) .. "/" .. displayItem.MaxAmount
+                                newItemButton.QtySerial.Text = (displayItem.Amount or 0) .. "/" .. displayItem.MaxAmount
                         end
 
                         newItemButton.MouseButton1Click:Connect(function()
@@ -437,7 +437,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 else
                                         if displayItem.Amount < displayItem.MaxAmount then
                                                 displayItem.Amount = displayItem.Amount + 1
-                                                newItemButton.QtySerial.Text = "x" .. displayItem.Amount .. "/" .. displayItem.MaxAmount
+                                                newItemButton.QtySerial.Text = displayItem.Amount .. "/" .. displayItem.MaxAmount
                                                 tradeEvent:FireServer("add item to trade", {displayItem.RobloxId, nil, 1})
                                         end
                                 end
@@ -447,7 +447,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 if not displayItem.isSerial then
                                         if displayItem.Amount > 0 then
                                                 displayItem.Amount = displayItem.Amount - 1
-                                                newItemButton.QtySerial.Text = "x" .. displayItem.Amount .. "/" .. displayItem.MaxAmount
+                                                newItemButton.QtySerial.Text = displayItem.Amount .. "/" .. displayItem.MaxAmount
                                                 tradeEvent:FireServer("remove item from trade", {displayItem.RobloxId, nil, 1})
                                         end
                                 end

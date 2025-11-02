@@ -501,7 +501,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                 Rarity = item.Rarity,
                                                 SerialNumber = item.SerialNumber,
                                                 Amount = item.Amount
-                                        })
+                                        }, true)
                                 end
 
                                 for _, item in ipairs(receiverItems) do
@@ -512,7 +512,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                 Rarity = item.Rarity,
                                                 SerialNumber = item.SerialNumber,
                                                 Amount = item.Amount
-                                        })
+                                        }, true)
                                 end
 
                                 DataStoreAPI:UpdateInventoryValue(senderPlr)

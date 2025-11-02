@@ -7,7 +7,7 @@ function DataStoreAPI:GetPlayerData(player)
   return _G.PlayerData[player.UserId]
 end
 
-function DataStoreAPI:AddItem(player, itemData)
+function DataStoreAPI:AddItem(player, itemData, preserveSerialOwner)
   local data = self:GetPlayerData(player)
   if not data then return false end
 
@@ -25,12 +25,15 @@ function DataStoreAPI:AddItem(player, itemData)
     })
     isNewOwner = true
 
-    ItemDatabase:RecordSerialOwner(
-      itemData.RobloxId,
-      player.UserId,
-      player.Name,
-      itemData.SerialNumber
-    )
+    -- Only record serial owner if this is NOT from a trade (preserve original owner during trades)
+    if not preserveSerialOwner then
+      ItemDatabase:RecordSerialOwner(
+        itemData.RobloxId,
+        player.UserId,
+        player.Name,
+        itemData.SerialNumber
+      )
+    end
   else
     local found = false
     for _, invItem in ipairs(data.Inventory) do
