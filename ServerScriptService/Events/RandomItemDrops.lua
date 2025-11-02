@@ -20,12 +20,19 @@ local EVENT_DURATION = 3 * 60 -- 3 minutes
 local ITEM_LIFETIME = math.random(60, 120) -- Items stay 1-2 minutes after landing
 local DROP_INTERVAL = EVENT_DURATION / NUM_ITEMS_TO_DROP
 
--- Increased probability power for event drops (higher value = higher chance)
--- For events, we use VALUE ^ POWER instead of 1/VALUE ^ POWER
--- This makes higher-value items MORE likely to drop (opposite of normal rolling)
--- Power of 0.17 makes a 10M item about 5x more likely than a 1k item
--- Normal rolling uses 1/(value^0.9), so events give a modest boost to rare items
-local EVENT_DROP_POWER = 0.17 -- Power to apply to item value
+-- Event drop probability system
+-- Instead of using absolute probabilities, events use MULTIPLIERS on normal roll chances
+-- This means events make items X times more likely than normal rolling, based on rarity
+local RARITY_MULTIPLIERS = {
+  ["Common"] = 2,        -- 2x normal roll chance
+  ["Uncommon"] = 3,      -- 3x normal roll chance
+  ["Rare"] = 5,          -- 5x normal roll chance
+  ["Ultra Rare"] = 7,    -- 7x normal roll chance
+  ["Epic"] = 10,         -- 10x normal roll chance
+  ["Ultra Epic"] = 12,   -- 12x normal roll chance
+  ["Mythic"] = 15,       -- 15x normal roll chance
+  ["Insane"] = 20        -- 20x normal roll chance
+}
 
 -- Chat notification
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
@@ -62,23 +69,32 @@ local function formatNumber(n)
   return formatted
 end
 
--- Pick a random item using event probability (higher chance for rare items)
--- Unlike normal rolling, events FAVOR high-value items by using value^power directly
+-- Pick a random item using event probability
+-- Events use normal roll probability multiplied by rarity-based multipliers
 local function pickRandomEventItem(items)
   if #items == 0 then return nil end
   
-  -- Calculate total value weight using EVENT_DROP_POWER
-  -- Higher value items get HIGHER weights (opposite of normal rolling)
-  local totalValueWeight = 0
+  -- Calculate weights using normal roll probability * rarity multiplier
+  -- Normal rolling: weight = 1 / (value ^ 0.9)
+  -- Event rolling: weight = (1 / (value ^ 0.9)) * rarity_multiplier
+  local totalWeight = 0
+  local weights = {}
+  
   for _, item in ipairs(items) do
-    totalValueWeight = totalValueWeight + (item.Value ^ EVENT_DROP_POWER)
+    local normalRollChance = 1 / (item.Value ^ 0.9)
+    local rarity = item.Rarity or ItemRarityModule.GetRarity(item.Value)
+    local multiplier = RARITY_MULTIPLIERS[rarity] or 2
+    local eventWeight = normalRollChance * multiplier
+    
+    table.insert(weights, eventWeight)
+    totalWeight = totalWeight + eventWeight
   end
   
-  -- Pick random item based on value weights
-  local randomValue = math.random() * totalValueWeight
+  -- Pick random item based on weighted probability
+  local randomValue = math.random() * totalWeight
   local cumulative = 0
-  for _, item in ipairs(items) do
-    cumulative = cumulative + (item.Value ^ EVENT_DROP_POWER)
+  for i, item in ipairs(items) do
+    cumulative = cumulative + weights[i]
     if randomValue <= cumulative then
       return item
     end
@@ -90,23 +106,33 @@ end
 -- Create a physical item drop
 local function createItemDrop(itemData, dropZone, onCollected)
   -- Try to load the actual Roblox item model
-  local itemModel
-  local success, result = pcall(function()
+  local itemModel = nil
+  local loadSuccess = false
+  
+  local success, assetContainer = pcall(function()
     return InsertService:LoadAsset(itemData.RobloxId)
   end)
   
-  if success and result then
-    itemModel = result:GetChildren()[1]
-    if itemModel then
-      itemModel.Name = "DroppedItem_" .. itemData.Name
-      itemModel:Clone() -- Clone to detach from the asset container
-      result:Destroy() -- Clean up the asset container
+  if success and assetContainer then
+    -- Get the first child (the actual model)
+    for _, child in ipairs(assetContainer:GetChildren()) do
+      if child:IsA("Accoutrement") or child:IsA("Tool") or child:IsA("Hat") or child:IsA("Model") then
+        itemModel = child:Clone()
+        itemModel.Name = "DroppedItem_" .. itemData.Name
+        loadSuccess = true
+        print("✅ Loaded actual model for: " .. itemData.Name)
+        break
+      end
     end
+    assetContainer:Destroy()
+  end
+  
+  if not loadSuccess then
+    warn("⚠️ Could not load model for " .. itemData.Name .. " (ID: " .. itemData.RobloxId .. "), using fallback")
   end
   
   -- Fallback: Create a simple visual if loading fails
-  if not itemModel or not itemModel:IsA("Model") then
-    warn("⚠️ Failed to load item model for " .. itemData.Name .. ", using fallback visual")
+  if not itemModel then
     itemModel = Instance.new("Model")
     itemModel.Name = "DroppedItem_" .. itemData.Name
     
@@ -142,6 +168,28 @@ local function createItemDrop(itemData, dropZone, onCollected)
     imageLabel.Image = "rbxthumb://type=Asset&id=" .. itemData.RobloxId .. "&w=150&h=150"
     imageLabel.Parent = surfaceGui
   end
+  
+  -- Add Highlight to show rarity (works on any model)
+  local highlight = Instance.new("Highlight")
+  highlight.Name = "RarityHighlight"
+  highlight.Adornee = itemModel
+  highlight.FillTransparency = 0.5
+  highlight.OutlineTransparency = 0
+  
+  -- Set highlight color based on rarity
+  local rarityColors = {
+    ["Common"] = Color3.fromRGB(170, 170, 170),
+    ["Uncommon"] = Color3.fromRGB(85, 170, 85),
+    ["Rare"] = Color3.fromRGB(85, 85, 255),
+    ["Ultra Rare"] = Color3.fromRGB(170, 85, 255),
+    ["Epic"] = Color3.fromRGB(255, 170, 0),
+    ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
+    ["Mythic"] = Color3.fromRGB(255, 0, 0),
+    ["Insane"] = Color3.fromRGB(255, 0, 255)
+  }
+  highlight.FillColor = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
+  highlight.OutlineColor = rarityColors[itemData.Rarity] or Color3.new(1, 1, 1)
+  highlight.Parent = itemModel
   
   -- Find or create a primary part for the model
   local part = itemModel.PrimaryPart or itemModel:FindFirstChildWhichIsA("BasePart")
