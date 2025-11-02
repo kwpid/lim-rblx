@@ -10,12 +10,13 @@ This project is a Roblox crate opening/unboxing game. It allows players to open 
 - User wants a living documentation file that tracks game details
 
 ## Recent Changes (November 2, 2025)
-- **NEW - Ultra Luck System**: Added second luck tier specifically for Mythic/Insane items (2.5M+ Robux):
-  - **Regular Luck**: Affects Epic+ items (250k+ Robux)
-  - **Ultra Luck**: Affects ONLY Mythic/Insane items (2.5M+ Robux)
-  - Both luck values **stack multiplicatively** (e.g., 300x regular + 1000x ultra = 300,000x for Mythic/Insane!)
-  - New console commands: `SetUltraLuck()`, `ResetUltraLuck()`, `CheckUltraLuck()`
-  - Perfect for testing - force yourself to get Mythic/Insane items
+- **NEW - Three-Tier Luck System**: Completely separate luck multipliers for different rarity tiers:
+  - **Regular Luck**: Affects Epic+ items (250k+ Robux) - for normal gameplay
+  - **Mythic Luck**: Affects ONLY Mythic items (2.5M-9.9M Robux) - admin-only for testing
+  - **Insane Luck**: Affects ONLY Insane items (10M+ Robux) - admin-only for testing
+  - Each tier **stacks multiplicatively** (e.g., 300x regular + 5000x mythic = 1,500,000x for Mythic items!)
+  - New console commands: `SetMythicLuck()`, `SetInsaneLuck()`, `ResetMythicLuck()`, `ResetInsaneLuck()`, `CheckAllLuck()`
+  - Perfect for testing - force yourself to get specific rarity items
 - **FIXED - Luck System Rewrite**: Completely rewrote how luck works - now it properly boosts Epic+ item probabilities instead of just picking the best one after rolling:
   - **Before**: Roll normally, IF you get Epic+, pick best one (luck useless 99% of the time)
   - **Now**: Epic+ items are directly 300x more likely to appear with 300x luck

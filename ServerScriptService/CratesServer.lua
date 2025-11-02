@@ -99,24 +99,27 @@ local GLOBAL_LUCK_MULTIPLIER = 1.5
 -- 🎃 LUCK RARITY THRESHOLDS
 -- Regular Luck applies to items of this rarity or higher (Epic = 250,000 Robux)
 local LUCK_MIN_VALUE = 250000 -- Epic rarity and above
--- Ultra Luck applies ONLY to Mythic/Insane items (2,500,000 Robux)
-local ULTRA_LUCK_MIN_VALUE = 2500000 -- Mythic and Insane rarity
+-- Mythic Luck applies ONLY to Mythic items (2,500,000 - 9,999,999 Robux)
+local MYTHIC_LUCK_MIN_VALUE = 2500000 -- Mythic rarity
+local MYTHIC_LUCK_MAX_VALUE = 9999999 -- Below Insane
+-- Insane Luck applies ONLY to Insane items (10,000,000+ Robux)
+local INSANE_LUCK_MIN_VALUE = 10000000 -- Insane rarity
 
 -- Helper function to pick random item based on value (inverse probability)
 -- luckMultiplier: Player's luck multiplier for Epic+ (1.0 = normal, higher = better odds)
--- ultraLuckMultiplier: Player's ultra luck multiplier for Mythic/Insane (1.0 = normal, higher = better odds)
+-- mythicLuckMultiplier: Player's mythic luck multiplier for Mythic ONLY (1.0 = normal, admin only)
+-- insaneLuckMultiplier: Player's insane luck multiplier for Insane ONLY (1.0 = normal, admin only)
 -- Luck affects items by modifying their roll weights
-function pickRandomItem(items, luckMultiplier, ultraLuckMultiplier)
+function pickRandomItem(items, luckMultiplier, mythicLuckMultiplier, insaneLuckMultiplier)
   if #items == 0 then
     return nil
   end
 
   luckMultiplier = luckMultiplier or 1.0
-  ultraLuckMultiplier = ultraLuckMultiplier or 1.0
+  mythicLuckMultiplier = mythicLuckMultiplier or 1.0
+  insaneLuckMultiplier = insaneLuckMultiplier or 1.0
   
   -- Calculate total inverse value with luck applied
-  -- Higher luck makes Epic+ items MORE likely
-  -- Ultra luck makes Mythic/Insane items EVEN MORE likely
   local totalInverseValue = 0
   for _, item in ipairs(items) do
     local baseWeight = 1 / (item.Value ^ 0.9)
@@ -126,9 +129,14 @@ function pickRandomItem(items, luckMultiplier, ultraLuckMultiplier)
       baseWeight = baseWeight * luckMultiplier
     end
     
-    -- Apply ADDITIONAL ultra luck multiplier to Mythic/Insane items (2.5M+)
-    if item.Value >= ULTRA_LUCK_MIN_VALUE then
-      baseWeight = baseWeight * ultraLuckMultiplier
+    -- Apply ADDITIONAL mythic luck multiplier to Mythic items ONLY (2.5M-9.9M)
+    if item.Value >= MYTHIC_LUCK_MIN_VALUE and item.Value <= MYTHIC_LUCK_MAX_VALUE then
+      baseWeight = baseWeight * mythicLuckMultiplier
+    end
+    
+    -- Apply ADDITIONAL insane luck multiplier to Insane items ONLY (10M+)
+    if item.Value >= INSANE_LUCK_MIN_VALUE then
+      baseWeight = baseWeight * insaneLuckMultiplier
     end
     
     totalInverseValue = totalInverseValue + baseWeight
@@ -146,16 +154,23 @@ function pickRandomItem(items, luckMultiplier, ultraLuckMultiplier)
       baseWeight = baseWeight * luckMultiplier
     end
     
-    if item.Value >= ULTRA_LUCK_MIN_VALUE then
-      baseWeight = baseWeight * ultraLuckMultiplier
+    if item.Value >= MYTHIC_LUCK_MIN_VALUE and item.Value <= MYTHIC_LUCK_MAX_VALUE then
+      baseWeight = baseWeight * mythicLuckMultiplier
+    end
+    
+    if item.Value >= INSANE_LUCK_MIN_VALUE then
+      baseWeight = baseWeight * insaneLuckMultiplier
     end
     
     cumulative = cumulative + baseWeight
     if randomValue <= cumulative then
       -- Debug log if luck affected this roll
-      if ultraLuckMultiplier ~= 1.0 and item.Value >= ULTRA_LUCK_MIN_VALUE then
-        print(string.format("  💎 ULTRA LUCK boosted Mythic/Insane item: %s (R$%s) with %.1fx × %.1fx = %.1fx total multiplier", 
-          item.Name, tostring(item.Value), luckMultiplier, ultraLuckMultiplier, luckMultiplier * ultraLuckMultiplier))
+      if insaneLuckMultiplier ~= 1.0 and item.Value >= INSANE_LUCK_MIN_VALUE then
+        print(string.format("  🔥 INSANE LUCK boosted Insane item: %s (R$%s) with %.1fx × %.1fx = %.1fx total", 
+          item.Name, tostring(item.Value), luckMultiplier, insaneLuckMultiplier, luckMultiplier * insaneLuckMultiplier))
+      elseif mythicLuckMultiplier ~= 1.0 and item.Value >= MYTHIC_LUCK_MIN_VALUE and item.Value <= MYTHIC_LUCK_MAX_VALUE then
+        print(string.format("  💎 MYTHIC LUCK boosted Mythic item: %s (R$%s) with %.1fx × %.1fx = %.1fx total", 
+          item.Name, tostring(item.Value), luckMultiplier, mythicLuckMultiplier, luckMultiplier * mythicLuckMultiplier))
       elseif luckMultiplier ~= 1.0 and item.Value >= LUCK_MIN_VALUE then
         print(string.format("  🍀 Luck boosted Epic+ item: %s (R$%s) with %.1fx multiplier", 
           item.Name, tostring(item.Value), luckMultiplier))
@@ -321,23 +336,25 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
 
   -- Get player's luck multipliers (from attributes, default 1.0)
   local playerLuck = player:GetAttribute("Luck") or 1.0
-  local playerUltraLuck = player:GetAttribute("UltraLuck") or 1.0
+  local playerMythicLuck = player:GetAttribute("MythicLuck") or 1.0
+  local playerInsaneLuck = player:GetAttribute("InsaneLuck") or 1.0
   
   -- Apply global luck multiplier to regular luck only
   local totalLuck = playerLuck * GLOBAL_LUCK_MULTIPLIER
-  local totalUltraLuck = playerUltraLuck
+  local totalMythicLuck = playerMythicLuck
+  local totalInsaneLuck = playerInsaneLuck
   
   -- Debug: Print luck values
-  if playerUltraLuck > 1.0 then
-    print(string.format("🍀💎 %s rolling with luck: Regular=%.1fx, Ultra=%.1fx (Mythic/Insane boost)", 
-      player.Name, totalLuck, totalUltraLuck))
+  if playerMythicLuck > 1.0 or playerInsaneLuck > 1.0 then
+    print(string.format("🍀💎🔥 %s rolling with luck: Regular=%.1fx, Mythic=%.1fx, Insane=%.1fx", 
+      player.Name, totalLuck, totalMythicLuck, totalInsaneLuck))
   else
     print(string.format("🍀 %s rolling with luck: Player=%.1fx, Global=%.1fx, Total=%.1fx", 
       player.Name, playerLuck, GLOBAL_LUCK_MULTIPLIER, totalLuck))
   end
   
   -- Pick random item (weighted by inverse value with luck modifiers)
-  local chosenItem = pickRandomItem(allItems, totalLuck, totalUltraLuck)
+  local chosenItem = pickRandomItem(allItems, totalLuck, totalMythicLuck, totalInsaneLuck)
 
   if not chosenItem then
     warn("⚠️ Failed to pick item!")
@@ -374,7 +391,7 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
       local newRollableItems = ItemDatabase:GetRollableItems()
       if #newRollableItems > 0 then
         -- Use same luck multipliers for reroll
-        chosenItem = pickRandomItem(newRollableItems, totalLuck, totalUltraLuck)
+        chosenItem = pickRandomItem(newRollableItems, totalLuck, totalMythicLuck, totalInsaneLuck)
 
         -- Try to claim the new item if it's also a stock item
         local newStock = chosenItem.Stock or 0

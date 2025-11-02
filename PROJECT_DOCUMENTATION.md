@@ -66,10 +66,14 @@ Items are automatically assigned rarity based on their value:
     - `SetPlayerLuck(username, multiplier)` - Set a player's luck multiplier (e.g., `SetPlayerLuck("2kwpid", 300)`)
     - `ResetPlayerLuck(username)` - Reset a player's luck to 1.0 (default/normal)
     - `CheckPlayerLuck(username)` - View a player's current luck multiplier
-  - **Ultra Luck (Mythic/Insane items, 2.5M+):**
-    - `SetUltraLuck(username, multiplier)` - Set ultra luck for Mythic/Insane items (e.g., `SetUltraLuck("2kwpid", 1000)`)
-    - `ResetUltraLuck(username)` - Reset ultra luck to 1.0 (default/normal)
-    - `CheckUltraLuck(username)` - View both luck values and combined effect
+  - **Mythic Luck (Mythic items ONLY, 2.5M-9.9M) - Admin Only:**
+    - `SetMythicLuck(username, multiplier)` - Set mythic luck (e.g., `SetMythicLuck("2kwpid", 5000)`)
+    - `ResetMythicLuck(username)` - Reset mythic luck to 1.0 (default/normal)
+  - **Insane Luck (Insane items ONLY, 10M+) - Admin Only:**
+    - `SetInsaneLuck(username, multiplier)` - Set insane luck (e.g., `SetInsaneLuck("2kwpid", 10000)`)
+    - `ResetInsaneLuck(username)` - Reset insane luck to 1.0 (default/normal)
+  - **Check All Luck Tiers:**
+    - `CheckAllLuck(username)` - View all luck values and combined effects
   - `StartEvent(eventName)` - Manually start a random event (e.g., `StartEvent("RandomItemDrops")`)
 
 ### 6. Data Persistence (DataStore)
