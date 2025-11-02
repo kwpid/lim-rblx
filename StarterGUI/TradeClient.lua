@@ -82,37 +82,6 @@ end
 
 local currentInventoryButtons = {}
 
-local function ensureQtyLabel(button, amount)
-        local qtyLabel = button:FindFirstChild("QtyLabel")
-        if not qtyLabel and amount then
-                qtyLabel = Instance.new("TextLabel")
-                qtyLabel.Name = "QtyLabel"
-                qtyLabel.Size = UDim2.new(0.3, 0, 0.2, 0)
-                qtyLabel.Position = UDim2.new(0.7, 0, 0, 0)
-                qtyLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-                qtyLabel.BackgroundTransparency = 0.3
-                qtyLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-                qtyLabel.TextScaled = true
-                qtyLabel.Font = Enum.Font.GothamBold
-                qtyLabel.ZIndex = 2
-                
-                local uiCorner = Instance.new("UICorner")
-                uiCorner.CornerRadius = UDim.new(0, 4)
-                uiCorner.Parent = qtyLabel
-                
-                qtyLabel.Parent = button
-        end
-        
-        if qtyLabel then
-                if amount then
-                        qtyLabel.Text = "x" .. amount
-                        qtyLabel.Visible = true
-                else
-                        qtyLabel.Visible = false
-                end
-        end
-end
-
 ongoingTradesFolder.ChildAdded:Connect(function(child)
         if child:WaitForChild("Sender").Value == client.Name or child:WaitForChild("Receiver").Value == client.Name then
                 local clientValue = child:WaitForChild("Sender").Value == client.Name and child.Sender or child.Receiver
@@ -233,7 +202,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 newItemButton.ItemName.Text = displayItem.Name
                         end
 
-                        newItemButton.ItemImageLabel.Image = getItemThumbnail(displayItem.RobloxId)
+                        newItemButton.ItemImage1.Image = getItemThumbnail(displayItem.RobloxId)
 
                         if not displayItem.isSerial then
                                 local amountLabel = Instance.new("TextLabel")
@@ -300,15 +269,17 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         local newToolButton = script.ItemButton:Clone()
                         newToolButton.Name = "Offer_" .. (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
                         
-                        if serialNumber then
-                                newToolButton.ItemName.Text = itemName.Value .. " #" .. serialNumber.Value
-                        else
-                                newToolButton.ItemName.Text = itemName.Value
-                        end
+                        newToolButton.ItemName.Text = itemName.Value
 
-                        newToolButton.ItemImageLabel.Image = getItemThumbnail(robloxId.Value)
+                        newToolButton.ItemImage1.Image = getItemThumbnail(robloxId.Value)
                         
-                        ensureQtyLabel(newToolButton, amount and amount.Value or nil)
+                        if serialNumber then
+                                newToolButton.QtySerial.Text = "#" .. serialNumber.Value
+                        elseif amount then
+                                newToolButton.QtySerial.Text = "x" .. amount.Value
+                        else
+                                newToolButton.QtySerial.Text = ""
+                        end
 
                         newToolButton.MouseButton1Click:Connect(function()
                                 if serialNumber then
@@ -321,7 +292,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         slotChild.ChildAdded:Connect(function(child)
                                 if child.Name == "Amount" then
                                         task.wait(0.1)
-                                        ensureQtyLabel(newToolButton, child.Value)
+                                        newToolButton.QtySerial.Text = "x" .. child.Value
                                 end
                         end)
 
@@ -330,7 +301,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         task.wait(0.1)
                                         local currentAmount = slotChild:FindFirstChild("Amount")
                                         if currentAmount then
-                                                ensureQtyLabel(newToolButton, currentAmount.Value)
+                                                newToolButton.QtySerial.Text = "x" .. currentAmount.Value
                                         else
                                                 newToolButton:Destroy()
                                         end
@@ -360,21 +331,23 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         local newToolButton = script.ItemButton:Clone()
                         newToolButton.Name = "TheirOffer_" .. (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
                         
-                        if serialNumber then
-                                newToolButton.ItemName.Text = itemName.Value .. " #" .. serialNumber.Value
-                        else
-                                newToolButton.ItemName.Text = itemName.Value
-                        end
+                        newToolButton.ItemName.Text = itemName.Value
 
-                        newToolButton.ItemImageLabel.Image = getItemThumbnail(robloxId.Value)
+                        newToolButton.ItemImage1.Image = getItemThumbnail(robloxId.Value)
                         newToolButton.AutoButtonColor = false
                         
-                        ensureQtyLabel(newToolButton, amount and amount.Value or nil)
+                        if serialNumber then
+                                newToolButton.QtySerial.Text = "#" .. serialNumber.Value
+                        elseif amount then
+                                newToolButton.QtySerial.Text = "x" .. amount.Value
+                        else
+                                newToolButton.QtySerial.Text = ""
+                        end
 
                         slotChild.ChildAdded:Connect(function(child)
                                 if child.Name == "Amount" then
                                         task.wait(0.1)
-                                        ensureQtyLabel(newToolButton, child.Value)
+                                        newToolButton.QtySerial.Text = "x" .. child.Value
                                 end
                         end)
 
@@ -383,7 +356,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         task.wait(0.1)
                                         local currentAmount = slotChild:FindFirstChild("Amount")
                                         if currentAmount then
-                                                ensureQtyLabel(newToolButton, currentAmount.Value)
+                                                newToolButton.QtySerial.Text = "x" .. currentAmount.Value
                                         else
                                                 newToolButton:Destroy()
                                         end
