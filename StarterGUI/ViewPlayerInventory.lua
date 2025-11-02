@@ -165,6 +165,9 @@ function getPlayerFromMouse()
   return targetPlayer
 end
 
+-- Store search connection so we can disconnect it
+local searchConnection = nil
+
 -- Populate inventory GUI with target player's items
 function populateInventory(targetPlayer)
   currentlyViewingPlayer = targetPlayer
@@ -177,6 +180,12 @@ function populateInventory(targetPlayer)
   -- Clear search bar when opening new inventory
   if searchBar then
     searchBar.Text = ""
+  end
+  
+  -- Disconnect old search connection if it exists
+  if searchConnection then
+    searchConnection:Disconnect()
+    searchConnection = nil
   end
   
   -- Clear existing buttons
@@ -343,17 +352,17 @@ function populateInventory(targetPlayer)
     
     table.insert(buttons, button)
   end
-end
-
--- Search bar functionality
-if searchBar and searchBar:IsA("TextBox") then
-  searchBar:GetPropertyChangedSignal("Text"):Connect(function()
-    local filterText = searchBar.Text:lower()
-    for _, button in pairs(buttons) do
-      local itemName = button.Name:lower()
-      button.Visible = filterText == "" or itemName:find(filterText, 1, true) ~= nil
-    end
-  end)
+  
+  -- Set up search bar functionality for this inventory
+  if searchBar and searchBar:IsA("TextBox") then
+    searchConnection = searchBar:GetPropertyChangedSignal("Text"):Connect(function()
+      local filterText = searchBar.Text:lower()
+      for _, button in pairs(buttons) do
+        local itemName = button.Name:lower()
+        button.Visible = filterText == "" or itemName:find(filterText, 1, true) ~= nil
+      end
+    end)
+  end
 end
 
 -- Close button functionality
@@ -365,6 +374,12 @@ if closeButton then
     -- Clear search bar
     if searchBar then
       searchBar.Text = ""
+    end
+    
+    -- Disconnect search connection
+    if searchConnection then
+      searchConnection:Disconnect()
+      searchConnection = nil
     end
     
     -- Clear buttons
@@ -444,5 +459,17 @@ Players.PlayerRemoving:Connect(function(removingPlayer)
   if removingPlayer == currentlyViewingPlayer then
     screenGui.Enabled = false
     currentlyViewingPlayer = nil
+    
+    -- Disconnect search connection
+    if searchConnection then
+      searchConnection:Disconnect()
+      searchConnection = nil
+    end
+    
+    -- Clear buttons
+    for _, button in pairs(buttons) do
+      button:Destroy()
+    end
+    buttons = {}
   end
 end)
