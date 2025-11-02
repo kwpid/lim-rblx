@@ -326,6 +326,34 @@ end
 
 -- Handle item collection
 local function handleItemCollection(player, itemData)
+  -- If this is a stock item, claim the serial number NOW (not at drop creation)
+  if itemData.IsStockItem then
+    local item = ItemDatabase:GetItemByRobloxId(itemData.RobloxId)
+    if item then
+      local serialNumber = ItemDatabase:IncrementStock(item)
+      if serialNumber then
+        itemData.SerialNumber = serialNumber
+        print("✅ " .. player.Name .. " collecting stock item " .. itemData.Name .. " #" .. serialNumber)
+      else
+        -- Stock sold out between drop and collection!
+        warn("⚠️ Stock sold out for " .. itemData.Name .. " before " .. player.Name .. " could collect it")
+        
+        -- Notify player the item sold out
+        if createNotificationEvent then
+          createNotificationEvent:FireClient(player, {
+            Type = "ERROR",
+            Title = "Item Sold Out",
+            Body = itemData.Name .. " sold out before you could collect it!"
+          })
+        end
+        return
+      end
+    else
+      warn("❌ Item not found in database: " .. itemData.Name)
+      return
+    end
+  end
+  
   -- Add to inventory (same as rolling)
   local success = DataStoreAPI:AddItem(player, itemData)
 
@@ -334,7 +362,11 @@ local function handleItemCollection(player, itemData)
     return
   end
 
-  print("✅ " .. player.Name .. " collected " .. itemData.Name .. " from event")
+  if itemData.SerialNumber then
+    print("✅ " .. player.Name .. " collected stock item " .. itemData.Name .. " #" .. itemData.SerialNumber .. " from event")
+  else
+    print("✅ " .. player.Name .. " collected " .. itemData.Name .. " from event")
+  end
 
   -- Send notification to the player who collected the item
   if createNotificationEvent then
@@ -450,44 +482,21 @@ function RandomItemDrops.Start(onEventEnd)
       -- Pick random item (with event probability)
       local randomItem = pickRandomEventItem(currentRollableItems)
       if randomItem then
-        -- Handle stock items
+        -- Prepare item data (serial number will be claimed when collected, not now)
         local itemData = {
           RobloxId = randomItem.RobloxId,
           Name = randomItem.Name,
           Value = randomItem.Value,
-          Rarity = randomItem.Rarity or ItemRarityModule.GetRarity(randomItem.Value)
+          Rarity = randomItem.Rarity or ItemRarityModule.GetRarity(randomItem.Value),
+          IsStockItem = (randomItem.Stock and randomItem.Stock > 0) or false
         }
 
-        -- Check if stock item and claim serial number
-        if randomItem.Stock and randomItem.Stock > 0 then
-          local serialNumber = ItemDatabase:IncrementStock(randomItem)
-          if serialNumber then
-            itemData.SerialNumber = serialNumber
-            print("  📦 Dropping stock item: " .. itemData.Name .. " #" .. serialNumber)
-          else
-            -- Stock sold out, pick a different item from fresh rollable list
-            print("  ⚠️ Stock sold out for " .. itemData.Name .. ", picking different item")
-            currentRollableItems = ItemDatabase:GetRollableItems()
-            if #currentRollableItems > 0 then
-              randomItem = pickRandomEventItem(currentRollableItems)
-              if randomItem then
-                itemData = {
-                  RobloxId = randomItem.RobloxId,
-                  Name = randomItem.Name,
-                  Value = randomItem.Value,
-                  Rarity = randomItem.Rarity or ItemRarityModule.GetRarity(randomItem.Value)
-                }
-              end
-            else
-              warn("⚠️ No rollable items left, skipping this drop")
-              randomItem = nil
-            end
-          end
-        end
-
-        -- Only create drop if we have a valid item
-        if randomItem then
-          createItemDrop(itemData, dropZone, handleItemCollection)
+        -- Create the drop (serial number will be claimed on collection)
+        createItemDrop(itemData, dropZone, handleItemCollection)
+        
+        if itemData.IsStockItem then
+          print("  📦 Dropping stock item: " .. itemData.Name .. " (serial will be claimed on pickup)")
+        else
           print("  🎁 Dropped item " .. i .. "/" .. NUM_ITEMS_TO_DROP .. ": " .. itemData.Name)
         end
       else
