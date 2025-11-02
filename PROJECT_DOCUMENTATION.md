@@ -61,7 +61,7 @@ Items are automatically assigned rarity based on their value:
 - **Console Commands:**
   - `CheckDatabase()` - View all items sorted by value
   - `CheckRarities()` - View item count by rarity tier
-  - `ResetOwnershipData()` - Reset all ownership data (CurrentStock, Owners, TotalCopies, SerialOwners) while keeping all items intact. Use this for a fresh reset during testing.
+  - `ResetOwnershipData()` - Reset all ownership data (CurrentStock, Owners, TotalCopies, SerialOwners) while keeping all items intact. Use this for a fresh reset during testing. Automatically refreshes the Index UI for all players.
 
 ### 6. Data Persistence (DataStore)
 - **Player Data Saved:**

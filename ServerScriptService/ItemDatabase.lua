@@ -577,7 +577,7 @@ task.spawn(function()
 end)
 
 function ItemDatabase:ResetOwnershipData()
-  print("🔄 Resetting all ownership data (CurrentStock, Owners, SerialOwners)...")
+  print("🔄 Resetting all ownership data (CurrentStock, Owners, TotalCopies, SerialOwners)...")
   
   local resetCount = 0
   for _, item in ipairs(self.Items) do
@@ -592,6 +592,17 @@ function ItemDatabase:ResetOwnershipData()
   
   if saveSuccess then
     print(string.format("✅ Reset ownership data for %d items successfully!", resetCount))
+    print("📊 All items now show: 0 owners, 0 copies, 0 stock claimed")
+    
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+    if remoteEvents then
+      local createItemEvent = remoteEvents:FindFirstChild("CreateItemEvent")
+      if createItemEvent then
+        createItemEvent:FireAllClients()
+      end
+    end
+    
     return true, string.format("Reset ownership data for %d items", resetCount)
   else
     print("❌ Failed to save reset data")
