@@ -108,7 +108,7 @@ local currentInventoryButtons = {}
 local viewInventoryButtons = {}
 
 local function populateViewInventory(targetPlayer)
-        local sample = viewInventoryFrame:FindFirstChild("Sample")
+        local sample = script:FindFirstChild("Sample")
         local handler = viewInventoryFrame:FindFirstChild("Handler")
         local title = viewInventoryFrame:FindFirstChild("Title")
         
@@ -157,34 +157,127 @@ local function populateViewInventory(targetPlayer)
                 button.Visible = true
                 button.Parent = handler
                 
-                local itemImage = button:FindFirstChild("ItemImage1")
-                if itemImage then
-                        itemImage.Image = getItemThumbnail(item.RobloxId)
+                local contentFrame = button:FindFirstChild("Content")
+                local content2Frame = button:FindFirstChild("content2")
+                
+                if contentFrame then
+                        local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+                        contentFrame.BorderColor3 = rarityColor
+                end
+                if content2Frame then
+                        local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+                        content2Frame.BorderColor3 = rarityColor
                 end
                 
-                local itemName = button:FindFirstChild("ItemName")
-                if itemName then
+                local qtyLabel = button:FindFirstChild("Qty")
+                if qtyLabel then
+                        if item.SerialNumber then
+                                qtyLabel.Text = "#" .. item.SerialNumber
+                        elseif item.Amount then
+                                qtyLabel.Text = item.Amount .. "x"
+                        else
+                                qtyLabel.Text = "1x"
+                        end
+                end
+                
+                local serialLabel = button:FindFirstChild("Serial")
+                if serialLabel then
+                        if item.SerialNumber then
+                                serialLabel.Text = "#" .. item.SerialNumber
+                                serialLabel.Visible = true
+                        else
+                                serialLabel.Visible = false
+                        end
+                end
+                
+                local rarityLabel = contentFrame and contentFrame:FindFirstChild("Rarity")
+                if rarityLabel then
+                        if item.Rarity == "Common" then
+                                rarityLabel.Visible = false
+                        else
+                                rarityLabel.Visible = true
+                                rarityLabel.Text = item.Rarity
+                                rarityLabel.TextColor3 = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+                        end
+                end
+                
+                local t1Label = button:FindFirstChild("t1")
+                if t1Label then
+                        t1Label.Visible = false
+                end
+                
+                local copiesCount = 0
+                if item.Stock and item.Stock > 0 then
+                        copiesCount = item.CurrentStock or 0
+                else
+                        copiesCount = item.TotalCopies or 0
+                end
+                
+                local rareText = button:FindFirstChild("RareText")
+                if rareText then
+                        if copiesCount > 0 and copiesCount <= 25 then
+                                rareText.Visible = true
+                        else
+                                rareText.Visible = false
+                        end
+                end
+                
+                local limText = button:FindFirstChild("LimText")
+                if limText then
+                        if item.Limited then
+                                limText.Visible = true
+                        else
+                                limText.Visible = false
+                        end
+                end
+                
+                local copiesLabel = button:FindFirstChild("copies")
+                if copiesLabel then
+                        local stockCount = item.Stock or 0
+                        
+                        if copiesCount > 0 then
+                                if stockCount > 0 then
+                                        copiesLabel.Text = copiesCount .. " / " .. stockCount .. " copies"
+                                else
+                                        copiesLabel.Text = copiesCount .. " copies"
+                                end
+                                copiesLabel.Visible = true
+                        else
+                                copiesLabel.Visible = false
+                        end
+                end
+                
+                local o2Label = contentFrame and contentFrame:FindFirstChild("o2")
+                if o2Label then
+                        if item.Stock and item.Stock > 0 then
+                                o2Label.Text = formatNumber(copiesCount) .. "/" .. formatNumber(item.Stock)
+                        else
+                                o2Label.Text = formatNumber(copiesCount)
+                        end
+                end
+                
+                local valueLabel = contentFrame and contentFrame:FindFirstChild("Value")
+                if valueLabel then
+                        valueLabel.Text = "R$ " .. formatNumber(item.Value)
+                end
+                
+                local v2Label = contentFrame and contentFrame:FindFirstChild("v2")
+                if v2Label then
+                        v2Label.Text = formatNumber(item.Value)
+                end
+                
+                local nameLabel = content2Frame and content2Frame:FindFirstChild("name")
+                if nameLabel then
                         local displayName = item.Name
                         if #displayName > 20 then
                                 displayName = string.sub(displayName, 1, 17) .. "..."
                         end
-                        itemName.Text = displayName
+                        nameLabel.Text = displayName
                 end
                 
-                local qtySerial = button:FindFirstChild("QtySerial")
-                if qtySerial then
-                        if item.SerialNumber then
-                                qtySerial.Text = "#" .. item.SerialNumber
-                        elseif item.Amount then
-                                qtySerial.Text = item.Amount .. "x"
-                        else
-                                qtySerial.Text = "1x"
-                        end
-                end
-                
-                local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-                if button:IsA("ImageButton") or button:IsA("TextButton") then
-                        button.BorderColor3 = rarityColor
+                local img = button:FindFirstChild("Image")
+                if img and img:IsA("ImageLabel") then
+                        img.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
                 end
                 
                 table.insert(viewInventoryButtons, button)
