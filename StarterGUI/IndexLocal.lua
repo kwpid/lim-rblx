@@ -9,25 +9,25 @@ local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModul
 
 local handler = gui:WaitForChild("Handler", 5)
 if not handler then
-  warn("handler not found in Index GUI")
+  warn("handler not found in index gui")
   return
 end
 
 local sample = script.Sample
 if not sample then
-  warn("sample template not found in Handler")
+  warn("sample template not found in handler")
   return
 end
 
 local userTemplate = script:FindFirstChild("UserTemplate")
 if not userTemplate then
-  warn("userTemplate not found in IndexLocal script")
+  warn("usertemplate not found in indexlocal script")
   return
 end
 
 local popup = gui:WaitForChild("Popup", 5)
 if not popup then
-  warn("popup not found in Index GUI")
+  warn("popup not found in index gui")
   return
 end
 
@@ -52,19 +52,19 @@ local selectedButton = nil
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents", 10)
 if not remoteEvents then
-  warn("❌ RemoteEvents folder not found")
+  warn("remoteevents folder not found")
   return
 end
 
 local getAllItemsFunction = remoteEvents:WaitForChild("GetAllItemsFunction", 10)
 if not getAllItemsFunction then
-  warn("❌ GetAllItemsFunction not found")
+  warn("getallitemsfunction not found")
   return
 end
 
 local getItemOwnersFunction = remoteEvents:WaitForChild("GetItemOwnersFunction", 10)
 if not getItemOwnersFunction then
-  warn("❌ GetItemOwnersFunction not found")
+  warn("getitemownersfunction not found")
   return
 end
 
@@ -123,7 +123,7 @@ function refresh()
   end)
 
   if not success or not allItems or type(allItems) ~= "table" then
-    warn("❌ Failed to get all items: " .. tostring(err))
+    warn("failed to get all items: " .. tostring(err))
     return
   end
 
@@ -417,7 +417,7 @@ function updateItemDetails(item)
           end
         end
       else
-        warn("❌ Failed to get item owners: " .. tostring(owners))
+        warn("failed to get item owners: " .. tostring(owners))
       end
     end
   end
@@ -425,7 +425,6 @@ function updateItemDetails(item)
   showPopup()
 end
 
--- Search bar functionality
 if searchBar and searchBar:IsA("TextBox") then
   searchBar:GetPropertyChangedSignal("Text"):Connect(function()
     local filterText = searchBar.Text:lower()
@@ -462,7 +461,6 @@ if createItemEvent then
   end)
 end
 
--- Close button handler
 local closeButton = popup:FindFirstChild("Close")
 if closeButton then
   closeButton.MouseButton1Click:Connect(function()

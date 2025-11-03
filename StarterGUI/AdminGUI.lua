@@ -170,22 +170,22 @@ createButton.MouseButton1Click:Connect(function()
   local itemStock = tonumber(itemStockBox.Text) or 0
 
   if not itemId then
-    warn("❌ Item ID must be a number!")
+    warn("item id must be a number")
     return
   end
 
   if itemName == "" then
-    warn("❌ Item name cannot be empty!")
+    warn("item name cannot be empty")
     return
   end
 
   if not itemValue or itemValue < 0 then
-    warn("❌ Item value must be a positive number!")
+    warn("item value must be a positive number")
     return
   end
 
   if itemStock < 0 or itemStock > 100 then
-    warn("❌ Stock must be between 0 and 100!")
+    warn("stock must be between 0 and 100")
     return
   end
 
@@ -195,10 +195,6 @@ createButton.MouseButton1Click:Connect(function()
     createButton.Text = "Creating..."
   end
   createButton.Active = false
-
-  print("🔧 CLIENT DEBUG: Sending to server:")
-  print("  - isLimitedEnabled:", isLimitedEnabled, "type:", type(isLimitedEnabled))
-  print("  - isEditMode:", isEditMode)
 
   createItemEvent:FireServer(itemId, itemName, itemValue, itemStock, isLimitedEnabled, isEditMode)
 end)
@@ -226,7 +222,7 @@ createItemEvent.OnClientEvent:Connect(function(success, message, itemData)
 
     isEditMode = false
   else
-    warn("❌ " .. message)
+    warn(message)
     createButton.Text = "❌ Failed"
   end
 
@@ -245,17 +241,17 @@ giveItemButton.MouseButton1Click:Connect(function()
   local playerIdentifier = playerIdBox.Text
 
   if not giveItemId then
-    warn("❌ Give Item ID must be a number!")
+    warn("give item id must be a number")
     return
   end
 
   if not giveAmount or giveAmount < 1 then
-    warn("❌ Give Amount must be at least 1!")
+    warn("give amount must be at least 1")
     return
   end
 
   if playerIdentifier == "" then
-    warn("❌ Player ID/Username cannot be empty!")
+    warn("player id or username cannot be empty")
     return
   end
 
@@ -273,7 +269,7 @@ giveItemEvent.OnClientEvent:Connect(function(success, message)
 
     giveItemButton.Text = "✅ Given!"
   else
-    warn("❌ " .. message)
+    warn(message)
     giveItemButton.Text = "❌ Failed"
   end
 
@@ -319,7 +315,7 @@ deleteItemButton.MouseButton1Click:Connect(function()
   local deleteItemId = tonumber(deleteItemIdBox.Text)
 
   if not deleteItemId then
-    warn("❌ Delete Item ID must be a number!")
+    warn("delete item id must be a number")
     return
   end
 
@@ -355,7 +351,7 @@ deleteItemEvent.OnClientEvent:Connect(function(success, message)
     deleteItemButton.Text = "✅ Deleted!"
     deleteItemButton.BackgroundColor3 = Color3.fromRGB(111, 218, 40)
   else
-    warn("❌ " .. message)
+    warn(message)
     deleteItemButton.Text = "❌ Failed"
     deleteItemButton.BackgroundColor3 = Color3.fromRGB(198, 34, 34)
   end
