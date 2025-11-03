@@ -205,22 +205,22 @@ local function createHiddenItem(itemData, hideLocation, onCollected)
         local pointLight = Instance.new("PointLight")
         pointLight.Name = "GlowLight"
         pointLight.Color = rarityColor
-        pointLight.Brightness = 2
-        pointLight.Range = 15
+        pointLight.Brightness = 0.2
+        pointLight.Range = 5
         pointLight.Parent = part
         
         task.spawn(function()
                 local pulseSpeed = 2
-                local minBrightness = 1
-                local maxBrightness = 3
+                local minBrightness = 0.1
+                local maxBrightness = 0.3
                 
                 while itemModel and itemModel.Parent and pointLight and pointLight.Parent do
-                        for brightness = minBrightness, maxBrightness, 0.1 do
+                        for brightness = minBrightness, maxBrightness, 0.02 do
                                 if not itemModel or not itemModel.Parent or not pointLight or not pointLight.Parent then break end
                                 pointLight.Brightness = brightness
                                 task.wait(pulseSpeed / 20)
                         end
-                        for brightness = maxBrightness, minBrightness, -0.1 do
+                        for brightness = maxBrightness, minBrightness, -0.02 do
                                 if not itemModel or not itemModel.Parent or not pointLight or not pointLight.Parent then break end
                                 pointLight.Brightness = brightness
                                 task.wait(pulseSpeed / 20)
