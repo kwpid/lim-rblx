@@ -18,14 +18,14 @@ local DROP_INTERVAL = EVENT_DURATION / NUM_ITEMS_TO_DROP
 
 
 local RARITY_MULTIPLIERS = {
-  ["Common"] = 1,       
-  ["Uncommon"] = 2,     
-  ["Rare"] = 1300,       
-  ["Ultra Rare"] = 940,  
-  ["Epic"] = 1204,         
-  ["Ultra Epic"] = 1200,   
-  ["Mythic"] = 1195,       
-  ["Insane"] = 1300        
+	["Common"] = 1,       
+	["Uncommon"] = 2,     
+	["Rare"] = 1300,       
+	["Ultra Rare"] = 940,  
+	["Epic"] = 1204,         
+	["Ultra Epic"] = 1000,   
+	["Mythic"] = 915,       
+	["Insane"] = 1000        
 }
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
