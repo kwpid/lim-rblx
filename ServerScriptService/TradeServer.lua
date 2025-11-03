@@ -140,7 +140,6 @@ function unequipItemFromCharacter(player, robloxId)
 end
 
 tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
-
         if instruction == "send trade request" then
                 local playerSent = data[1]
 
@@ -148,16 +147,16 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         local inTrade = false
 
                         for _, trade in pairs(ongoingTradesFolder:GetChildren()) do
-                                if trade.Sender.Value == playerSent.Name or trade.Sender.Value == plr.Name or 
-                                        trade.Receiver.Value == playerSent.Name or trade.Receiver.Value == plr.Name then
+                                if trade.Sender.Value == playerSent.Name or trade.Sender.Value == plr.Name or
+                                    trade.Receiver.Value == playerSent.Name or trade.Receiver.Value == plr.Name then
                                         inTrade = true
                                         break
                                 end
                         end
 
                         for _, request in pairs(tradeRequestsFolder:GetChildren()) do
-                                if request.Name == playerSent.Name or request.Name == plr.Name or 
-                                        request.Value == playerSent.Name or request.Value == plr.Name then
+                                if request.Name == playerSent.Name or request.Name == plr.Name or
+                                    request.Value == playerSent.Name or request.Value == plr.Name then
                                         inTrade = true
                                         break
                                 end
@@ -178,7 +177,6 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 end
                         end
                 end
-
         elseif instruction == "reject trade request" then
                 for _, request in pairs(tradeRequestsFolder:GetChildren()) do
                         if request.Name == plr.Name or request.Value == plr.Name then
@@ -197,7 +195,6 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 break
                         end
                 end
-
         elseif instruction == "accept trade request" then
                 local requestValue = nil
                 for _, request in pairs(tradeRequestsFolder:GetChildren()) do
@@ -249,7 +246,6 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
 
                         tradeFolder.Parent = ongoingTradesFolder
                 end
-
         elseif instruction == "add item to trade" then
                 local robloxId = data[1]
                 local serialNumber = data[2]
@@ -365,7 +361,6 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 itemFolder.Parent = plrOffer
                         end
                 end
-
         elseif instruction == "remove item from trade" then
                 local robloxId = data[1]
                 local serialNumber = data[2]
@@ -398,13 +393,12 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 end
                         end
                 end
-
         elseif instruction == "accept trade" then
                 local currentTrade = findTradeForPlayer(plr)
                 if not currentTrade then return end
 
                 local plrValue = currentTrade.Sender.Value == plr.Name and currentTrade.Sender or
-                        currentTrade.Receiver.Value == plr.Name and currentTrade.Receiver
+                    currentTrade.Receiver.Value == plr.Name and currentTrade.Receiver
 
                 if plrValue then
                         if not plrValue:FindFirstChild("ACCEPTED") then
@@ -502,7 +496,8 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 end
 
                                 for _, item in ipairs(senderItems) do
-                                        local inventoryIndex, inventoryItem = findItemInInventory(senderPlr, item.RobloxId, item.SerialNumber)
+                                        local inventoryIndex, inventoryItem = findItemInInventory(senderPlr,
+                                                item.RobloxId, item.SerialNumber)
                                         if inventoryIndex and inventoryItem then
                                                 if item.SerialNumber then
                                                         table.remove(senderData.Inventory, inventoryIndex)
@@ -510,11 +505,13 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                         local actualItem = senderData.Inventory[inventoryIndex]
                                                         if actualItem.Amount and actualItem.Amount > item.Amount then
                                                                 actualItem.Amount = actualItem.Amount - item.Amount
-                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId, item.Amount)
+                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId,
+                                                                        item.Amount)
                                                         else
                                                                 table.remove(senderData.Inventory, inventoryIndex)
                                                                 ItemDatabase:DecrementOwners(item.RobloxId)
-                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId, actualItem.Amount or 1)
+                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId,
+                                                                        actualItem.Amount or 1)
                                                         end
                                                 end
 
@@ -522,7 +519,8 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                         for i = #senderData.EquippedItems, 1, -1 do
                                                                 if senderData.EquippedItems[i] == item.RobloxId then
                                                                         table.remove(senderData.EquippedItems, i)
-                                                                        unequipItemFromCharacter(senderPlr, item.RobloxId)
+                                                                        unequipItemFromCharacter(senderPlr, item
+                                                                        .RobloxId)
                                                                 end
                                                         end
                                                 end
@@ -530,7 +528,8 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 end
 
                                 for _, item in ipairs(receiverItems) do
-                                        local inventoryIndex, inventoryItem = findItemInInventory(receiverPlr, item.RobloxId, item.SerialNumber)
+                                        local inventoryIndex, inventoryItem = findItemInInventory(receiverPlr,
+                                                item.RobloxId, item.SerialNumber)
                                         if inventoryIndex and inventoryItem then
                                                 if item.SerialNumber then
                                                         table.remove(receiverData.Inventory, inventoryIndex)
@@ -538,11 +537,13 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                         local actualItem = receiverData.Inventory[inventoryIndex]
                                                         if actualItem.Amount and actualItem.Amount > item.Amount then
                                                                 actualItem.Amount = actualItem.Amount - item.Amount
-                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId, item.Amount)
+                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId,
+                                                                        item.Amount)
                                                         else
                                                                 table.remove(receiverData.Inventory, inventoryIndex)
                                                                 ItemDatabase:DecrementOwners(item.RobloxId)
-                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId, actualItem.Amount or 1)
+                                                                ItemDatabase:DecrementTotalCopies(item.RobloxId,
+                                                                        actualItem.Amount or 1)
                                                         end
                                                 end
 
@@ -550,7 +551,8 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                         for i = #receiverData.EquippedItems, 1, -1 do
                                                                 if receiverData.EquippedItems[i] == item.RobloxId then
                                                                         table.remove(receiverData.EquippedItems, i)
-                                                                        unequipItemFromCharacter(receiverPlr, item.RobloxId)
+                                                                        unequipItemFromCharacter(receiverPlr,
+                                                                                item.RobloxId)
                                                                 end
                                                         end
                                                 end
@@ -630,11 +632,11 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 currentTrade:Destroy()
                         end
                 end
-
         elseif instruction == "reject trade" then
                 for _, trade in pairs(ongoingTradesFolder:GetChildren()) do
                         if trade.Sender.Value == plr.Name or trade.Receiver.Value == plr.Name then
-                                local otherPlayerName = trade.Sender.Value == plr.Name and trade.Receiver.Value or trade.Sender.Value
+                                local otherPlayerName = trade.Sender.Value == plr.Name and trade.Receiver.Value or
+                                trade.Sender.Value
                                 local otherPlayer = Players:FindFirstChild(otherPlayerName)
 
                                 if createNotificationEvent and otherPlayer then
@@ -649,7 +651,6 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 break
                         end
                 end
-
         elseif instruction == "get trade history" then
                 local playerData = _G.PlayerData[plr.UserId]
                 if playerData and playerData.TradeHistory then

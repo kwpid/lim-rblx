@@ -14,10 +14,8 @@ local ITEM_DROP_WEBHOOK = ""
 if configSuccess and WebhookConfig then
         ITEM_RELEASE_WEBHOOK = WebhookConfig.ITEM_RELEASE_WEBHOOK or ""
         ITEM_DROP_WEBHOOK = WebhookConfig.ITEM_DROP_WEBHOOK or ""
-        print("✅ Loaded webhook configuration")
 else
-        warn("⚠️ WebhookConfig not found - webhooks will not be sent")
-        warn("   Create ServerScriptService/WebhookConfig.lua with your webhook URLs")
+        warn("webhookconfig not found")
 end
 
 local RARITY_COLORS = {
@@ -26,7 +24,7 @@ local RARITY_COLORS = {
         ["Rare"] = 5592575,        -- #5555FF (Blue)
         ["Ultra Rare"] = 11167999, -- #AA55FF (Purple)
         ["Epic"] = 16755200,       -- #FFAA00 (Orange)
-        ["Ultra Epic"] = 16733440,  -- #FF5500 (Red-Orange)
+        ["Ultra Epic"] = 16733440, -- #FF5500 (Red-Orange)
         ["Mythic"] = 16711680,     -- #FF0000 (Red)
         ["Insane"] = 16711935      -- #FF00FF (Magenta)
 }
@@ -51,7 +49,7 @@ local function sendWebhook(webhookUrl, payload)
         end)
 
         if not success then
-                warn("⚠️ Failed to send Discord webhook: " .. tostring(result))
+                warn("failed to send Discord webhook: " .. tostring(result))
                 return false
         end
 
@@ -72,7 +70,7 @@ function WebhookHandler:SendItemRelease(item, rollPercentage)
         end
 
         local payload = {
-                embeds = {{
+                embeds = { {
                         title = item.Name,
                         description = description,
                         color = rarityColor,
@@ -83,7 +81,7 @@ function WebhookHandler:SendItemRelease(item, rollPercentage)
                                 text = "New Item Release"
                         },
                         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-                }}
+                } }
         }
 
         if item.Value >= 250000 then
@@ -100,10 +98,10 @@ function WebhookHandler:SendHighValueUnbox(player, item, source)
         local rarityColor = getRarityColor(item.Rarity)
 
         source = source or "roll"
-        local sourceText = source == "event" and "Event Drop" or "Unboxed"
+        local sourceText = source == "event" and "Event Drop" or "Rolled"
         local title = source == "event" and "High-Value Item from Event" or "High-Value Item Rolled"
 
-local description = string.format("**Player:**\n%s\n\n**Item:**\n%s\n\n**Value:**\nR$ %s\n\n**Source:**\n%s",
+        local description = string.format("**Player:**\n%s\n\n**Item:**\n%s\n\n**Value:**\nR$ %s\n\n**Source:**\n%s",
                 player.Name,
                 item.Name,
                 formatNumber(item.Value),
@@ -114,10 +112,11 @@ local description = string.format("**Player:**\n%s\n\n**Item:**\n%s\n\n**Value:*
                 description = description .. string.format("\n\n**Serial:**\n#%d", item.SerialNumber)
         end
 
-        local playerThumbnailUrl = string.format("https://www.roblox.com/headshot-thumbnail/image?userId=%d&width=150&height=150&format=png", player.UserId)
+        local playerThumbnailUrl = string.format(
+        "https://www.roblox.com/headshot-thumbnail/image?userId=%d&width=150&height=150&format=png", player.UserId)
 
         local payload = {
-                embeds = {{
+                embeds = { {
                         title = title,
                         description = description,
                         color = rarityColor,
@@ -131,7 +130,7 @@ local description = string.format("**Player:**\n%s\n\n**Item:**\n%s\n\n**Value:*
                                 text = sourceText
                         },
                         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-                }}
+                } }
         }
 
         local success = sendWebhook(ITEM_DROP_WEBHOOK, payload)
@@ -155,7 +154,8 @@ end
 function WebhookHandler:SendOutOfStock(item)
         local rarityColor = getRarityColor(item.Rarity)
 
-        local description = string.format("**Item:**\n%s\n\n**Rarity:**\n%s\n\n**Value:**\nR$ %s\n\n**Stock:**\n%d/%d (SOLD OUT)",
+        local description = string.format(
+                "**Item:**\n%s\n\n**Rarity:**\n%s\n\n**Value:**\nR$ %s\n\n**Stock:**\n%d/%d (SOLD OUT)",
                 item.Name,
                 item.Rarity,
                 formatNumber(item.Value),
@@ -164,7 +164,7 @@ function WebhookHandler:SendOutOfStock(item)
         )
 
         local payload = {
-                embeds = {{
+                embeds = { {
                         title = "Item Out of Stock!",
                         description = description,
                         color = rarityColor,
@@ -175,7 +175,7 @@ function WebhookHandler:SendOutOfStock(item)
                                 text = "Out of Stock"
                         },
                         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-                }}
+                } }
         }
 
         local success = sendWebhook(ITEM_DROP_WEBHOOK, payload)
