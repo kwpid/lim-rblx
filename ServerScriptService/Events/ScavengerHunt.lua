@@ -84,9 +84,11 @@ local function pickRandomScavengerItem(items)
         local weights = {}
         
         for _, item in ipairs(filteredItems) do
-                -- Higher exponent (1.5) makes higher value items MUCH less likely
-                -- Ultra Epic (750k) will be most common, Insane (10M+) will be extremely rare
-                local weight = 1 / (item.Value ^ 1.5)
+                -- Higher exponent (2.5) heavily favors mid-tier items (Ultra Epic)
+                -- Ultra Epic (750k-2.5M) will be most common
+                -- Mythic (2.5M-10M) will be rare
+                -- Insane (10M+) will be extremely rare
+                local weight = 1 / (item.Value ^ 2.5)
                 table.insert(weights, weight)
                 totalWeight = totalWeight + weight
         end
