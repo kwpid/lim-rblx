@@ -6,35 +6,33 @@ local config = require(ReplicatedStorage:WaitForChild("TradeConfiguration"))
 
 local tradeRequestsFolder = ReplicatedStorage:WaitForChild("TRADE REQUESTS", 30)
 if not tradeRequestsFolder then
-        warn("❌ TradeClient: TRADE REQUESTS folder not found!")
+        warn("trade requests folder not found")
         return
 end
 
 local ongoingTradesFolder = ReplicatedStorage:WaitForChild("ONGOING TRADES", 30)
 if not ongoingTradesFolder then
-        warn("❌ TradeClient: ONGOING TRADES folder not found!")
+        warn("ongoing trades folder not found")
         return
 end
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents", 30)
 if not remoteEvents then
-        warn("❌ TradeClient: RemoteEvents folder not found!")
+        warn("remoteevents folder not found")
         return
 end
 
 local tradeEvent = remoteEvents:WaitForChild("TradeEvent", 30)
 if not tradeEvent then
-        warn("❌ TradeClient: TradeEvent not found!")
+        warn("tradeevent not found")
         return
 end
 
 local getInventoryFunction = remoteEvents:WaitForChild("GetInventoryFunction", 30)
 if not getInventoryFunction then
-        warn("❌ TradeClient: GetInventoryFunction not found!")
+        warn("getinventoryfunction not found")
         return
 end
-
-print("✅ TradeClient: All resources loaded successfully for", client.Name)
 
 local gui = script.Parent
 
@@ -126,7 +124,7 @@ local function populateViewInventory(targetPlayer)
         local title = viewInventoryFrame:FindFirstChild("Title")
 
         if not sample or not handler then
-                warn("❌ TradeClient: ViewInventoryFrame missing required elements")
+                warn("viewinventoryframe missing required elements")
                 return
         end
 
@@ -143,7 +141,7 @@ local function populateViewInventory(targetPlayer)
 
         local getPlayerInventoryFunction = remoteEvents:FindFirstChild("GetPlayerInventoryFunction")
         if not getPlayerInventoryFunction then
-                warn("❌ TradeClient: GetPlayerInventoryFunction not found")
+                warn("getplayerinventoryfunction not found")
                 return
         end
 
@@ -152,7 +150,7 @@ local function populateViewInventory(targetPlayer)
         end)
 
         if not success or not response or type(response) ~= "table" or not response.success then
-                warn("❌ TradeClient: Failed to get inventory for", targetPlayer.Name)
+                warn("failed to get inventory for " .. targetPlayer.Name)
                 viewInventoryFrame.Visible = false
                 return
         end
@@ -296,18 +294,14 @@ local function populateViewInventory(targetPlayer)
                 table.insert(viewInventoryButtons, button)
         end
 
-        -- Set up search bar functionality
         local searchBar = viewInventoryFrame:FindFirstChild("SearchBar")
         if searchBar and searchBar:IsA("TextBox") then
-                -- Disconnect previous connection if it exists
                 if viewInventorySearchConnection then
                         viewInventorySearchConnection:Disconnect()
                 end
 
-                -- Clear search text
                 searchBar.Text = ""
 
-                -- Connect new search functionality
                 viewInventorySearchConnection = searchBar:GetPropertyChangedSignal("Text"):Connect(function()
                         local filterText = searchBar.Text:lower()
                         for _, button in pairs(viewInventoryButtons) do
@@ -399,12 +393,12 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                 end)
 
                 if not success then
-                        warn("❌ TradeClient: Failed to get inventory: " .. tostring(inventory))
+                        warn("failed to get inventory: " .. tostring(inventory))
                         return
                 end
 
                 if not inventory then
-                        warn("❌ TradeClient: Inventory is nil")
+                        warn("inventory is nil")
                         return
                 end
 
@@ -742,7 +736,6 @@ openBtn.MouseButton1Click:Connect(function()
 
                                 playerFrame.SendButton.MouseButton1Click:Connect(function()
                                         if tradeRequestFrame.Visible == false then
-                                                print("🔄 TradeClient: Sending trade request to", plr.Name)
                                                 tradeEvent:FireServer("send trade request", { plr })
                                         end
                                 end)
@@ -806,7 +799,6 @@ if viewInvCloseBtn then
         viewInvCloseBtn.MouseButton1Click:Connect(function()
                 viewInventoryFrame.Visible = false
 
-                -- Disconnect search connection
                 if viewInventorySearchConnection then
                         viewInventorySearchConnection:Disconnect()
                         viewInventorySearchConnection = nil

@@ -9,22 +9,22 @@ local inventoryOpenButton = gui:WaitForChild("InventoryOpen", 5)
 local indexOpenButton = gui:WaitForChild("IndexOpen", 5)
 
 if not inventoryFrame then
-  warn("❌ Inventory frame not found in MainUI")
+  warn("inventory frame not found in mainui")
   return
 end
 
 if not indexFrame then
-  warn("❌ Index frame not found in MainUI")
+  warn("index frame not found in mainui")
   return
 end
 
 if not inventoryOpenButton then
-  warn("❌ InventoryOpen button not found in MainUI")
+  warn("inventoryopen button not found in mainui")
   return
 end
 
 if not indexOpenButton then
-  warn("❌ IndexOpen button not found in MainUI")
+  warn("indexopen button not found in mainui")
   return
 end
 
@@ -43,5 +43,3 @@ end
 
 inventoryOpenButton.MouseButton1Click:Connect(openInventory)
 indexOpenButton.MouseButton1Click:Connect(openIndex)
-
-print("✅ MainUI toggle system loaded")
