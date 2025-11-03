@@ -2,7 +2,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
 
 -- REMEMEBR TO MATCH THIS WITH ITEMDATABASE VERSION!
-local DATA_VERSION = "DataVersion.16"
+local DATA_VERSION = "DataVersion.30"
 
 local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
 local DataStoreManager = {}

@@ -15,7 +15,7 @@ local function getWebhookHandler()
 end
 
 -- 🔑 DATA VERSION - Must match DataStoreManager.lua to keep data in sync
-local DATA_VERSION = "DataVersion.16"
+local DATA_VERSION = "DataVersion.30"
 
 local ItemDatabase = {}
 ItemDatabase.Items = {}
@@ -64,12 +64,18 @@ function ItemDatabase:LoadItems()
 
       self.Items = items
 
-      -- Just update version, don't auto-reset data
-      if savedVersion and savedVersion ~= DATA_VERSION then
-        print("ℹ️ DATA_VERSION updated from " .. tostring(savedVersion) .. " to " .. DATA_VERSION .. " (no reset)")
+      if savedVersion ~= DATA_VERSION then
+        for _, item in ipairs(self.Items) do
+          item.CurrentStock = 0
+          item.Owners = 0
+          item.SerialOwners = {}
+        end
+
+        self.DataVersion = DATA_VERSION
+        self:SaveItems()
+      else
+        self.DataVersion = savedVersion
       end
-      
-      self.DataVersion = DATA_VERSION
       for _, item in ipairs(self.Items) do
         if item.Stock == nil then
           item.Stock = 0
@@ -472,15 +478,15 @@ function ItemDatabase:RecordSerialOwner(robloxId, userId, username, serialNumber
     item.SerialOwners = {}
   end
 
-  -- Check if this serial already has an owner (preserve original owner)
   for _, owner in ipairs(item.SerialOwners) do
     if owner.SerialNumber == serialNumber then
-      -- Serial already has an owner, preserve it (don't update)
+      owner.UserId = userId
+      owner.Username = username
+      self:QueueSave()
       return true
     end
   end
 
-  -- Serial doesn't have an owner yet, record this as the original owner
   table.insert(item.SerialOwners, {
     UserId = userId,
     SerialNumber = serialNumber,
@@ -572,7 +578,7 @@ end)
 
 function ItemDatabase:ResetOwnershipData()
   print("🔄 Resetting all ownership data (CurrentStock, Owners, TotalCopies, SerialOwners)...")
-  
+
   local resetCount = 0
   for _, item in ipairs(self.Items) do
     item.CurrentStock = 0
@@ -581,13 +587,13 @@ function ItemDatabase:ResetOwnershipData()
     item.SerialOwners = {}
     resetCount = resetCount + 1
   end
-  
+
   local saveSuccess = self:SaveItems()
-  
+
   if saveSuccess then
     print(string.format("✅ Reset ownership data for %d items successfully!", resetCount))
     print("📊 All items now show: 0 owners, 0 copies, 0 stock claimed")
-    
+
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
     if remoteEvents then
@@ -596,12 +602,16 @@ function ItemDatabase:ResetOwnershipData()
         createItemEvent:FireAllClients()
       end
     end
-    
+
     return true, string.format("Reset ownership data for %d items", resetCount)
   else
     print("❌ Failed to save reset data")
     return false, "Failed to save reset data"
   end
+end
+
+_G.ResetOwnershipData = function()
+  return ItemDatabase:ResetOwnershipData()
 end
 
 game:BindToClose(function()

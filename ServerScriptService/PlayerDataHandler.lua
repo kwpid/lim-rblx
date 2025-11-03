@@ -72,7 +72,6 @@ local function setupPlayer(player)
 
     -- Log and notify player if items were removed
     if #itemsToRemove > 0 then
-      print("🧹 Cleaned up " .. #itemsToRemove .. " deleted items from " .. player.Name .. "'s inventory")
 
       -- Send notification to player about removed items
       task.delay(3, function()
@@ -114,39 +113,39 @@ local function setupPlayer(player)
     }
     return limitedRarities[rarity] == true
   end
-  
+
   if data.Inventory then
     local totalAutoSellValue = 0
     local itemsAutoSold = {}
-    
+
     for _, invItem in ipairs(data.Inventory) do
       if not invItem.SerialNumber and shouldHaveStackLimit(invItem.Rarity) then
         local currentAmount = invItem.Amount or 1
         if currentAmount > MAX_REGULAR_ITEM_STACK then
           local excessAmount = currentAmount - MAX_REGULAR_ITEM_STACK
           local sellValue = math.floor(invItem.Value * 0.8 * excessAmount)
-          
+
           invItem.Amount = MAX_REGULAR_ITEM_STACK
           totalAutoSellValue = totalAutoSellValue + sellValue
-          
+
           local itemDatabase = require(script.Parent.ItemDatabase)
           itemDatabase:DecrementTotalCopies(invItem.RobloxId, excessAmount)
-          
+
           table.insert(itemsAutoSold, {
             name = invItem.Name,
             amount = excessAmount,
             value = sellValue
           })
-          
+
           print("📦 Migration: Auto-sold " .. excessAmount .. "x " .. invItem.Name .. " (exceeded max 100) for R$" .. sellValue)
         end
       end
     end
-    
+
     if totalAutoSellValue > 0 then
       data.Cash = (data.Cash or 0) + totalAutoSellValue
       print("💰 Migration: Gave " .. player.Name .. " R$" .. totalAutoSellValue .. " from auto-selling " .. #itemsAutoSold .. " excess items")
-      
+
       task.delay(3, function()
         local itemsList = ""
         for i, item in ipairs(itemsAutoSold) do
@@ -157,11 +156,11 @@ local function setupPlayer(player)
             end
           end
         end
-        
+
         if #itemsAutoSold > 3 then
           itemsList = itemsList .. " and " .. (#itemsAutoSold - 3) .. " more"
         end
-        
+
         local notificationData = {
           Type = "SELL",
           Title = "Auto-Sold Excess Items",
@@ -292,8 +291,8 @@ if not getInventoryFunction then
 end
 
 getInventoryFunction.OnServerInvoke = function(player)
-  print("🔍 GetInventory called by: " .. player.Name .. " (UserId: " .. player.UserId .. ")")
-  
+
+
   local attempts = 0
   while not _G.PlayerData[player.UserId] and attempts < 10 do
     attempts = attempts + 1
@@ -312,8 +311,6 @@ getInventoryFunction.OnServerInvoke = function(player)
   if not result then
     return {}
   end
-
-  print("✅ Returning " .. #result .. " items to " .. player.Name)
   return result
 end
 

@@ -1,6 +1,3 @@
--- RandomItemDrops.lua
--- Random item drop event - items fall from the sky and players can collect them
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -14,40 +11,34 @@ local WebhookHandler = require(script.Parent.Parent.WebhookHandler)
 
 local RandomItemDrops = {}
 
--- Event configuration
 local NUM_ITEMS_TO_DROP = math.random(15, 20)
-local EVENT_DURATION = 3 * 60 -- 3 minutes
-local ITEM_LIFETIME = math.random(60, 120) -- Items stay 1-2 minutes after landing
+local EVENT_DURATION = 3 * 60 
+local ITEM_LIFETIME = math.random(60, 120) 
 local DROP_INTERVAL = EVENT_DURATION / NUM_ITEMS_TO_DROP
 
--- Event drop probability system
--- Instead of using absolute probabilities, events use MULTIPLIERS on normal roll chances
--- This means events make items X times more likely than normal rolling, based on rarity
--- Higher multipliers = more common in events, but still respects rarity hierarchy
+
 local RARITY_MULTIPLIERS = {
   ["Common"] = 1,       
   ["Uncommon"] = 2,     
-  ["Rare"] = 30,       
-  ["Ultra Rare"] = 50,  
-  ["Epic"] = 75,         
-  ["Ultra Epic"] = 65,   
-  ["Mythic"] =75,       
-  ["Insane"] = 30        
+  ["Rare"] = 1300,       
+  ["Ultra Rare"] = 940,  
+  ["Epic"] = 1204,         
+  ["Ultra Epic"] = 1200,   
+  ["Mythic"] = 1195,       
+  ["Insane"] = 1300        
 }
 
--- Chat notification and notification system
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local chatNotificationEvent = remoteEvents:FindFirstChild("ChatNotificationEvent")
 local createNotificationEvent = remoteEvents:FindFirstChild("CreateNotification")
 
--- Helper function to get color tag based on item value
 local function getValueColorTag(value)
   if value >= 10000000 then
     return "<font color=\"#FF00FF\">" -- Insane (Magenta)
   elseif value >= 2500000 then
     return "<font color=\"#FF0000\">" -- Mythic (Red)
   elseif value >= 750000 then
-    return "<font color=\"#FF5500\">" -- Ultra Epic (Red-Orange)
+    return "<font color=\"#FF5500\">" -- Legendary (Red-Orange)
   elseif value >= 250000 then
     return "<font color=\"#FFAA00\">" -- Epic (Orange)
   elseif value >= 50000 then
@@ -61,7 +52,6 @@ local function getValueColorTag(value)
   end
 end
 
--- Helper to format numbers with commas
 local function formatNumber(n)
   local formatted = tostring(n)
   while true do
@@ -71,14 +61,9 @@ local function formatNumber(n)
   return formatted
 end
 
--- Pick a random item using event probability
--- Events use normal roll probability multiplied by rarity-based multipliers
 local function pickRandomEventItem(items)
   if #items == 0 then return nil end
 
-  -- Calculate weights using normal roll probability * rarity multiplier
-  -- Normal rolling: weight = 1 / (value ^ 0.9)
-  -- Event rolling: weight = (1 / (value ^ 0.9)) * rarity_multiplier
   local totalWeight = 0
   local weights = {}
 
@@ -92,7 +77,6 @@ local function pickRandomEventItem(items)
     totalWeight = totalWeight + eventWeight
   end
 
-  -- Pick random item based on weighted probability
   local randomValue = math.random() * totalWeight
   local cumulative = 0
   for i, item in ipairs(items) do
@@ -152,7 +136,7 @@ local function createItemDrop(itemData, dropZone, onCollected)
       ["Rare"] = Color3.fromRGB(85, 85, 255),
       ["Ultra Rare"] = Color3.fromRGB(170, 85, 255),
       ["Epic"] = Color3.fromRGB(255, 170, 0),
-      ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
+      ["Legendary"] = Color3.fromRGB(255, 85, 0),
       ["Mythic"] = Color3.fromRGB(255, 0, 0),
       ["Insane"] = Color3.fromRGB(255, 0, 255)
     }
@@ -178,7 +162,7 @@ local function createItemDrop(itemData, dropZone, onCollected)
     ["Rare"] = Color3.fromRGB(85, 85, 255),
     ["Ultra Rare"] = Color3.fromRGB(170, 85, 255),
     ["Epic"] = Color3.fromRGB(255, 170, 0),
-    ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
+    ["Legendary"] = Color3.fromRGB(255, 85, 0),
     ["Mythic"] = Color3.fromRGB(255, 0, 0),
     ["Insane"] = Color3.fromRGB(255, 0, 255)
   }
@@ -221,7 +205,7 @@ local function createItemDrop(itemData, dropZone, onCollected)
   highlight.FillColor = rarityColor
   highlight.OutlineColor = rarityColor
   highlight.Parent = itemModel
-  
+
   -- Add PointLight for glowing effect on the main part
   local pointLight = Instance.new("PointLight")
   pointLight.Name = "GlowLight"
@@ -229,13 +213,13 @@ local function createItemDrop(itemData, dropZone, onCollected)
   pointLight.Brightness = 2
   pointLight.Range = 15
   pointLight.Parent = part
-  
+
   -- Pulsing glow animation
   task.spawn(function()
     local pulseSpeed = 2
     local minBrightness = 1
     local maxBrightness = 3
-    
+
     while itemModel and itemModel.Parent and pointLight and pointLight.Parent do
       for brightness = minBrightness, maxBrightness, 0.1 do
         if not itemModel or not itemModel.Parent or not pointLight or not pointLight.Parent then break end
@@ -337,7 +321,7 @@ local function handleItemCollection(player, itemData)
       else
         -- Stock sold out between drop and collection!
         warn("⚠️ Stock sold out for " .. itemData.Name .. " before " .. player.Name .. " could collect it")
-        
+
         -- Notify player the item sold out
         if createNotificationEvent then
           createNotificationEvent:FireClient(player, {
@@ -353,7 +337,7 @@ local function handleItemCollection(player, itemData)
       return
     end
   end
-  
+
   -- Add to inventory (same as rolling)
   local success = DataStoreAPI:AddItem(player, itemData)
 
@@ -383,7 +367,7 @@ local function handleItemCollection(player, itemData)
       ["Rare"] = Color3.fromRGB(85, 85, 255),
       ["Ultra Rare"] = Color3.fromRGB(170, 85, 255),
       ["Epic"] = Color3.fromRGB(255, 170, 0),
-      ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
+      ["Legendary"] = Color3.fromRGB(255, 85, 0),
       ["Mythic"] = Color3.fromRGB(255, 0, 0),
       ["Insane"] = Color3.fromRGB(255, 0, 255)
     }
@@ -493,7 +477,7 @@ function RandomItemDrops.Start(onEventEnd)
 
         -- Create the drop (serial number will be claimed on collection)
         createItemDrop(itemData, dropZone, handleItemCollection)
-        
+
         if itemData.IsStockItem then
           print("  📦 Dropping stock item: " .. itemData.Name .. " (serial will be claimed on pickup)")
         else

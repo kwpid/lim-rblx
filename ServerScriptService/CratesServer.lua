@@ -50,7 +50,7 @@ local subscribeSuccess, subscribeErr = pcall(function()
   MessagingService:SubscribeAsync("HighValueUnbox", function(message)
     -- Receive cross-server notifications from other servers
     local data = message.Data
-    
+
     if data and data.PlayerName and data.ItemName and data.ItemValue then
       -- Format the item value with commas
       local function formatNumber(n)
@@ -61,19 +61,19 @@ local subscribeSuccess, subscribeErr = pcall(function()
         end
         return formatted
       end
-      
+
       -- Build the cross-server message
       local colorTag = getValueColorTag(data.ItemValue)
       local closeTag = "</font>"
-      
+
       local crossServerMessage = colorTag .. "[GLOBAL] " .. data.PlayerName .. " unboxed " .. data.ItemName
-      
+
       if data.SerialNumber then
         crossServerMessage = crossServerMessage .. " #" .. data.SerialNumber
       end
-      
+
       crossServerMessage = crossServerMessage .. " (R$" .. formatNumber(data.ItemValue) .. ")" .. closeTag
-      
+
       -- Send to all clients in this server to display
       chatNotificationEvent:FireAllClients(crossServerMessage)
     end
@@ -119,50 +119,50 @@ function pickRandomItem(items, luckMultiplier, mythicLuckMultiplier, insaneLuckM
   luckMultiplier = luckMultiplier or 1.0
   mythicLuckMultiplier = mythicLuckMultiplier or 1.0
   insaneLuckMultiplier = insaneLuckMultiplier or 1.0
-  
+
   -- Calculate total inverse value with luck applied
   local totalInverseValue = 0
   for _, item in ipairs(items) do
     local baseWeight = 1 / (item.Value ^ 0.9)
-    
+
     -- Apply luck multiplier to Epic+ items (250k+)
     if item.Value >= LUCK_MIN_VALUE then
       baseWeight = baseWeight * luckMultiplier
     end
-    
+
     -- Apply ADDITIONAL mythic luck multiplier to Mythic items ONLY (2.5M-9.9M)
     if item.Value >= MYTHIC_LUCK_MIN_VALUE and item.Value <= MYTHIC_LUCK_MAX_VALUE then
       baseWeight = baseWeight * mythicLuckMultiplier
     end
-    
+
     -- Apply ADDITIONAL insane luck multiplier to Insane items ONLY (10M+)
     if item.Value >= INSANE_LUCK_MIN_VALUE then
       baseWeight = baseWeight * insaneLuckMultiplier
     end
-    
+
     totalInverseValue = totalInverseValue + baseWeight
   end
-  
+
   -- Pick a random item using the luck-adjusted weights
   local randomValue = rnd:NextNumber() * totalInverseValue
   local cumulative = 0
-  
+
   for _, item in ipairs(items) do
     local baseWeight = 1 / (item.Value ^ 0.9)
-    
+
     -- Apply same luck adjustments
     if item.Value >= LUCK_MIN_VALUE then
       baseWeight = baseWeight * luckMultiplier
     end
-    
+
     if item.Value >= MYTHIC_LUCK_MIN_VALUE and item.Value <= MYTHIC_LUCK_MAX_VALUE then
       baseWeight = baseWeight * mythicLuckMultiplier
     end
-    
+
     if item.Value >= INSANE_LUCK_MIN_VALUE then
       baseWeight = baseWeight * insaneLuckMultiplier
     end
-    
+
     cumulative = cumulative + baseWeight
     if randomValue <= cumulative then
       -- Debug log if luck affected this roll
@@ -179,7 +179,7 @@ function pickRandomItem(items, luckMultiplier, mythicLuckMultiplier, insaneLuckM
       return item
     end
   end
-  
+
   -- Fallback
   return items[#items]
 end
@@ -217,22 +217,22 @@ function sendUnboxChatMessage(player, item, serialNumber, isCrossServer)
       end
       return formatted
     end
-    
+
     -- Build the message
     local colorTag = getValueColorTag(item.Value)
     local closeTag = "</font>"
-    
+
     local message = colorTag .. player.Name .. " unboxed " .. item.Name
-    
+
     if serialNumber then
       message = message .. " #" .. serialNumber
     end
-    
+
     message = message .. " (R$" .. formatNumber(item.Value) .. ")" .. closeTag
-    
+
     -- Send to all clients in the current server
     chatNotificationEvent:FireAllClients(message)
-    
+
     -- If cross-server (5M+ items), announce to all servers
     if isCrossServer then
       local messageData = {
@@ -241,18 +241,18 @@ function sendUnboxChatMessage(player, item, serialNumber, isCrossServer)
         ItemValue = item.Value,
         SerialNumber = serialNumber
       }
-      
+
       -- Publish to all servers via MessagingService
       local publishSuccess, publishErr = pcall(function()
         MessagingService:PublishAsync("HighValueUnbox", messageData)
       end)
-      
+
       if not publishSuccess then
         warn("⚠️ Failed to publish cross-server message: " .. tostring(publishErr))
       end
     end
   end)
-  
+
   if not success then
     warn("⚠️ Failed to send chat message: " .. tostring(err))
   end
@@ -296,17 +296,17 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
     print("⏳ ItemDatabase not ready yet, waiting...")
     local waitStart = tick()
     local maxWait = 30 -- Maximum 30 seconds wait
-    
+
     while not ItemDatabase.IsReady and (tick() - waitStart) < maxWait do
       task.wait(0.1)
     end
-    
+
     if not ItemDatabase.IsReady then
       warn("❌ ItemDatabase failed to load in time!")
       return
     end
   end
-  
+
   -- Check if player is already rolling
   if playersRolling[player] then
     return
@@ -319,7 +319,7 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
   local success, result = pcall(function()
     return MarketplaceService:UserOwnsGamePassAsync(player.UserId, FAST_ROLL_GAMEPASS_ID)
   end)
-  
+
   if success then
     hasFastRoll = result
   else
@@ -339,21 +339,13 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
   local playerLuck = player:GetAttribute("Luck") or 1.0
   local playerMythicLuck = player:GetAttribute("MythicLuck") or 1.0
   local playerInsaneLuck = player:GetAttribute("InsaneLuck") or 1.0
-  
+
   -- Apply global luck multiplier to regular luck only
   local totalLuck = playerLuck * GLOBAL_LUCK_MULTIPLIER
   local totalMythicLuck = playerMythicLuck
   local totalInsaneLuck = playerInsaneLuck
-  
-  -- Debug: Print luck values
-  if playerMythicLuck > 1.0 or playerInsaneLuck > 1.0 then
-    print(string.format("🍀💎🔥 %s rolling with luck: Regular=%.1fx, Mythic=%.1fx, Insane=%.1fx", 
-      player.Name, totalLuck, totalMythicLuck, totalInsaneLuck))
-  else
-    print(string.format("🍀 %s rolling with luck: Player=%.1fx, Global=%.1fx, Total=%.1fx", 
-      player.Name, playerLuck, GLOBAL_LUCK_MULTIPLIER, totalLuck))
-  end
-  
+
+
   -- Pick random item (weighted by inverse value with luck modifiers)
   local chosenItem = pickRandomItem(allItems, totalLuck, totalMythicLuck, totalInsaneLuck)
 
@@ -444,7 +436,7 @@ rollCrateEvent.OnServerEvent:Connect(function(player)
     -- 250k+ = Server-wide notification (current server only)
     sendUnboxChatMessage(player, chosenItem, serialNumber, false)
   end
-  
+
   -- Send Discord webhook for high-value items (250k+)
   if chosenItem.Value >= 250000 then
     task.spawn(function()

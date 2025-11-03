@@ -109,16 +109,16 @@ function unequipItemFromCharacter(player, robloxId)
                 local headlessId = head:FindFirstChild("HeadlessRobloxId")
                 if headlessId and headlessId.Value == robloxId then
                         head.Transparency = 0
-                        
+
                         local face = head:FindFirstChildOfClass("Decal")
                         if face then
                                 face.Transparency = 0
                         end
-                        
+
                         headlessId:Destroy()
                 end
         end
-        
+
         for _, child in ipairs(character:GetChildren()) do
                 if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
                         local storedId = child:FindFirstChild("OriginalRobloxId")
@@ -127,7 +127,7 @@ function unequipItemFromCharacter(player, robloxId)
                         end
                 end
         end
-        
+
         local backpack = player:FindFirstChild("Backpack")
         if backpack then
                 for _, child in ipairs(backpack:GetChildren()) do
@@ -145,7 +145,7 @@ print("✅ TradeServer: Event listener connected and ready")
 
 tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
         print("📩 TradeServer received:", instruction, "from", plr.Name)
-        
+
         if instruction == "send trade request" then
                 local playerSent = data[1]
 
@@ -154,7 +154,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
 
                         for _, trade in pairs(ongoingTradesFolder:GetChildren()) do
                                 if trade.Sender.Value == playerSent.Name or trade.Sender.Value == plr.Name or 
-                                   trade.Receiver.Value == playerSent.Name or trade.Receiver.Value == plr.Name then
+                                        trade.Receiver.Value == playerSent.Name or trade.Receiver.Value == plr.Name then
                                         inTrade = true
                                         break
                                 end
@@ -162,7 +162,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
 
                         for _, request in pairs(tradeRequestsFolder:GetChildren()) do
                                 if request.Name == playerSent.Name or request.Name == plr.Name or 
-                                   request.Value == playerSent.Name or request.Value == plr.Name then
+                                        request.Value == playerSent.Name or request.Value == plr.Name then
                                         inTrade = true
                                         break
                                 end
@@ -173,7 +173,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 newRequest.Name = plr.Name
                                 newRequest.Value = playerSent.Name
                                 newRequest.Parent = tradeRequestsFolder
-                                
+
                                 if createNotificationEvent then
                                         createNotificationEvent:FireClient(playerSent, {
                                                 Type = "VICTORY",
@@ -189,9 +189,9 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         if request.Name == plr.Name or request.Value == plr.Name then
                                 local otherPlayerName = request.Name == plr.Name and request.Value or request.Name
                                 local otherPlayer = Players:FindFirstChild(otherPlayerName)
-                                
+
                                 request:Destroy()
-                                
+
                                 if createNotificationEvent and otherPlayer then
                                         createNotificationEvent:FireClient(otherPlayer, {
                                                 Type = "ERROR",
@@ -222,7 +222,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         end
 
                         requestValue:Destroy()
-                        
+
                         if createNotificationEvent then
                                 createNotificationEvent:FireClient(senderPlr, {
                                         Type = "VICTORY",
@@ -424,12 +424,12 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                 if currentTrade.Sender:FindFirstChild("ACCEPTED") and currentTrade.Receiver:FindFirstChild("ACCEPTED") then
                         local senderPlr = Players:FindFirstChild(currentTrade.Sender.Value)
                         local receiverPlr = Players:FindFirstChild(currentTrade.Receiver.Value)
-                        
+
                         if not senderPlr or not receiverPlr then
                                 currentTrade:Destroy()
                                 return
                         end
-                        
+
                         local countdownTime = 3
                         for i = countdownTime, 1, -1 do
                                 if not currentTrade or not currentTrade.Parent then break end
@@ -438,7 +438,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                         tradeEvent:FireClient(receiverPlr, "countdown cancelled")
                                         return
                                 end
-                                
+
                                 tradeEvent:FireClient(senderPlr, "countdown update", i)
                                 tradeEvent:FireClient(receiverPlr, "countdown update", i)
                                 task.wait(1)
@@ -522,7 +522,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                                 ItemDatabase:DecrementTotalCopies(item.RobloxId, actualItem.Amount or 1)
                                                         end
                                                 end
-                                                
+
                                                 if senderData.EquippedItems then
                                                         for i = #senderData.EquippedItems, 1, -1 do
                                                                 if senderData.EquippedItems[i] == item.RobloxId then
@@ -550,7 +550,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                                 ItemDatabase:DecrementTotalCopies(item.RobloxId, actualItem.Amount or 1)
                                                         end
                                                 end
-                                                
+
                                                 if receiverData.EquippedItems then
                                                         for i = #receiverData.EquippedItems, 1, -1 do
                                                                 if receiverData.EquippedItems[i] == item.RobloxId then
@@ -586,22 +586,22 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
 
                                 DataStoreAPI:UpdateInventoryValue(senderPlr)
                                 DataStoreAPI:UpdateInventoryValue(receiverPlr)
-                                
+
                                 local senderGaveValue = 0
                                 for _, item in ipairs(senderItems) do
                                         senderGaveValue = senderGaveValue + (item.Value * item.Amount)
                                 end
-                                
+
                                 local senderReceivedValue = 0
                                 for _, item in ipairs(receiverItems) do
                                         senderReceivedValue = senderReceivedValue + (item.Value * item.Amount)
                                 end
-                                
+
                                 local receiverGaveValue = senderReceivedValue
                                 local receiverReceivedValue = senderGaveValue
-                                
+
                                 local timestamp = os.date("%m/%d/%Y %I:%M %p")
-                                
+
                                 table.insert(senderData.TradeHistory, 1, {
                                         OtherPlayer = receiverPlr.Name,
                                         OtherPlayerId = receiverPlr.UserId,
@@ -611,7 +611,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                         GaveValue = senderGaveValue,
                                         ReceivedValue = senderReceivedValue
                                 })
-                                
+
                                 table.insert(receiverData.TradeHistory, 1, {
                                         OtherPlayer = senderPlr.Name,
                                         OtherPlayerId = senderPlr.UserId,
@@ -621,7 +621,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                         GaveValue = receiverGaveValue,
                                         ReceivedValue = receiverReceivedValue
                                 })
-                                
+
                                 if #senderData.TradeHistory > 50 then
                                         table.remove(senderData.TradeHistory)
                                 end
@@ -631,7 +631,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
 
                                 tradeEvent:FireClient(senderPlr, "trade completed")
                                 tradeEvent:FireClient(receiverPlr, "trade completed")
-                                
+
                                 currentTrade:Destroy()
                         end
                 end
@@ -641,7 +641,7 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         if trade.Sender.Value == plr.Name or trade.Receiver.Value == plr.Name then
                                 local otherPlayerName = trade.Sender.Value == plr.Name and trade.Receiver.Value or trade.Sender.Value
                                 local otherPlayer = Players:FindFirstChild(otherPlayerName)
-                                
+
                                 if createNotificationEvent and otherPlayer then
                                         createNotificationEvent:FireClient(otherPlayer, {
                                                 Type = "ERROR",
@@ -649,12 +649,12 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                                 Body = plr.Name .. " cancelled the trade."
                                         })
                                 end
-                                
+
                                 trade:Destroy()
                                 break
                         end
                 end
-        
+
         elseif instruction == "get trade history" then
                 local playerData = _G.PlayerData[plr.UserId]
                 if playerData and playerData.TradeHistory then

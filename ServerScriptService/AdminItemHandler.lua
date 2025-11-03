@@ -60,20 +60,20 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
 
   -- Default stock to 0 if not provided
   itemStock = itemStock or 0
-  
+
   -- Default Limited to false if not provided
   isLimited = isLimited or false
-  
+
   -- Default edit mode to false if not provided
   isEditMode = isEditMode or false
 
   local success, result
-  
+
   if isEditMode then
     -- EDIT MODE - Update existing item
     print("🔧 DEBUG: Editing item with isLimited =", isLimited, "type =", type(isLimited))
     success, result = ItemDatabase:EditItem(robloxId, itemName, itemValue, itemStock, isLimited)
-    
+
     if success then
       print("🔧 DEBUG: Edit successful, result.Limited =", result.Limited)
       local stockText = itemStock > 0 and " [Stock: " .. itemStock .. "]" or ""
@@ -117,12 +117,12 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
       }
       notificationEvent:FireAllClients(notificationData)
       print("📢 Sent new item notification to all players: " .. itemName .. " (ImageId: " .. robloxId .. ")")
-      
+
       -- Calculate roll percentage and send Discord webhook
       task.spawn(function()
         local allItems = ItemDatabase:GetAllItems()
         local itemsWithPercentages = ItemRarityModule:CalculateAllRollPercentages(allItems)
-        
+
         -- Find the newly created item's roll percentage
         local rollPercentage = 0
         for _, itemData in ipairs(itemsWithPercentages) do
@@ -131,7 +131,7 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
             break
           end
         end
-        
+
         -- Send webhook notification
         WebhookHandler:SendItemRelease(result, rollPercentage)
       end)
@@ -224,7 +224,7 @@ giveItemEvent.OnServerEvent:Connect(function(adminPlayer, giveItemId, giveAmount
     -- ═══════════════════════════════════════════════════
     -- REGULAR ITEM - Give amount times
     -- ═══════════════════════════════════════════════════
-    
+
     for i = 1, giveAmount do
       local itemToAdd = {
         RobloxId = item.RobloxId,
@@ -237,7 +237,7 @@ giveItemEvent.OnServerEvent:Connect(function(adminPlayer, giveItemId, giveAmount
 
     print("✅ Admin " .. adminPlayer.Name .. " gave " .. giveAmount .. "x " .. item.Name .. " to " .. targetPlayer.Name)
     giveItemEvent:FireClient(adminPlayer, true, "Gave " .. giveAmount .. "x " .. item.Name .. " to " .. targetPlayer.Name)
-    
+
     -- Send notification to admin
     local adminNotification = {
       Type = "GIFT",
@@ -246,7 +246,7 @@ giveItemEvent.OnServerEvent:Connect(function(adminPlayer, giveItemId, giveAmount
       ImageId = item.RobloxId
     }
     notificationEvent:FireClient(adminPlayer, adminNotification)
-    
+
     -- Send notification to target player
     local playerNotification = {
       Type = "GIFT",
@@ -260,12 +260,12 @@ giveItemEvent.OnServerEvent:Connect(function(adminPlayer, giveItemId, giveAmount
     -- ═══════════════════════════════════════════════════
     -- STOCK ITEM
     -- ═══════════════════════════════════════════════════
-    
+
     local itemsGiven = 0
-    
+
     for i = 1, giveAmount do
       local serialNumber = nil
-      
+
       -- Check if stock is available
       if currentStock < stock then
         -- Stock available - claim next serial
@@ -301,7 +301,7 @@ giveItemEvent.OnServerEvent:Connect(function(adminPlayer, giveItemId, giveAmount
     if itemsGiven > 0 then
       print("✅ Admin " .. adminPlayer.Name .. " gave " .. itemsGiven .. "x " .. item.Name .. " to " .. targetPlayer.Name)
       giveItemEvent:FireClient(adminPlayer, true, "Gave " .. itemsGiven .. "x " .. item.Name .. " to " .. targetPlayer.Name)
-      
+
       -- Send notification to admin
       local adminNotification = {
         Type = "GIFT",
@@ -310,7 +310,7 @@ giveItemEvent.OnServerEvent:Connect(function(adminPlayer, giveItemId, giveAmount
         ImageId = item.RobloxId
       }
       notificationEvent:FireClient(adminPlayer, adminNotification)
-      
+
       -- Send notification to target player
       local playerNotification = {
         Type = "GIFT",
@@ -492,7 +492,7 @@ _G.CheckRarities = function()
   print("║      ITEMS BY RARITY                  ║")
   print("╚═══════════════════════════════════════╝")
 
-  local rarities = {"Insane", "Mythic", "Ultra Epic", "Epic", "Ultra Rare", "Rare", "Uncommon", "Common"}
+  local rarities = {"Insane", "Mythic", "Legendary", "Epic", "Ultra Rare", "Rare", "Uncommon", "Common"}
   for _, rarity in ipairs(rarities) do
     local count = rarityCount[rarity] or 0
     if count > 0 then
@@ -784,7 +784,7 @@ _G.CheckAllLuck = function(username)
   print("  🔥 Insane Luck (Insane only): " .. string.format("%.1fx", playerInsaneLuck))
   print("")
   print("  💡 Combined Effects:")
-  print("     Epic/Ultra Epic: " .. string.format("%.1fx", playerLuck))
+  print("     Epic/Legendary: " .. string.format("%.1fx", playerLuck))
   print("     Mythic: " .. string.format("%.1fx", playerLuck * playerMythicLuck))
   print("     Insane: " .. string.format("%.1fx", playerLuck * playerInsaneLuck))
   print("")

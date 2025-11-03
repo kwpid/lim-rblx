@@ -70,22 +70,22 @@ function DataStoreAPI:AddItem(player, itemData, preserveSerialOwner)
       isNewOwner = true
       currentAmount = 0
     end
-    
+
     if shouldHaveStackLimit(itemData.Rarity) then
       local newTotal = currentAmount + amountToAdd
       if newTotal > MAX_REGULAR_ITEM_STACK then
         local excessAmount = newTotal - MAX_REGULAR_ITEM_STACK
         local sellValue = math.floor(itemData.Value * 0.8 * excessAmount)
-        
+
         for _, invItem in ipairs(data.Inventory) do
           if invItem.RobloxId == itemData.RobloxId and not invItem.SerialNumber then
             invItem.Amount = MAX_REGULAR_ITEM_STACK
             break
           end
         end
-        
+
         ItemDatabase:DecrementTotalCopies(itemData.RobloxId, excessAmount)
-        
+
         DataStoreManager:AddCash(data, sellValue)
         if player:FindFirstChild("leaderstats") then
           local cash = player.leaderstats:FindFirstChild("Cash")
@@ -93,8 +93,8 @@ function DataStoreAPI:AddItem(player, itemData, preserveSerialOwner)
             cash.Value = data.Cash
           end
         end
-        
-        print("📦 Auto-sold " .. excessAmount .. "x " .. itemData.Name .. " (max 100) for R$" .. sellValue .. " to " .. player.Name)
+
+
       end
     end
   end
@@ -260,7 +260,7 @@ function DataStoreAPI:UpdateInventoryValue(player)
   if remoteEvents then
     local inventoryUpdatedEvent = remoteEvents:FindFirstChild("InventoryUpdatedEvent")
     if inventoryUpdatedEvent then
-      print("📢 Firing InventoryUpdatedEvent to: " .. player.Name .. " (UserId: " .. player.UserId .. ")")
+
       inventoryUpdatedEvent:FireClient(player)
     end
   end

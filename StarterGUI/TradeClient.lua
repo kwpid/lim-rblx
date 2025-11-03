@@ -124,55 +124,55 @@ local function populateViewInventory(targetPlayer)
         local sample = script:FindFirstChild("Sample")
         local handler = viewInventoryFrame:FindFirstChild("Handler")
         local title = viewInventoryFrame:FindFirstChild("Title")
-        
+
         if not sample or not handler then
                 warn("❌ TradeClient: ViewInventoryFrame missing required elements")
                 return
         end
-        
+
         if title then
                 title.Text = targetPlayer.Name .. "'s Inventory"
         end
-        
+
         for _, btn in pairs(viewInventoryButtons) do
                 if btn then
                         btn:Destroy()
                 end
         end
         viewInventoryButtons = {}
-        
+
         local getPlayerInventoryFunction = remoteEvents:FindFirstChild("GetPlayerInventoryFunction")
         if not getPlayerInventoryFunction then
                 warn("❌ TradeClient: GetPlayerInventoryFunction not found")
                 return
         end
-        
+
         local success, response = pcall(function()
                 return getPlayerInventoryFunction:InvokeServer(targetPlayer.UserId)
         end)
-        
+
         if not success or not response or type(response) ~= "table" or not response.success then
                 warn("❌ TradeClient: Failed to get inventory for", targetPlayer.Name)
                 viewInventoryFrame.Visible = false
                 return
         end
-        
+
         local inventory = response.inventory
-        
+
         table.sort(inventory, function(a, b)
                 return a.Value > b.Value
         end)
-        
+
         for i, item in ipairs(inventory) do
                 local button = sample:Clone()
                 button.Name = item.Name or "Item_" .. i
                 button.LayoutOrder = i
                 button.Visible = true
                 button.Parent = handler
-                
+
                 local contentFrame = button:FindFirstChild("Content")
                 local content2Frame = button:FindFirstChild("content2")
-                
+
                 if contentFrame then
                         local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
                         contentFrame.BorderColor3 = rarityColor
@@ -181,7 +181,7 @@ local function populateViewInventory(targetPlayer)
                         local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
                         content2Frame.BorderColor3 = rarityColor
                 end
-                
+
                 local qtyLabel = button:FindFirstChild("Qty")
                 if qtyLabel then
                         if item.SerialNumber then
@@ -192,7 +192,7 @@ local function populateViewInventory(targetPlayer)
                                 qtyLabel.Text = "1x"
                         end
                 end
-                
+
                 local serialLabel = button:FindFirstChild("Serial")
                 if serialLabel then
                         if item.SerialNumber then
@@ -202,7 +202,7 @@ local function populateViewInventory(targetPlayer)
                                 serialLabel.Visible = false
                         end
                 end
-                
+
                 local rarityLabel = contentFrame and contentFrame:FindFirstChild("Rarity")
                 if rarityLabel then
                         if item.Rarity == "Common" then
@@ -213,19 +213,19 @@ local function populateViewInventory(targetPlayer)
                                 rarityLabel.TextColor3 = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
                         end
                 end
-                
+
                 local t1Label = button:FindFirstChild("t1")
                 if t1Label then
                         t1Label.Visible = false
                 end
-                
+
                 local copiesCount = 0
                 if item.Stock and item.Stock > 0 then
                         copiesCount = item.CurrentStock or 0
                 else
                         copiesCount = item.TotalCopies or 0
                 end
-                
+
                 local rareText = button:FindFirstChild("RareText")
                 if rareText then
                         if copiesCount > 0 and copiesCount <= 25 then
@@ -234,7 +234,7 @@ local function populateViewInventory(targetPlayer)
                                 rareText.Visible = false
                         end
                 end
-                
+
                 local limText = button:FindFirstChild("LimText")
                 if limText then
                         if item.Limited then
@@ -243,11 +243,11 @@ local function populateViewInventory(targetPlayer)
                                 limText.Visible = false
                         end
                 end
-                
+
                 local copiesLabel = button:FindFirstChild("copies")
                 if copiesLabel then
                         local stockCount = item.Stock or 0
-                        
+
                         if copiesCount > 0 then
                                 if stockCount > 0 then
                                         copiesLabel.Text = copiesCount .. " / " .. stockCount .. " copies"
@@ -259,7 +259,7 @@ local function populateViewInventory(targetPlayer)
                                 copiesLabel.Visible = false
                         end
                 end
-                
+
                 local o2Label = contentFrame and contentFrame:FindFirstChild("o2")
                 if o2Label then
                         if item.Stock and item.Stock > 0 then
@@ -268,17 +268,17 @@ local function populateViewInventory(targetPlayer)
                                 o2Label.Text = formatNumber(copiesCount)
                         end
                 end
-                
+
                 local valueLabel = contentFrame and contentFrame:FindFirstChild("Value")
                 if valueLabel then
                         valueLabel.Text = "R$ " .. formatNumber(item.Value)
                 end
-                
+
                 local v2Label = contentFrame and contentFrame:FindFirstChild("v2")
                 if v2Label then
                         v2Label.Text = formatNumber(item.Value)
                 end
-                
+
                 local nameLabel = content2Frame and content2Frame:FindFirstChild("name")
                 if nameLabel then
                         local displayName = item.Name
@@ -287,15 +287,15 @@ local function populateViewInventory(targetPlayer)
                         end
                         nameLabel.Text = displayName
                 end
-                
+
                 local img = button:FindFirstChild("Image")
                 if img and img:IsA("ImageLabel") then
                         img.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
                 end
-                
+
                 table.insert(viewInventoryButtons, button)
         end
-        
+
         -- Set up search bar functionality
         local searchBar = viewInventoryFrame:FindFirstChild("SearchBar")
         if searchBar and searchBar:IsA("TextBox") then
@@ -303,10 +303,10 @@ local function populateViewInventory(targetPlayer)
                 if viewInventorySearchConnection then
                         viewInventorySearchConnection:Disconnect()
                 end
-                
+
                 -- Clear search text
                 searchBar.Text = ""
-                
+
                 -- Connect new search functionality
                 viewInventorySearchConnection = searchBar:GetPropertyChangedSignal("Text"):Connect(function()
                         local filterText = searchBar.Text:lower()
@@ -318,7 +318,7 @@ local function populateViewInventory(targetPlayer)
                         end
                 end)
         end
-        
+
         viewInventoryFrame.Visible = true
 end
 
@@ -372,7 +372,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 tradeFrame.TradingFrame.PlayerAccepted.Text = ""
                         end
                 end)
-                
+
                 clientValue.ChildAdded:Connect(function(child)
                         if child.Name == "ACCEPTED" then
                                 tradeFrame.TradingFrame.AcceptButton.Text = "Accepted"
@@ -386,7 +386,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                 local inventoryList = tradeFrame.InventoryFrame.InventoryList
                 local searchBox = tradeFrame.InventoryFrame:FindFirstChild("SearchInv")
-                
+
                 for _, child in pairs(inventoryList:GetChildren()) do
                         if child:IsA("TextButton") or child:IsA("ImageButton") or child:IsA("Frame") then
                                 child:Destroy()
@@ -443,7 +443,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                         newItemButton.ItemName.Text = displayItem.Name
                         newItemButton.ItemImage1.Image = getItemThumbnail(displayItem.RobloxId)
-                        
+
                         if displayItem.isSerial then
                                 newItemButton.QtySerial.Text = "#" .. displayItem.SerialNumber
                         else
@@ -479,7 +479,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                         return newItemButton
                 end
-                
+
                 local function updateInventoryDisplay(searchQuery)
                         for _, child in pairs(inventoryList:GetChildren()) do
                                 if child:IsA("TextButton") or child:IsA("ImageButton") or child:IsA("Frame") then
@@ -487,9 +487,9 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 end
                         end
                         currentInventoryButtons = {}
-                        
+
                         local query = searchQuery and searchQuery:lower() or ""
-                        
+
                         for _, displayItem in ipairs(allItemsData) do
                                 local itemName = displayItem.Name:lower()
                                 if query == "" or itemName:find(query, 1, true) then
@@ -499,17 +499,17 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 end
                         end
                 end
-                
+
                 for _, displayItem in ipairs(itemsToDisplay) do
                         table.insert(allItemsData, displayItem)
                 end
-                
+
                 table.sort(allItemsData, function(a, b)
                         return a.Value > b.Value
                 end)
-                
+
                 updateInventoryDisplay("")
-                
+
                 if searchBox then
                         searchBox:GetPropertyChangedSignal("Text"):Connect(function()
                                 updateInventoryDisplay(searchBox.Text)
@@ -518,7 +518,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                 local clientOffer = child[clientValue.Value .. "'s offer"]
                 local otherPlrOffer = child[otherPlrValue.Value .. "'s offer"]
-                
+
                 local function updateYourValue()
                         local totalValue = 0
                         for _, offerItem in pairs(clientOffer:GetChildren()) do
@@ -531,7 +531,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         end
                         tradeFrame.TradingFrame.YourOfferFrame.YourValue.Text = "Value: " .. tostring(totalValue)
                 end
-                
+
                 local function updateTheirValue()
                         local totalValue = 0
                         for _, offerItem in pairs(otherPlrOffer:GetChildren()) do
@@ -548,7 +548,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                 clientOffer.ChildAdded:Connect(function(slotChild)
                         task.wait()
                         updateYourValue()
-                        
+
                         local robloxId = slotChild:FindFirstChild("RobloxId")
                         local serialNumber = slotChild:FindFirstChild("SerialNumber")
                         local amount = slotChild:FindFirstChild("Amount")
@@ -558,16 +558,16 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                         local newToolButton = script.ItemButton:Clone()
                         newToolButton.Name = "Offer_" .. (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
-                        
+
                         newToolButton.ItemName.Text = itemName.Value
 
                         newToolButton.ItemImage1.Image = getItemThumbnail(robloxId.Value)
-                        
+
                         if serialNumber then
                                 newToolButton.QtySerial.Text = "#" .. serialNumber.Value
                         elseif amount then
                                 newToolButton.QtySerial.Text = "x" .. amount.Value
-                                
+
                                 amount:GetPropertyChangedSignal("Value"):Connect(function()
                                         newToolButton.QtySerial.Text = "x" .. amount.Value
                                         updateYourValue()
@@ -589,7 +589,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         task.wait(0.1)
                                         newToolButton.QtySerial.Text = "x" .. child.Value
                                         updateYourValue()
-                                        
+
                                         child:GetPropertyChangedSignal("Value"):Connect(function()
                                                 newToolButton.QtySerial.Text = "x" .. child.Value
                                                 updateYourValue()
@@ -605,7 +605,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                                 newToolButton.QtySerial.Text = "x" .. currentAmount.Value
                                         else
                                                 newToolButton:Destroy()
-                                                
+
                                                 for _, displayItem in ipairs(allItemsData) do
                                                         if displayItem.RobloxId == robloxId.Value and not displayItem.isSerial then
                                                                 if displayItem.Amount > 0 then
@@ -623,7 +623,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         slotChild:GetPropertyChangedSignal("Parent"):Connect(function()
                                 if slotChild.Parent == nil then
                                         newToolButton:Destroy()
-                                        
+
                                         if not serialNumber then
                                                 for _, displayItem in ipairs(allItemsData) do
                                                         if displayItem.RobloxId == robloxId.Value and not displayItem.isSerial then
@@ -634,14 +634,14 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                                         end
                                                 end
                                         end
-                                        
+
                                         updateYourValue()
                                 end
                         end)
 
                         newToolButton.Parent = tradeFrame.TradingFrame.YourOfferFrame.Slots
                 end)
-                
+
                 clientOffer.ChildRemoved:Connect(function()
                         updateYourValue()
                 end)
@@ -649,7 +649,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                 otherPlrOffer.ChildAdded:Connect(function(slotChild)
                         task.wait()
                         updateTheirValue()
-                        
+
                         local robloxId = slotChild:FindFirstChild("RobloxId")
                         local serialNumber = slotChild:FindFirstChild("SerialNumber")
                         local amount = slotChild:FindFirstChild("Amount")
@@ -659,17 +659,17 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                         local newToolButton = script.ItemButton:Clone()
                         newToolButton.Name = "TheirOffer_" .. (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
-                        
+
                         newToolButton.ItemName.Text = itemName.Value
 
                         newToolButton.ItemImage1.Image = getItemThumbnail(robloxId.Value)
                         newToolButton.AutoButtonColor = false
-                        
+
                         if serialNumber then
                                 newToolButton.QtySerial.Text = "#" .. serialNumber.Value
                         elseif amount then
                                 newToolButton.QtySerial.Text = "x" .. amount.Value
-                                
+
                                 amount:GetPropertyChangedSignal("Value"):Connect(function()
                                         newToolButton.QtySerial.Text = "x" .. amount.Value
                                         updateTheirValue()
@@ -683,7 +683,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         task.wait(0.1)
                                         newToolButton.QtySerial.Text = "x" .. child.Value
                                         updateTheirValue()
-                                        
+
                                         child:GetPropertyChangedSignal("Value"):Connect(function()
                                                 newToolButton.QtySerial.Text = "x" .. child.Value
                                                 updateTheirValue()
@@ -713,7 +713,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                         newToolButton.Parent = tradeFrame.TradingFrame.TheirOfferFrame.Slots
                 end)
-                
+
                 otherPlrOffer.ChildRemoved:Connect(function()
                         updateTheirValue()
                 end)
@@ -746,7 +746,7 @@ openBtn.MouseButton1Click:Connect(function()
                                                 tradeEvent:FireServer("send trade request", { plr })
                                         end
                                 end)
-                                
+
                                 local viewInvBtn = playerFrame:FindFirstChild("ViewInventory")
                                 if viewInvBtn then
                                         viewInvBtn.MouseButton1Click:Connect(function()
@@ -805,13 +805,13 @@ local viewInvCloseBtn = viewInventoryFrame:FindFirstChild("Close")
 if viewInvCloseBtn then
         viewInvCloseBtn.MouseButton1Click:Connect(function()
                 viewInventoryFrame.Visible = false
-                
+
                 -- Disconnect search connection
                 if viewInventorySearchConnection then
                         viewInventorySearchConnection:Disconnect()
                         viewInventorySearchConnection = nil
                 end
-                
+
                 for _, btn in pairs(viewInventoryButtons) do
                         if btn then
                                 btn:Destroy()
@@ -824,37 +824,37 @@ end
 tradeEvent.OnClientEvent:Connect(function(instruction, data)
         if instruction == "load trade history" then
                 local scrollFrame = tradeHistoryFrame.Main.ScrollingFrame
-                
+
                 for _, child in pairs(scrollFrame:GetChildren()) do
                         if child:IsA("Frame") then
                                 child:Destroy()
                         end
                 end
-                
+
                 if not data or #data == 0 then
                         return
                 end
-                
+
                 for _, historyEntry in ipairs(data) do
                         local historyFrame = script.HistoryFrame:Clone()
-                        
+
                         historyFrame.PlayerUser.Text = "@" .. historyEntry.OtherPlayer
-                        
+
                         local dateLabel = historyFrame:FindFirstChild("Date")
                         if dateLabel then
                                 dateLabel.Text = historyEntry.Date
                         end
-                        
+
                         historyFrame.ForValue.Text = "For: " .. formatValueShort(historyEntry.ReceivedValue)
                         historyFrame.GaveValue.Text = "Gave: " .. formatValueShort(historyEntry.GaveValue)
-                        
+
                         local success, pfp = pcall(function()
                                 return game.Players:GetUserThumbnailAsync(historyEntry.OtherPlayerId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
                         end)
                         if success then
                                 historyFrame.PlayerImage1.Image = pfp
                         end
-                        
+
                         for _, item in ipairs(historyEntry.ReceivedItems) do
                                 local itemBtn = script.ItemButton:Clone()
                                 itemBtn.ItemName.Text = item.Name
@@ -868,7 +868,7 @@ tradeEvent.OnClientEvent:Connect(function(instruction, data)
                                 end
                                 itemBtn.Parent = historyFrame.For
                         end
-                        
+
                         for _, item in ipairs(historyEntry.GaveItems) do
                                 local itemBtn = script.ItemButton:Clone()
                                 itemBtn.ItemName.Text = item.Name
@@ -882,20 +882,20 @@ tradeEvent.OnClientEvent:Connect(function(instruction, data)
                                 end
                                 itemBtn.Parent = historyFrame.Gave
                         end
-                        
+
                         historyFrame.Parent = scrollFrame
                 end
-                
+
         elseif instruction == "countdown update" then
                 if tradeFrame.Visible then
                         tradeFrame.TradingFrame.PlayerAccepted.Text = "Trade completing in " .. tostring(data) .. "..."
                 end
-                
+
         elseif instruction == "countdown cancelled" then
                 if tradeFrame.Visible then
                         tradeFrame.TradingFrame.PlayerAccepted.Text = ""
                 end
-                
+
         elseif instruction == "trade completed" then
                 tradeFrame.Visible = false
                 openBtn.Visible = true
