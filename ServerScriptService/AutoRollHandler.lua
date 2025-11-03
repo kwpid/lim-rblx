@@ -69,17 +69,13 @@ getHideRollsFunction.OnServerInvoke = function(player)
 end
 
 game:BindToClose(function()
-  print("Server is shutting down - enabling AutoRoll for all players")
-  
   for _, player in pairs(Players:GetPlayers()) do
     DataStoreAPI:SetAutoRoll(player, true)
-    
+
     pcall(function()
       serverShutdownEvent:FireClient(player)
     end)
   end
-  
+
   wait(1)
 end)
-
-print("AutoRollHandler (with HideRolls) loaded successfully")

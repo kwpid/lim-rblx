@@ -31,7 +31,6 @@ if not tradeRequestsFolder then
         tradeRequestsFolder = Instance.new("Folder")
         tradeRequestsFolder.Name = "TRADE REQUESTS"
         tradeRequestsFolder.Parent = ReplicatedStorage
-        print("✅ TradeServer: Created TRADE REQUESTS folder")
 end
 
 local ongoingTradesFolder = ReplicatedStorage:FindFirstChild("ONGOING TRADES")
@@ -39,7 +38,6 @@ if not ongoingTradesFolder then
         ongoingTradesFolder = Instance.new("Folder")
         ongoingTradesFolder.Name = "ONGOING TRADES"
         ongoingTradesFolder.Parent = ReplicatedStorage
-        print("✅ TradeServer: Created ONGOING TRADES folder")
 end
 
 function removeTrades(plr)
@@ -141,10 +139,7 @@ function unequipItemFromCharacter(player, robloxId)
         end
 end
 
-print("✅ TradeServer: Event listener connected and ready")
-
 tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
-        print("📩 TradeServer received:", instruction, "from", plr.Name)
 
         if instruction == "send trade request" then
                 local playerSent = data[1]

@@ -10,7 +10,6 @@ ItemRarityModule.RarityTiers = {
   { Name = "Insane",     Min = 10000000, Max = math.huge, Color = Color3.fromRGB(255, 0, 255) }
 }
 
--- Get rarity name from value
 function ItemRarityModule:GetRarity(value)
   for _, tier in ipairs(self.RarityTiers) do
     if value >= tier.Min and value <= tier.Max then
@@ -38,7 +37,6 @@ function ItemRarityModule:GetRarityInfo(value)
   return nil
 end
 
--- Power of 0.9 = steeper rarity curve (rare items more rare)
 function ItemRarityModule:GetRollPercentage(value, totalValue)
   if totalValue == 0 then return 0 end
 

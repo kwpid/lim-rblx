@@ -1,6 +1,5 @@
 local AdminConfig = {}
 
--- Add admin User IDs here
 AdminConfig.AdminUserIds = {
   1547280148,
 }

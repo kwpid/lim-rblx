@@ -47,11 +47,15 @@ local function startAutoRoll()
 end
 
 local function lerp(a, b, t) return a + (b - a) * t end
-local function tweenGraph(x, pow) x = math.clamp(x, 0, 1) return 1 - (1 - x) ^ pow end
+local function tweenGraph(x, pow)
+  x = math.clamp(x, 0, 1)
+  return 1 - (1 - x) ^ pow
+end
 
 closeOpenedBtn.MouseButton1Click:Connect(function()
   openedFrame.Visible, openedGui.Enabled = false, false
-  for _, c in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do if c:IsA("Frame") or c:IsA("ImageLabel") then c:Destroy() end end
+  for _, c in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do if c:IsA("Frame") or c:IsA("ImageLabel") then c
+          :Destroy() end end
   rollButton.Visible, autoRollButton.Visible = true, true
 end)
 
@@ -91,7 +95,8 @@ hideRollsButton.MouseButton1Click:Connect(function()
 end)
 
 crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
-  for _, c in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do if c:IsA("Frame") or c:IsA("ImageLabel") then c:Destroy() end end
+  for _, c in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do if c:IsA("Frame") or c:IsA("ImageLabel") then c
+          :Destroy() end end
   local numItems, chosenPosition = 100, 25
   for i = 1, numItems do
     local itemData = i == chosenPosition and chosenItem or allItems[rnd:NextInteger(1, #allItems)]
@@ -114,7 +119,8 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   local pow, timeOpened, lastSlot = 2.5, tick(), 0
 
   openedFrame.CrateName.Text, closeOpenedBtn.Visible = "Rolling...", false
-  if not hideRollsEnabled then openedFrame.Visible, openedGui.Enabled = true, true else openedFrame.Visible, openedGui.Enabled = false, false end
+  if not hideRollsEnabled then openedFrame.Visible, openedGui.Enabled = true, true else openedFrame.Visible, openedGui.Enabled =
+    false, false end
 
   if not hideRollsEnabled then
     while true do
@@ -140,7 +146,8 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
     task.delay(hideRollsEnabled and 0.5 or 1.5, function()
       if isAutoRolling and not isCurrentlyRolling and not shouldStopAutoRoll then
         openedFrame.Visible, openedGui.Enabled = false, false
-        for _, c in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do if c:IsA("Frame") or c:IsA("ImageLabel") then c:Destroy() end end
+        for _, c in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do if c:IsA("Frame") or c:IsA("ImageLabel") then
+            c:Destroy() end end
         isCurrentlyRolling, rollButton.Visible = true, false
         rollCrateEvent:FireServer()
       end
@@ -149,7 +156,8 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
     stopAutoRoll()
   elseif hideRollsEnabled then
     task.delay(0.5, function()
-      for _, c in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do if c:IsA("Frame") or c:IsA("ImageLabel") then c:Destroy() end end
+      for _, c in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do if c:IsA("Frame") or c:IsA("ImageLabel") then c
+              :Destroy() end end
       openedFrame.Visible, openedGui.Enabled = false, false
     end)
   end
@@ -157,7 +165,8 @@ end)
 
 updateResultEvent.OnClientEvent:Connect(function(serial)
   if currentChosenItem and serial then
-    openedFrame.CrateName.Text = "You won: " .. currentChosenItem.Name .. " (#" .. serial .. ") (" .. currentChosenItem.Rarity .. ")!"
+    openedFrame.CrateName.Text = "You won: " ..
+    currentChosenItem.Name .. " (#" .. serial .. ") (" .. currentChosenItem.Rarity .. ")!"
   end
 end)
 
@@ -198,5 +207,3 @@ if serverShutdownEvent then
     print("Server is shutting down - AutoRoll will be enabled on reconnect")
   end)
 end
-
-print("Crates Client loaded!")

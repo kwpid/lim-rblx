@@ -1,7 +1,7 @@
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
 
--- REMEMEBR TO MATCH THIS WITH ITEMDATABASE VERSION!
+-- MATCH THIS WITH ITEM DATABASE!
 local DATA_VERSION = "DataVersion.30"
 
 local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
@@ -25,7 +25,7 @@ function DataStoreManager:SaveData(player, data)
   end)
 
   if not success then
-    warn("❌ Failed to save data for " .. player.Name .. ": " .. errorMessage)
+    warn("failed to save data for " .. player.Name .. ": " .. errorMessage)
     return false
   end
 
@@ -45,14 +45,14 @@ function DataStoreManager:LoadData(player)
   end)
 
   if not success then
-    warn("❌ DataStore Error for " .. player.Name .. ": " .. tostring(errorMessage))
-    warn("⚠️ SOLUTION: Enable Studio API Access in Game Settings > Security > Studio Access to API Services")
-    warn("⚠️ Without API access, leaderstats and inventory will not work properly!")
+    warn("datastore error for " .. player.Name .. ": " .. tostring(errorMessage))
+    warn("solution: enable studio api access in game settings > security > studio access to api services")
+    warn("without api access, leaderstats and inventory will not work properly")
     return self:GetDefaultData()
   end
 
   if not data or type(data) ~= "table" then
-    warn("❌ Invalid data structure loaded for " .. player.Name)
+    warn("invalid data structure loaded for " .. player.Name)
     return self:GetDefaultData()
   end
 
