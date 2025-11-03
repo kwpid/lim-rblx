@@ -38,10 +38,21 @@ end
 function EventSystem:StartEvent(eventName)
   local eventModule = self.EventModules[eventName]
   if not eventModule then
+    warn("❌ Event module not found: " .. eventName)
     return false
   end
 
-  if self.ActiveEvents[eventName] then
+  -- Check if ANY event is currently active
+  local hasActiveEvent = false
+  for name, active in pairs(self.ActiveEvents) do
+    if active then
+      hasActiveEvent = true
+      warn("⚠️ Cannot start " .. eventName .. " - " .. name .. " is already running")
+      break
+    end
+  end
+
+  if hasActiveEvent then
     return false
   end
 
@@ -59,6 +70,7 @@ function EventSystem:StartEvent(eventName)
   end
 
   self.ActiveEvents[eventName] = true
+  print("✅ Started event: " .. eventName)
 
   task.spawn(function()
     local success, err = pcall(function()
@@ -68,6 +80,7 @@ function EventSystem:StartEvent(eventName)
     end)
 
     if not success then
+      warn("❌ Error running event " .. eventName .. ": " .. tostring(err))
       self:EndEvent(eventName)
     end
   end)
@@ -81,6 +94,7 @@ function EventSystem:EndEvent(eventName)
   end
 
   self.ActiveEvents[eventName] = nil
+  print("✅ Ended event: " .. eventName)
 
   sendNotificationEvent:FireAllClients({
     Type = "EVENT_END",
@@ -96,14 +110,27 @@ function EventSystem:StartRandomEventSpawner()
       local waitTime = math.random(MIN_EVENT_INTERVAL, MAX_EVENT_INTERVAL)
       task.wait(waitTime)
 
-      local eventNames = {}
-      for eventName, _ in pairs(self.EventModules) do
-        table.insert(eventNames, eventName)
+      -- Check if any event is currently active before starting a new one
+      local hasActiveEvent = false
+      for name, active in pairs(self.ActiveEvents) do
+        if active then
+          hasActiveEvent = true
+          print("⏳ Skipping event spawn - " .. name .. " is still active")
+          break
+        end
       end
 
-      if #eventNames > 0 then
-        local randomEvent = eventNames[math.random(1, #eventNames)]
-        self:StartEvent(randomEvent)
+      if not hasActiveEvent then
+        local eventNames = {}
+        for eventName, _ in pairs(self.EventModules) do
+          table.insert(eventNames, eventName)
+        end
+
+        if #eventNames > 0 then
+          local randomEvent = eventNames[math.random(1, #eventNames)]
+          print("🎲 Attempting to start random event: " .. randomEvent)
+          self:StartEvent(randomEvent)
+        end
       end
     end
   end)
