@@ -16,6 +16,10 @@ local createNotificationEvent = remoteEvents:FindFirstChild("CreateNotification"
 
 local currentEventEndCallback = nil
 local hiddenItemModel = nil
+local timeoutTask = nil
+local itemCollected = false
+
+local EVENT_TIMEOUT = 5 * 60
 
 local function getValueColorTag(value)
         if value >= 10000000 then
@@ -256,6 +260,12 @@ local function createHiddenItem(itemData, hideLocation, onCollected)
         proximityPrompt.Triggered:Connect(function(player)
                 if collected then return end
                 collected = true
+                itemCollected = true
+                
+                if timeoutTask then
+                        task.cancel(timeoutTask)
+                        timeoutTask = nil
+                end
                 
                 onCollected(player, itemData)
                 
@@ -449,7 +459,33 @@ function ScavengerHunt.Start(onEventEnd)
         
         print("✅ Hiding scavenger hunt item: " .. itemData.Name .. " at " .. randomLocation.Name)
         
+        itemCollected = false
         hiddenItemModel = createHiddenItem(itemData, randomLocation, handleItemCollection)
+        
+        timeoutTask = task.delay(EVENT_TIMEOUT, function()
+                if not itemCollected and hiddenItemModel and hiddenItemModel.Parent then
+                        print("⏱️ Scavenger Hunt timed out after 5 minutes - item not found")
+                        
+                        if hiddenItemModel then
+                                hiddenItemModel:Destroy()
+                                hiddenItemModel = nil
+                        end
+                        
+                        if createNotificationEvent then
+                                createNotificationEvent:FireAllClients({
+                                        Type = "EVENT_END",
+                                        Title = "Scavenger Hunt Ended!",
+                                        Body = "Time's up! The hidden item was not found.",
+                                        ImageId = "rbxassetid://8150337440"
+                                })
+                        end
+                        
+                        if currentEventEndCallback then
+                                currentEventEndCallback()
+                                currentEventEndCallback = nil
+                        end
+                end
+        end)
 end
 
 return ScavengerHunt
