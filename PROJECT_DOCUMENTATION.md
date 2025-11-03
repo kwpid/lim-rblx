@@ -80,7 +80,7 @@ Items are automatically assigned rarity based on their value:
     - `ResetInsaneLuck(username)` - Reset insane luck to 1.0 (default/normal)
   - **Check All Luck Tiers:**
     - `CheckAllLuck(username)` - View all luck values and combined effects
-  - `StartEvent(eventName)` - Manually start a random event (e.g., `StartEvent("RandomItemDrops")`)
+  - `StartEvent(eventName)` - Manually start a random event (e.g., `StartEvent("RandomItemDrops")` or `StartEvent("ScavengerHunt")`)
 
 ### 6. Data Persistence (DataStore)
 - **Player Data Saved:**
