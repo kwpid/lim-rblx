@@ -106,11 +106,11 @@ end
 
 local function formatValueShort(value)
         if value >= 1000000000 then
-                return string.format("%.2fB", value / 1000000000)
+                return string.format("%.1fB", value / 1000000000)
         elseif value >= 1000000 then
-                return string.format("%.2fM", value / 1000000)
+                return string.format("%.1fM", value / 1000000)
         elseif value >= 1000 then
-                return string.format("%.2fK", value / 1000)
+                return string.format("%.1fK", value / 1000)
         else
                 return tostring(value)
         end
@@ -529,7 +529,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         totalValue = totalValue + (value.Value * multiplier)
                                 end
                         end
-                        tradeFrame.TradingFrame.YourOfferFrame.YourValue.Text = "Value: " .. tostring(totalValue)
+                        tradeFrame.TradingFrame.YourOfferFrame.YourValue.Text = "Value: " .. formatValueShort(totalValue)
                 end
 
                 local function updateTheirValue()
@@ -542,7 +542,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         totalValue = totalValue + (value.Value * multiplier)
                                 end
                         end
-                        tradeFrame.TradingFrame.TheirOfferFrame.TheirValue.Text = "Value: " .. tostring(totalValue)
+                        tradeFrame.TradingFrame.TheirOfferFrame.TheirValue.Text = "Value: " .. formatValueShort(totalValue)
                 end
 
                 clientOffer.ChildAdded:Connect(function(slotChild)
