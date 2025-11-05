@@ -12,6 +12,7 @@ local BarrelEvent = {}
 local PULL_COST = 5000
 local CHROMA_VALK_ID = 88275556285191
 local CHROMA_VALK_CHANCE = 0.005
+local EVENT_DURATION = 10 * 60
 
 local RARITY_WEIGHTS = {
         ["Common"] = 100,
@@ -28,6 +29,9 @@ local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local createNotificationEvent = remoteEvents:FindFirstChild("CreateNotification")
 
 local activePulls = {}
+local activeProximityPrompts = {}
+local activeHighlights = {}
+local setPlayerCameraEvent = nil
 
 local function getRarityColor(rarity)
         if rarity == "Limited" then
@@ -164,9 +168,8 @@ local function handleBarrelPull(player, barrel)
                 return
         end
         
-        local playerCameraEvent = remoteEvents:FindFirstChild("SetPlayerCamera")
-        if playerCameraEvent then
-                playerCameraEvent:FireClient(player, camPart)
+        if setPlayerCameraEvent then
+                setPlayerCameraEvent:FireClient(player, camPart)
         end
         
         local itemModel = nil
@@ -230,8 +233,8 @@ local function handleBarrelPull(player, barrel)
         
         itemModel:Destroy()
         
-        if playerCameraEvent then
-                playerCameraEvent:FireClient(player, nil)
+        if setPlayerCameraEvent then
+                setPlayerCameraEvent:FireClient(player, nil)
         end
         
         local cashDeducted = DataStoreAPI:AddCash(player, -PULL_COST)
@@ -346,26 +349,88 @@ local function handleBarrelPull(player, barrel)
         activePulls[player.UserId] = nil
 end
 
-function BarrelEvent:Initialize()
+local function setBarrelDecorVisibility(visible)
+        local workspace = game:GetService("Workspace")
+        local barrelsFolder = workspace:FindFirstChild("Barrels")
+        
+        if not barrelsFolder then
+                return
+        end
+        
+        for _, item in ipairs(barrelsFolder:GetChildren()) do
+                local isBarrel = item:IsA("Model") and item:FindFirstChild("Body") and item:FindFirstChild("cam") and item:FindFirstChild("spawn") and item:FindFirstChild("final")
+                
+                if not isBarrel then
+                        for _, descendant in ipairs(item:GetDescendants()) do
+                                if descendant:IsA("BasePart") then
+                                        if visible then
+                                                descendant.Transparency = 0
+                                                descendant.CanCollide = true
+                                        else
+                                                descendant.Transparency = 1
+                                                descendant.CanCollide = false
+                                        end
+                                end
+                        end
+                        
+                        if item:IsA("BasePart") then
+                                if visible then
+                                        item.Transparency = 0
+                                        item.CanCollide = true
+                                else
+                                        item.Transparency = 1
+                                        item.CanCollide = false
+                                end
+                        end
+                end
+        end
+end
+
+function BarrelEvent.GetEventInfo()
+        return {
+                Name = "Barrel Event",
+                Description = "Barrels have appeared! Pull items for " .. formatNumber(PULL_COST) .. " Cash each!",
+                Image = "rbxassetid://8150337440"
+        }
+end
+
+function BarrelEvent.Start(onEventEnd)
         local workspace = game:GetService("Workspace")
         local barrelsFolder = workspace:FindFirstChild("Barrels")
         
         if not barrelsFolder then
                 warn("⚠️ Barrels folder not found in Workspace")
+                if onEventEnd then
+                        onEventEnd()
+                end
                 return
         end
+        
+        setPlayerCameraEvent = remoteEvents:FindFirstChild("SetPlayerCamera")
+        if not setPlayerCameraEvent then
+                setPlayerCameraEvent = Instance.new("RemoteEvent")
+                setPlayerCameraEvent.Name = "SetPlayerCamera"
+                setPlayerCameraEvent.Parent = remoteEvents
+        end
+        
+        setBarrelDecorVisibility(true)
         
         for _, barrel in ipairs(barrelsFolder:GetChildren()) do
                 if barrel:IsA("Model") then
                         local body = barrel:FindFirstChild("Body")
+                        local camPart = barrel:FindFirstChild("cam")
+                        local spawnPart = barrel:FindFirstChild("spawn")
+                        local finalPart = barrel:FindFirstChild("final")
                         
-                        if body then
+                        if body and camPart and spawnPart and finalPart then
                                 local proximityPrompt = Instance.new("ProximityPrompt")
                                 proximityPrompt.ActionText = "Pull Item"
                                 proximityPrompt.ObjectText = "Barrel (" .. formatNumber(PULL_COST) .. " Cash)"
                                 proximityPrompt.HoldDuration = 0.5
                                 proximityPrompt.MaxActivationDistance = 10
                                 proximityPrompt.Parent = body
+                                
+                                table.insert(activeProximityPrompts, proximityPrompt)
                                 
                                 local highlight = Instance.new("Highlight")
                                 highlight.FillColor = Color3.fromRGB(139, 69, 19)
@@ -374,6 +439,8 @@ function BarrelEvent:Initialize()
                                 highlight.OutlineTransparency = 0
                                 highlight.Enabled = false
                                 highlight.Parent = barrel
+                                
+                                table.insert(activeHighlights, highlight)
                                 
                                 proximityPrompt.PromptShown:Connect(function()
                                         highlight.Enabled = true
@@ -388,19 +455,37 @@ function BarrelEvent:Initialize()
                                 end)
                                 
                                 print("✅ Barrel event initialized for: " .. barrel.Name)
-                        else
-                                warn("⚠️ Barrel model missing 'Body' part: " .. barrel.Name)
                         end
                 end
         end
         
-        local setPlayerCameraEvent = Instance.new("RemoteEvent")
-        setPlayerCameraEvent.Name = "SetPlayerCamera"
-        setPlayerCameraEvent.Parent = remoteEvents
+        print("✅ Barrel Event started for " .. EVENT_DURATION .. " seconds")
         
-        print("✅ Barrel Event system initialized")
+        task.wait(EVENT_DURATION)
+        
+        for _, prompt in ipairs(activeProximityPrompts) do
+                if prompt and prompt.Parent then
+                        prompt:Destroy()
+                end
+        end
+        activeProximityPrompts = {}
+        
+        for _, highlight in ipairs(activeHighlights) do
+                if highlight and highlight.Parent then
+                        highlight:Destroy()
+                end
+        end
+        activeHighlights = {}
+        
+        setBarrelDecorVisibility(false)
+        
+        print("✅ Barrel Event ended")
+        
+        if onEventEnd then
+                onEventEnd()
+        end
 end
 
-BarrelEvent:Initialize()
+setBarrelDecorVisibility(false)
 
 return BarrelEvent
