@@ -75,7 +75,7 @@ local function unequipItemFromCharacter(player, robloxId)
       local face = head:FindFirstChildOfClass("Decal")
       if face then face.Transparency = 0 end
       headlessId:Destroy()
-      itemsRemoved += 1
+      itemsRemoved = itemsRemoved + 1
     end
   end
   for _, child in ipairs(character:GetChildren()) do
@@ -83,7 +83,7 @@ local function unequipItemFromCharacter(player, robloxId)
       local storedId = child:FindFirstChild("OriginalRobloxId")
       if storedId and storedId.Value == robloxId then
         child:Destroy()
-        itemsRemoved += 1
+        itemsRemoved = itemsRemoved + 1
       end
     end
   end
@@ -94,7 +94,7 @@ local function unequipItemFromCharacter(player, robloxId)
         local storedId = child:FindFirstChild("OriginalRobloxId")
         if storedId and storedId.Value == robloxId then
           child:Destroy()
-          itemsRemoved += 1
+          itemsRemoved = itemsRemoved + 1
         end
       end
     end
@@ -117,6 +117,10 @@ sellItemEvent.Parent = remoteEventsFolder
 local sellAllItemEvent = remoteEventsFolder:FindFirstChild("SellAllItemEvent") or Instance.new("RemoteEvent")
 sellAllItemEvent.Name = "SellAllItemEvent"
 sellAllItemEvent.Parent = remoteEventsFolder
+
+local sellByRarityEvent = remoteEventsFolder:FindFirstChild("SellByRarityEvent") or Instance.new("RemoteEvent")
+sellByRarityEvent.Name = "SellByRarityEvent"
+sellByRarityEvent.Parent = remoteEventsFolder
 
 local notificationEvent = remoteEventsFolder:FindFirstChild("CreateNotification") or Instance.new("RemoteEvent")
 notificationEvent.Name = "CreateNotification"
@@ -209,7 +213,7 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
   else
     local amount = item.Amount or 1
     if amount > 1 then
-      item.Amount -= 1
+      item.Amount = item.Amount - 1
     else
       table.remove(data.Inventory, itemIndex)
       ItemDatabase:DecrementOwners(item.RobloxId)
@@ -251,9 +255,9 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
       local isStockItem = invItem.SerialNumber ~= nil
       local amount = invItem.Amount or 1
       local sellValue = math.floor(invItem.Value * 0.8 * amount)
-      totalSellValue += sellValue
+      totalSellValue = totalSellValue + sellValue
       table.insert(itemsToRemove, { index = i, item = invItem, isStock = isStockItem, amount = amount })
-      itemsSold += amount
+      itemsSold = itemsSold + amount
     end
   end
   if #itemsToRemove == 0 then return end
@@ -262,7 +266,7 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
     if entry.isStock then
       ItemDatabase:DecrementStock(entry.item.RobloxId)
     else
-      totalCopiesRemoved += entry.amount
+      totalCopiesRemoved = totalCopiesRemoved + entry.amount
     end
     table.remove(data.Inventory, entry.index)
   end
@@ -281,6 +285,82 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
   notificationEvent:FireClient(player,
     { Type = "SELL", Title = "Items Sold!", Body = "Sold " ..
     itemsSold .. "x " .. firstItem.Name .. " for R$ " .. totalSellValue, ImageId = firstItem.RobloxId })
+end)
+
+sellByRarityEvent.OnServerEvent:Connect(function(player, rarity)
+  if typeof(rarity) ~= "string" then return end
+  local validRarities = {
+    ["Common"] = true,
+    ["Uncommon"] = true,
+    ["Rare"] = true,
+    ["Ultra Rare"] = true
+  }
+  if not validRarities[rarity] then return end
+  
+  local data = DataStoreAPI:GetPlayerData(player)
+  if not data then return end
+  
+  local totalSellValue, itemsToRemove, itemsSold, totalCopiesPerItem = 0, {}, 0, {}
+  
+  for i, invItem in ipairs(data.Inventory) do
+    local isStockItem = invItem.SerialNumber ~= nil
+    if not isStockItem and invItem.Rarity == rarity then
+      local amount = invItem.Amount or 1
+      local sellValue = math.floor(invItem.Value * 0.8 * amount)
+      totalSellValue = totalSellValue + sellValue
+      itemsSold = itemsSold + amount
+      
+      table.insert(itemsToRemove, { index = i, item = invItem, amount = amount })
+      
+      -- Track total copies per RobloxId for database updates
+      if not totalCopiesPerItem[invItem.RobloxId] then
+        totalCopiesPerItem[invItem.RobloxId] = 0
+      end
+      totalCopiesPerItem[invItem.RobloxId] = totalCopiesPerItem[invItem.RobloxId] + amount
+    end
+  end
+  
+  if #itemsToRemove == 0 then return end
+  
+  -- Sort in reverse order to remove from the end first
+  table.sort(itemsToRemove, function(a, b) return a.index > b.index end)
+  
+  -- Track which items we need to decrement owners for
+  local ownerDecrements = {}
+  for _, entry in ipairs(itemsToRemove) do
+    table.remove(data.Inventory, entry.index)
+    
+    if not ownerDecrements[entry.item.RobloxId] then
+      ownerDecrements[entry.item.RobloxId] = true
+    end
+    
+    -- Unequip items
+    unequipItemFromCharacter(player, entry.item.RobloxId)
+    if data.EquippedItems then
+      for i = #data.EquippedItems, 1, -1 do
+        if data.EquippedItems[i] == entry.item.RobloxId then
+          table.remove(data.EquippedItems, i)
+        end
+      end
+    end
+  end
+  
+  -- Update ItemDatabase
+  for robloxId, totalCopies in pairs(totalCopiesPerItem) do
+    ItemDatabase:DecrementTotalCopies(robloxId, totalCopies)
+    if ownerDecrements[robloxId] then
+      ItemDatabase:DecrementOwners(robloxId)
+    end
+  end
+  
+  DataStoreAPI:AddCash(player, totalSellValue)
+  DataStoreAPI:UpdateInventoryValue(player)
+  
+  notificationEvent:FireClient(player, {
+    Type = "SELL",
+    Title = "Items Sold!",
+    Body = "Sold " .. itemsSold .. " " .. rarity .. " items for R$ " .. totalSellValue
+  })
 end)
 
 local function autoEquipItems(player)

@@ -48,6 +48,12 @@ local selectedButton = nil
 local equippedItems = {}
 local sellConfirmation = false
 local sellAllConfirmation = false
+local rarityCounts = {
+  ["Common"] = 0,
+  ["Uncommon"] = 0,
+  ["Rare"] = 0,
+  ["Ultra Rare"] = 0
+}
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents", 10)
 if not remoteEvents then
@@ -64,6 +70,9 @@ end
 local equipItemEvent = remoteEvents:WaitForChild("EquipItemEvent", 10)
 local sellItemEvent = remoteEvents:WaitForChild("SellItemEvent", 10)
 local sellAllItemEvent = remoteEvents:WaitForChild("SellAllItemEvent", 10)
+local sellByRarityEvent = remoteEvents:FindFirstChild("SellByRarityEvent") or Instance.new("RemoteEvent")
+sellByRarityEvent.Name = "SellByRarityEvent"
+sellByRarityEvent.Parent = remoteEvents
 local getEquippedItemsFunction = remoteEvents:WaitForChild("GetEquippedItemsFunction", 10)
 
 local rarityColors = {
@@ -191,6 +200,43 @@ function refresh()
     button:Destroy()
   end
   buttons = {}
+
+  -- Reset rarity counts
+  rarityCounts["Common"] = 0
+  rarityCounts["Uncommon"] = 0
+  rarityCounts["Rare"] = 0
+  rarityCounts["Ultra Rare"] = 0
+
+  -- Calculate rarity counts (excluding stock items)
+  for _, item in ipairs(inventory) do
+    local isStockItem = item.Stock and item.Stock > 0
+    if not isStockItem then
+      local rarity = item.Rarity
+      if rarity == "Common" or rarity == "Uncommon" or rarity == "Rare" or rarity == "Ultra Rare" then
+        local amount = item.Amount or 1
+        rarityCounts[rarity] = rarityCounts[rarity] + amount
+      end
+    end
+  end
+
+  -- Update bulk sell buttons
+  local sellCommonsBtn = gui:FindFirstChild("SellCommons")
+  local sellUncommonsBtn = gui:FindFirstChild("SellUncommons")
+  local sellRaresBtn = gui:FindFirstChild("SellRares")
+  local sellUltraRaresBtn = gui:FindFirstChild("SellUltraRares")
+
+  if sellCommonsBtn then
+    sellCommonsBtn.Text = "Sell Commons (" .. rarityCounts["Common"] .. ")"
+  end
+  if sellUncommonsBtn then
+    sellUncommonsBtn.Text = "Sell Uncommons (" .. rarityCounts["Uncommon"] .. ")"
+  end
+  if sellRaresBtn then
+    sellRaresBtn.Text = "Sell Rares (" .. rarityCounts["Rare"] .. ")"
+  end
+  if sellUltraRaresBtn then
+    sellUltraRaresBtn.Text = "Sell Ultra Rares (" .. rarityCounts["Ultra Rare"] .. ")"
+  end
 
   table.sort(inventory, function(a, b)
     local aEquipped = equippedItems[a.RobloxId] or false
@@ -569,6 +615,123 @@ if sellAllButton and sellAllItemEvent then
         sellAllItemEvent:FireServer(selectedItemData.RobloxId)
         sellAllConfirmation = false
         sellAllButton.Text = "Sell All"
+      end
+    end
+  end)
+end
+
+-- Bulk sell by rarity functionality
+local sellConfirmFrame = gui:FindFirstChild("SellConfirm")
+local currentRarityForSell = nil
+local confirmConnection = nil
+local cancelConnection = nil
+
+local function showSellConfirm(rarity, count, totalValue)
+  if not sellConfirmFrame then return end
+  
+  local pop = sellConfirmFrame:FindFirstChild("Pop")
+  if not pop then return end
+  
+  local text1 = pop:FindFirstChild("Text1")
+  local sellPrice = pop:FindFirstChild("SellPrice")
+  local confirmBtn = pop:FindFirstChild("Confirm")
+  local cancelBtn = pop:FindFirstChild("Cancel")
+  
+  if text1 then
+    text1.Text = "Are you sure you want to sell all " .. rarity .. "?"
+  end
+  
+  if sellPrice then
+    local cashValue = math.floor(totalValue * 0.8)
+    sellPrice.Text = "You will sell " .. count .. " " .. rarity .. " for R$ " .. formatNumber(cashValue)
+  end
+  
+  currentRarityForSell = rarity
+  sellConfirmFrame.Visible = true
+  
+  -- Disconnect old connections
+  if confirmConnection then
+    confirmConnection:Disconnect()
+    confirmConnection = nil
+  end
+  if cancelConnection then
+    cancelConnection:Disconnect()
+    cancelConnection = nil
+  end
+  
+  if confirmBtn then
+    confirmConnection = confirmBtn.MouseButton1Click:Connect(function()
+      sellByRarityEvent:FireServer(currentRarityForSell)
+      sellConfirmFrame.Visible = false
+    end)
+  end
+  
+  if cancelBtn then
+    cancelConnection = cancelBtn.MouseButton1Click:Connect(function()
+      sellConfirmFrame.Visible = false
+    end)
+  end
+end
+
+local function calculateRarityValue(inventory, rarity)
+  local totalValue = 0
+  for _, item in ipairs(inventory) do
+    local isStockItem = item.Stock and item.Stock > 0
+    if not isStockItem and item.Rarity == rarity then
+      local amount = item.Amount or 1
+      totalValue = totalValue + (item.Value * amount)
+    end
+  end
+  return totalValue
+end
+
+local sellCommonsBtn = gui:FindFirstChild("SellCommons")
+if sellCommonsBtn then
+  sellCommonsBtn.MouseButton1Click:Connect(function()
+    if rarityCounts["Common"] > 0 then
+      local inventory = getInventoryFunction:InvokeServer()
+      if inventory then
+        local totalValue = calculateRarityValue(inventory, "Common")
+        showSellConfirm("Common", rarityCounts["Common"], totalValue)
+      end
+    end
+  end)
+end
+
+local sellUncommonsBtn = gui:FindFirstChild("SellUncommons")
+if sellUncommonsBtn then
+  sellUncommonsBtn.MouseButton1Click:Connect(function()
+    if rarityCounts["Uncommon"] > 0 then
+      local inventory = getInventoryFunction:InvokeServer()
+      if inventory then
+        local totalValue = calculateRarityValue(inventory, "Uncommon")
+        showSellConfirm("Uncommon", rarityCounts["Uncommon"], totalValue)
+      end
+    end
+  end)
+end
+
+local sellRaresBtn = gui:FindFirstChild("SellRares")
+if sellRaresBtn then
+  sellRaresBtn.MouseButton1Click:Connect(function()
+    if rarityCounts["Rare"] > 0 then
+      local inventory = getInventoryFunction:InvokeServer()
+      if inventory then
+        local totalValue = calculateRarityValue(inventory, "Rare")
+        showSellConfirm("Rare", rarityCounts["Rare"], totalValue)
+      end
+    end
+  end)
+end
+
+local sellUltraRaresBtn = gui:FindFirstChild("SellUltraRares")
+if sellUltraRaresBtn then
+  sellUltraRaresBtn.MouseButton1Click:Connect(function()
+    if rarityCounts["Ultra Rare"] > 0 then
+      local inventory = getInventoryFunction:InvokeServer()
+      if inventory then
+        local totalValue = calculateRarityValue(inventory, "Ultra Rare")
+        showSellConfirm("Ultra Rare", rarityCounts["Ultra Rare"], totalValue)
       end
     end
   end)
