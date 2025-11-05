@@ -13,6 +13,7 @@ local PULL_COST = 5000
 local CHROMA_VALK_ID = 88275556285191
 local CHROMA_VALK_CHANCE = 0.005
 local EVENT_DURATION = 10 * 60
+local EVENT_POOL_SIZE = 50
 
 local RARITY_WEIGHTS = {
         ["Common"] = 100,
@@ -32,6 +33,7 @@ local activePulls = {}
 local activeProximityPrompts = {}
 local activeHighlights = {}
 local setPlayerCameraEvent = nil
+local eventItemPool = {}
 
 local function getRarityColor(rarity)
         if rarity == "Limited" then
@@ -49,7 +51,7 @@ local function formatNumber(n)
         return formatted
 end
 
-local function getHatItems()
+local function getAllHatItems()
         local hatItems = {}
         for _, item in ipairs(ItemDatabase.Items) do
                 local success, assetInfo = pcall(function()
@@ -64,6 +66,28 @@ local function getHatItems()
                 end
         end
         return hatItems
+end
+
+local function createEventPool(hatItems)
+        local pool = {}
+        
+        local chromaValk = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID)
+        if chromaValk then
+                table.insert(pool, chromaValk)
+                print("✅ Added Chroma Valkyrie to barrel event pool")
+        end
+        
+        local itemsToSelect = math.min(EVENT_POOL_SIZE - #pool, #hatItems)
+        
+        for i = 1, itemsToSelect do
+                local selectedItem = pickWeightedItem(hatItems, false)
+                if selectedItem then
+                        table.insert(pool, selectedItem)
+                end
+        end
+        
+        print("✅ Created barrel event pool with " .. #pool .. " items")
+        return pool
 end
 
 local function pickWeightedItem(items, includeChromaValk)
@@ -152,16 +176,40 @@ local function handleBarrelPull(player, barrel)
                 return
         end
         
-        local placeholderPart = Instance.new("Part")
-        placeholderPart.Name = "BarrelItem_Loading"
-        placeholderPart.Size = Vector3.new(2, 2, 2)
-        placeholderPart.Anchored = true
-        placeholderPart.CanCollide = false
-        placeholderPart.Color = Color3.fromRGB(255, 255, 255)
-        placeholderPart.Material = Enum.Material.Neon
-        placeholderPart.CFrame = spawnPart.CFrame
-        placeholderPart.Parent = workspace
-        placeholderPart:SetAttribute("BarrelPullOwner", player.UserId)
+        if #eventItemPool == 0 then
+                warn("Event pool is empty!")
+                activePulls[player.UserId] = nil
+                if createNotificationEvent then
+                        createNotificationEvent:FireClient(player, {
+                                Type = "ERROR",
+                                Title = "Error",
+                                Body = "No items available in event pool"
+                        })
+                end
+                return
+        end
+        
+        local chromaValkExists = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID) ~= nil
+        local selectedItem = pickWeightedItem(eventItemPool, chromaValkExists)
+        
+        if not selectedItem then
+                warn("Failed to select item from event pool")
+                activePulls[player.UserId] = nil
+                return
+        end
+        
+        local itemPart = Instance.new("Part")
+        itemPart.Name = "BarrelItem_" .. selectedItem.Name
+        itemPart.Size = Vector3.new(2, 2, 2)
+        itemPart.Anchored = true
+        itemPart.CanCollide = false
+        itemPart.Color = getRarityColor(selectedItem.Rarity)
+        itemPart.Material = Enum.Material.Neon
+        itemPart.CFrame = spawnPart.CFrame
+        itemPart.Parent = workspace
+        itemPart:SetAttribute("BarrelPullOwner", player.UserId)
+        
+        task.wait(0.1)
         
         for _, prompt in ipairs(activeProximityPrompts) do
                 if prompt and prompt.Parent then
@@ -170,46 +218,10 @@ local function handleBarrelPull(player, barrel)
         end
         
         if setPlayerCameraEvent then
-                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, placeholderPart, placeholderPart, "Common")
+                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemPart, itemPart, selectedItem.Rarity)
         end
         
         task.spawn(function()
-                local hatItems = getHatItems()
-                if #hatItems == 0 then
-                        warn("No hat items available for barrel pull")
-                        activePulls[player.UserId] = nil
-                        if placeholderPart and placeholderPart.Parent then
-                                placeholderPart:Destroy()
-                        end
-                        for _, prompt in ipairs(activeProximityPrompts) do
-                                if prompt and prompt.Parent then
-                                        prompt.Enabled = true
-                                end
-                        end
-                        return
-                end
-                
-                local chromaValkExists = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID) ~= nil
-                local selectedItem = pickWeightedItem(hatItems, chromaValkExists)
-                
-                if not selectedItem then
-                        warn("Failed to select item from barrel")
-                        activePulls[player.UserId] = nil
-                        if placeholderPart and placeholderPart.Parent then
-                                placeholderPart:Destroy()
-                        end
-                        for _, prompt in ipairs(activeProximityPrompts) do
-                                if prompt and prompt.Parent then
-                                        prompt.Enabled = true
-                                end
-                        end
-                        return
-                end
-                
-                if placeholderPart and placeholderPart.Parent then
-                        placeholderPart.Color = getRarityColor(selectedItem.Rarity)
-                        placeholderPart.Name = "BarrelItem_" .. selectedItem.Name
-                end
         
                 task.wait(6)
                 
@@ -219,8 +231,8 @@ local function handleBarrelPull(player, barrel)
                         end
                 end
                 
-                if placeholderPart and placeholderPart.Parent then
-                        placeholderPart:Destroy()
+                if itemPart and itemPart.Parent then
+                        itemPart:Destroy()
                 end
                 
                         local cashDeducted = DataStoreAPI:AddCash(player, -PULL_COST)
@@ -435,6 +447,18 @@ function BarrelEvent.Start(onEventEnd)
                 return
         end
         
+        print("🎲 Creating barrel event item pool...")
+        local allHatItems = getAllHatItems()
+        eventItemPool = createEventPool(allHatItems)
+        
+        if #eventItemPool == 0 then
+                warn("⚠️ Failed to create event pool, no items available")
+                if onEventEnd then
+                        onEventEnd()
+                end
+                return
+        end
+        
         setPlayerCameraEvent = remoteEvents:FindFirstChild("SetPlayerCamera")
         if not setPlayerCameraEvent then
                 setPlayerCameraEvent = Instance.new("RemoteEvent")
@@ -505,6 +529,7 @@ function BarrelEvent.Start(onEventEnd)
                 end
         end
         activeHighlights = {}
+        eventItemPool = {}
         
         setBarrelVisibility(false)
         

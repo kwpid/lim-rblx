@@ -4,15 +4,16 @@
 This project is a Roblox crate opening/unboxing game designed to provide an engaging unboxing experience. Players can open virtual crates to acquire items of varying rarities and values, managed by a weighted probability system. Key features include a player-to-player trading system, comprehensive admin tools for item management, robust data persistence, an interactive inventory, Discord webhook notifications, and the ability to equip virtual goods. The project aims to offer a feature-rich and dynamic virtual economy within Roblox.
 
 ## Recent Changes
-**November 5, 2025 - Barrel Event Animation Improvements:**
-- Fixed timing delay: Animation now starts INSTANTLY when prompt is activated (removed InsertService blocking)
-- Simplified visual: Uses colored neon part instead of loading actual asset model (eliminates network delay)
-- Improved player visibility: Both own player and other players are now hidden during barrel pull
-- Added item reveal timing: Item stays in barrel for 1 second before floating out
-- Added rarity-based camera shake: Higher rarity items create more intense shake effects (Common: 0.05 → Insane: 1.2)
-- Camera shake now oscillates smoothly with fade-out instead of drifting away
-- Changed notification to EVENT_COLLECT type (matches item rain event style)
-- Server and client timing synchronized at 6 seconds total (1s hold + 2s float + 1.5s shake + 1.5s wait)
+**November 5, 2025 - Barrel Event Pool & Animation Fix:**
+- **Event Pool System**: Pre-selects 50 random weighted items when event starts (eliminates slow MarketplaceService calls during pulls)
+- **Chroma Valkyrie**: Always included in the pool regardless of random selection
+- **Instant Animation**: Camera and animation start immediately when prompt is activated (0.1s replication wait)
+- **Fixed Animation**: Properly creates colored neon part with correct rarity before starting animation
+- **Player Hiding**: Both own player and other players hidden during barrel pull
+- **Item Timing**: Item stays in barrel for 1 second before floating out
+- **Camera Shake**: Rarity-based shake effects (Common: 0.05 → Insane: 1.2) with smooth fade-out oscillation
+- **Notification Style**: EVENT_COLLECT type matching item rain event format
+- **Synchronized Timing**: 6 seconds total (1s hold + 2s float + 1.5s shake + 1.5s wait)
 
 **November 5, 2025 - Barrel Event System Complete Fix:**
 - Fixed barrel visibility: Barrels and decorations now properly hidden when event is inactive
