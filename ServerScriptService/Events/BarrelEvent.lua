@@ -168,10 +168,6 @@ local function handleBarrelPull(player, barrel)
                 return
         end
         
-        if setPlayerCameraEvent then
-                setPlayerCameraEvent:FireClient(player, camPart)
-        end
-        
         local itemModel = nil
         local loadSuccess = false
         
@@ -210,31 +206,16 @@ local function handleBarrelPull(player, barrel)
         end
         
         itemModel.Parent = workspace
-        itemModel:PivotTo(spawnPart.CFrame)
+        itemModel:SetAttribute("BarrelPullOwner", player.UserId)
         
-        local floatTween = TweenService:Create(
-                itemModel:IsA("BasePart") and itemModel or itemModel:FindFirstChild("Handle"),
-                TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                {CFrame = finalPart.CFrame}
-        )
-        floatTween:Play()
-        
-        task.spawn(function()
-                local targetPart = itemModel:IsA("BasePart") and itemModel or itemModel:FindFirstChild("Handle")
-                if targetPart then
-                        for i = 1, 60 do
-                                targetPart.CFrame = targetPart.CFrame * CFrame.Angles(0, math.rad(6), 0)
-                                task.wait(0.05)
-                        end
-                end
-        end)
+        if setPlayerCameraEvent then
+                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemModel)
+        end
         
         task.wait(3)
         
-        itemModel:Destroy()
-        
-        if setPlayerCameraEvent then
-                setPlayerCameraEvent:FireClient(player, nil)
+        if itemModel and itemModel.Parent then
+                itemModel:Destroy()
         end
         
         local cashDeducted = DataStoreAPI:AddCash(player, -PULL_COST)
@@ -349,7 +330,7 @@ local function handleBarrelPull(player, barrel)
         activePulls[player.UserId] = nil
 end
 
-local function setBarrelDecorVisibility(visible)
+local function setBarrelVisibility(eventActive)
         local workspace = game:GetService("Workspace")
         local barrelsFolder = workspace:FindFirstChild("Barrels")
         
@@ -358,29 +339,60 @@ local function setBarrelDecorVisibility(visible)
         end
         
         for _, item in ipairs(barrelsFolder:GetChildren()) do
-                local isBarrel = item:IsA("Model") and item:FindFirstChild("Body") and item:FindFirstChild("cam") and item:FindFirstChild("spawn") and item:FindFirstChild("final")
-                
-                if not isBarrel then
-                        for _, descendant in ipairs(item:GetDescendants()) do
-                                if descendant:IsA("BasePart") then
-                                        if visible then
-                                                descendant.Transparency = 0
-                                                descendant.CanCollide = true
-                                        else
-                                                descendant.Transparency = 1
-                                                descendant.CanCollide = false
+                if item:IsA("Model") then
+                        local body = item:FindFirstChild("Body")
+                        local camPart = item:FindFirstChild("cam")
+                        local spawnPart = item:FindFirstChild("spawn")
+                        local finalPart = item:FindFirstChild("final")
+                        local guiStand = item:FindFirstChild("GUI_Stand")
+                        
+                        local isBarrel = body and camPart and spawnPart and finalPart
+                        
+                        if isBarrel then
+                                if body then
+                                        body.Transparency = 0
+                                        body.CanCollide = true
+                                end
+                                
+                                if camPart then
+                                        camPart.Transparency = 1
+                                        camPart.CanCollide = false
+                                end
+                                if spawnPart then
+                                        spawnPart.Transparency = 1
+                                        spawnPart.CanCollide = false
+                                end
+                                if finalPart then
+                                        finalPart.Transparency = 1
+                                        finalPart.CanCollide = false
+                                end
+                                
+                                if guiStand then
+                                        local billboardGui = guiStand:FindFirstChildOfClass("BillboardGui")
+                                        if billboardGui then
+                                                billboardGui.Enabled = eventActive
+                                        end
+                                end
+                        else
+                                for _, descendant in ipairs(item:GetDescendants()) do
+                                        if descendant:IsA("BasePart") then
+                                                if eventActive then
+                                                        descendant.Transparency = 0
+                                                        descendant.CanCollide = true
+                                                else
+                                                        descendant.Transparency = 1
+                                                        descendant.CanCollide = false
+                                                end
                                         end
                                 end
                         end
-                        
-                        if item:IsA("BasePart") then
-                                if visible then
-                                        item.Transparency = 0
-                                        item.CanCollide = true
-                                else
-                                        item.Transparency = 1
-                                        item.CanCollide = false
-                                end
+                elseif item:IsA("BasePart") then
+                        if eventActive then
+                                item.Transparency = 0
+                                item.CanCollide = true
+                        else
+                                item.Transparency = 1
+                                item.CanCollide = false
                         end
                 end
         end
@@ -413,7 +425,7 @@ function BarrelEvent.Start(onEventEnd)
                 setPlayerCameraEvent.Parent = remoteEvents
         end
         
-        setBarrelDecorVisibility(true)
+        setBarrelVisibility(true)
         
         for _, barrel in ipairs(barrelsFolder:GetChildren()) do
                 if barrel:IsA("Model") then
@@ -477,7 +489,7 @@ function BarrelEvent.Start(onEventEnd)
         end
         activeHighlights = {}
         
-        setBarrelDecorVisibility(false)
+        setBarrelVisibility(false)
         
         print("✅ Barrel Event ended")
         
@@ -486,6 +498,6 @@ function BarrelEvent.Start(onEventEnd)
         end
 end
 
-setBarrelDecorVisibility(false)
+setBarrelVisibility(false)
 
 return BarrelEvent
