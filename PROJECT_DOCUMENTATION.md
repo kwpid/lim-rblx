@@ -21,7 +21,7 @@ This is a Roblox crate/case opening game where players can roll for random items
   - Epic, Ultra Epic, Mythic, and Insane items: No stack limit (unlimited)
   - Migration system auto-sells existing excess items when players join the game
 
-### 2. Rarity System (8 Tiers)
+### 2. Rarity System (8 Tiers + Limited)
 Items are automatically assigned rarity based on their value:
 - **Common**: 1 - 2,499 Robux (Gray)
 - **Uncommon**: 2,500 - 9,999 Robux (Green)
@@ -31,6 +31,15 @@ Items are automatically assigned rarity based on their value:
 - **Ultra Epic**: 750,000 - 2,500,000 Robux (Red-Orange)
 - **Mythic**: 2,500,000 - 9,999,999 Robux (Red)
 - **Insane**: 10,000,000+ Robux (Magenta)
+- **Limited**: Special event-exclusive rarity (Gold) - NOT rollable from crates
+
+**Limited Items:**
+- Cannot be obtained through regular crate rolls
+- Only available through special events
+- Can have stock limits (with serial numbers) or timer-based availability
+- Timer system: Items can have an "OffsaleAt" timestamp that makes them unavailable after a certain time
+- Display as "Not Rollable" in the Index UI
+- Color-coded in gold (RGB 255, 215, 0) across all UI elements
 
 ### 3. Probability System
 - Higher value items = lower chance to win
@@ -53,10 +62,15 @@ Items are automatically assigned rarity based on their value:
 - **Whitelisted Admins**: Defined by User ID in AdminConfig.lua
   - Current Admin ID: 1547280148
 - **Admin Panel Features:**
-  - **Create Items**: Create new items with Roblox ID, name, value, and optional stock
+  - **Create Items**: Create new items with Roblox ID, name, value, and optional stock or Limited rarity
     - Live preview of item thumbnail
     - Auto-fills item name from Roblox marketplace
     - Input validation for all fields
+    - **Limited Items**: Toggle to create event-exclusive Limited items
+      - Limited items cannot be rolled from crates
+      - Optional timer field (in hours) to set when the item goes offsale
+      - Timer is converted to Unix timestamp and stored as OffsaleAt field
+      - Can still use stock system for serial numbers
   - **Give Items to Players**: Give items directly to players
     - Enter item Roblox ID, amount to give, and player ID/username
     - Supports both User ID (number) and username (case-insensitive)
