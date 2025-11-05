@@ -17,7 +17,7 @@ local function hideOtherPlayers()
         hiddenPlayersData = {}
         
         for _, otherPlayer in ipairs(Players:GetPlayers()) do
-                if otherPlayer ~= player and otherPlayer.Character then
+                if otherPlayer.Character then
                         hiddenPlayersData[otherPlayer.UserId] = {}
                         
                         for _, descendant in ipairs(otherPlayer.Character:GetDescendants()) do
@@ -37,7 +37,7 @@ end
 
 local function showOtherPlayers()
         for _, otherPlayer in ipairs(Players:GetPlayers()) do
-                if otherPlayer ~= player and otherPlayer.Character then
+                if otherPlayer.Character then
                         for _, descendant in ipairs(otherPlayer.Character:GetDescendants()) do
                                 if descendant:IsA("BasePart") or descendant:IsA("Decal") or descendant:IsA("Texture") then
                                         descendant.LocalTransparencyModifier = 0
@@ -79,7 +79,44 @@ local function restoreCamera()
         print("📷 Camera restored to player")
 end
 
-setPlayerCameraEvent.OnClientEvent:Connect(function(camPart, spawnPart, finalPart, itemModel, primaryPart)
+local function getCameraShakeIntensity(rarity)
+        local rarityValues = {
+                ["Common"] = 0.05,
+                ["Uncommon"] = 0.1,
+                ["Rare"] = 0.15,
+                ["Ultra Rare"] = 0.25,
+                ["Epic"] = 0.4,
+                ["Ultra Epic"] = 0.6,
+                ["Mythic"] = 0.8,
+                ["Insane"] = 1.2
+        }
+        return rarityValues[rarity] or 0.05
+end
+
+local function applyCameraShake(baseCFrame, intensity, duration)
+        local startTime = tick()
+        local elapsed = 0
+        
+        while elapsed < duration do
+                if camera.CameraType ~= Enum.CameraType.Scriptable then break end
+                
+                elapsed = tick() - startTime
+                local fadeOut = math.max(0, 1 - (elapsed / duration))
+                local currentIntensity = intensity * fadeOut
+                
+                local randomX = (math.random() - 0.5) * currentIntensity
+                local randomY = (math.random() - 0.5) * currentIntensity
+                local randomZ = (math.random() - 0.5) * currentIntensity
+                
+                camera.CFrame = baseCFrame * CFrame.new(randomX, randomY, randomZ)
+                
+                task.wait()
+        end
+        
+        camera.CFrame = baseCFrame
+end
+
+setPlayerCameraEvent.OnClientEvent:Connect(function(camPart, spawnPart, finalPart, itemModel, primaryPart, rarity)
         if camPart and spawnPart and finalPart and itemModel then
                 if isPulling then
                         warn("Already pulling from a barrel!")
@@ -120,6 +157,8 @@ setPlayerCameraEvent.OnClientEvent:Connect(function(camPart, spawnPart, finalPar
                                         targetPart.CFrame = spawnPart.CFrame
                                 end
                                 
+                                task.wait(1)
+                                
                                 local floatTween = TweenService:Create(
                                         targetPart,
                                         TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
@@ -127,21 +166,28 @@ setPlayerCameraEvent.OnClientEvent:Connect(function(camPart, spawnPart, finalPar
                                 )
                                 floatTween:Play()
                                 
+                                task.wait(2)
+                                
                                 task.spawn(function()
-                                        for i = 1, 60 do
+                                        for i = 1, 30 do
                                                 if not targetPart or not targetPart.Parent then break end
                                                 local success = pcall(function()
-                                                        targetPart.CFrame = targetPart.CFrame * CFrame.Angles(0, math.rad(6), 0)
+                                                        targetPart.CFrame = targetPart.CFrame * CFrame.Angles(0, math.rad(12), 0)
                                                 end)
                                                 if not success then break end
                                                 task.wait(0.05)
                                         end
                                 end)
+                                
+                                local shakeIntensity = getCameraShakeIntensity(rarity or "Common")
+                                local baseCFrame = camera.CFrame
+                                applyCameraShake(baseCFrame, shakeIntensity, 1.5)
+                                
+                                task.wait(1.5)
                         else
                                 warn("⚠️ Could not find valid part to animate for: " .. tostring(itemModel))
+                                task.wait(4.5)
                         end
-                        
-                        task.wait(3)
                 end)
                 
                 if not success then

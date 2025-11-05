@@ -234,10 +234,10 @@ local function handleBarrelPull(player, barrel)
         end
         
         if setPlayerCameraEvent then
-                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemModel, primaryPart)
+                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemModel, primaryPart, selectedItem.Rarity)
         end
         
-        task.wait(3)
+        task.wait(6)
         
         for _, prompt in ipairs(activeProximityPrompts) do
                 if prompt and prompt.Parent then
@@ -309,18 +309,17 @@ local function handleBarrelPull(player, barrel)
         local addSuccess = DataStoreAPI:AddItem(player, itemToAdd)
         
         if addSuccess then
-                local notificationBody = selectedItem.Name
+                local notificationBody = selectedItem.Name .. "\n" .. selectedItem.Rarity
                 if itemToAdd.SerialNumber then
                         notificationBody = notificationBody .. " #" .. itemToAdd.SerialNumber
                 end
-                notificationBody = notificationBody .. "\n" .. formatNumber(selectedItem.Value) .. " Robux (" .. selectedItem.Rarity .. ")"
                 
                 if createNotificationEvent then
                         createNotificationEvent:FireClient(player, {
-                                Type = "BARREL_PULL",
+                                Type = "EVENT_COLLECT",
                                 Title = "Barrel Pull!",
                                 Body = notificationBody,
-                                ImageId = "rbxassetid://" .. selectedItem.RobloxId,
+                                ImageId = "rbxthumb://type=Asset&id=" .. selectedItem.RobloxId .. "&w=150&h=150",
                                 Color = getRarityColor(selectedItem.Rarity)
                         })
                 end
