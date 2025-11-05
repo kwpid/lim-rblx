@@ -186,6 +186,10 @@ function refresh()
     if rarityLabel then
       if item.Rarity == "Common" then
         rarityLabel.Visible = false
+      elseif item.Rarity == "Limited" then
+        rarityLabel.Visible = true
+        rarityLabel.Text = "Limited | Not Rollable"
+        rarityLabel.TextColor3 = rarityColors["Limited"] or Color3.new(1, 1, 1)
       else
         rarityLabel.Visible = true
         local percentage = item.RollPercentage or 0

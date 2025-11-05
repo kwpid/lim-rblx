@@ -47,12 +47,30 @@ function ItemRarityModule:GetRarityColor(rarity)
   return Color3.fromRGB(255, 255, 255)
 end
 
-function ItemRarityModule:GetRarityInfo(value)
-  for _, tier in ipairs(self.RarityTiers) do
-    if value >= tier.Min and value <= tier.Max then
-      return tier
+function ItemRarityModule:GetRarityInfo(rarity)
+  if type(rarity) == "string" then
+    if rarity == "Limited" then
+      return {
+        Name = "Limited",
+        Min = 0,
+        Max = math.huge,
+        Color = self.LimitedColor
+      }
+    end
+    
+    for _, tier in ipairs(self.RarityTiers) do
+      if tier.Name == rarity then
+        return tier
+      end
+    end
+  else
+    for _, tier in ipairs(self.RarityTiers) do
+      if rarity >= tier.Min and rarity <= tier.Max then
+        return tier
+      end
     end
   end
+  
   return nil
 end
 
@@ -68,13 +86,19 @@ end
 function ItemRarityModule:CalculateAllRollPercentages(items)
   local totalInverseValue = 0
   for _, item in ipairs(items) do
-    totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
+    if item.Rarity ~= "Limited" then
+      totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
+    end
   end
 
   local itemsWithPercentages = {}
   for _, item in ipairs(items) do
     local itemCopy = table.clone(item)
-    itemCopy.RollPercentage = self:GetRollPercentage(item.Value, totalInverseValue)
+    if item.Rarity == "Limited" then
+      itemCopy.RollPercentage = 0
+    else
+      itemCopy.RollPercentage = self:GetRollPercentage(item.Value, totalInverseValue)
+    end
     table.insert(itemsWithPercentages, itemCopy)
   end
 
