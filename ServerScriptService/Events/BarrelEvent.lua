@@ -37,7 +37,7 @@ local function getRarityColor(rarity)
         if rarity == "Limited" then
                 return Color3.fromRGB(255, 215, 0)
         end
-        return ItemRarityModule.GetRarityColor(rarity)
+        return ItemRarityModule:GetRarityColor(rarity)
 end
 
 local function formatNumber(n)
@@ -197,22 +197,53 @@ local function handleBarrelPull(player, barrel)
                 itemModel.Material = Enum.Material.Neon
         end
         
+        local primaryPart = nil
+        
         if itemModel:IsA("Accoutrement") or itemModel:IsA("Hat") then
                 local handle = itemModel:FindFirstChild("Handle")
-                if handle then
+                if handle and handle:IsA("BasePart") then
                         handle.Anchored = true
                         handle.CanCollide = false
+                        primaryPart = handle
                 end
+        elseif itemModel:IsA("Model") then
+                primaryPart = itemModel.PrimaryPart or itemModel:FindFirstChild("Handle")
+                if primaryPart and primaryPart:IsA("BasePart") then
+                        primaryPart.Anchored = true
+                        primaryPart.CanCollide = false
+                end
+        elseif itemModel:IsA("BasePart") then
+                itemModel.Anchored = true
+                itemModel.CanCollide = false
+                primaryPart = itemModel
         end
         
         itemModel.Parent = workspace
         itemModel:SetAttribute("BarrelPullOwner", player.UserId)
         
+        if primaryPart and primaryPart:IsA("BasePart") then
+                primaryPart.CFrame = spawnPart.CFrame
+        else
+                warn("⚠️ Could not find primaryPart for barrel item: " .. itemModel.Name)
+        end
+        
+        for _, prompt in ipairs(activeProximityPrompts) do
+                if prompt and prompt.Parent then
+                        prompt.Enabled = false
+                end
+        end
+        
         if setPlayerCameraEvent then
-                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemModel)
+                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemModel, primaryPart)
         end
         
         task.wait(3)
+        
+        for _, prompt in ipairs(activeProximityPrompts) do
+                if prompt and prompt.Parent then
+                        prompt.Enabled = true
+                end
+        end
         
         if itemModel and itemModel.Parent then
                 itemModel:Destroy()
@@ -338,61 +369,73 @@ local function setBarrelVisibility(eventActive)
                 return
         end
         
-        for _, item in ipairs(barrelsFolder:GetChildren()) do
-                if item:IsA("Model") then
-                        local body = item:FindFirstChild("Body")
-                        local camPart = item:FindFirstChild("cam")
-                        local spawnPart = item:FindFirstChild("spawn")
-                        local finalPart = item:FindFirstChild("final")
-                        local guiStand = item:FindFirstChild("GUI_Stand")
+        for _, barrel in ipairs(barrelsFolder:GetChildren()) do
+                if barrel:IsA("Model") then
+                        local body = barrel:FindFirstChild("Body")
+                        local camPart = barrel:FindFirstChild("cam")
+                        local spawnPart = barrel:FindFirstChild("spawn")
+                        local finalPart = barrel:FindFirstChild("final")
+                        local guiStand = barrel:FindFirstChild("GUI_Stand")
                         
                         local isBarrel = body and camPart and spawnPart and finalPart
                         
                         if isBarrel then
-                                if body then
-                                        body.Transparency = 0
-                                        body.CanCollide = true
+                                if body and body:IsA("BasePart") then
+                                        if eventActive then
+                                                body.Transparency = 0
+                                                body.CanCollide = true
+                                        else
+                                                body.Transparency = 1
+                                                body.CanCollide = false
+                                        end
                                 end
                                 
-                                if camPart then
+                                if camPart and camPart:IsA("BasePart") then
                                         camPart.Transparency = 1
                                         camPart.CanCollide = false
                                 end
-                                if spawnPart then
+                                if spawnPart and spawnPart:IsA("BasePart") then
                                         spawnPart.Transparency = 1
                                         spawnPart.CanCollide = false
                                 end
-                                if finalPart then
+                                if finalPart and finalPart:IsA("BasePart") then
                                         finalPart.Transparency = 1
                                         finalPart.CanCollide = false
                                 end
                                 
                                 if guiStand then
-                                        local billboardGui = guiStand:FindFirstChildOfClass("BillboardGui")
-                                        if billboardGui then
-                                                billboardGui.Enabled = eventActive
-                                        end
-                                end
-                        else
-                                for _, descendant in ipairs(item:GetDescendants()) do
-                                        if descendant:IsA("BasePart") then
-                                                if eventActive then
-                                                        descendant.Transparency = 0
-                                                        descendant.CanCollide = true
-                                                else
-                                                        descendant.Transparency = 1
-                                                        descendant.CanCollide = false
+                                        for _, descendant in ipairs(guiStand:GetDescendants()) do
+                                                if descendant:IsA("BillboardGui") or descendant:IsA("SurfaceGui") then
+                                                        descendant.Enabled = eventActive
                                                 end
                                         end
                                 end
-                        end
-                elseif item:IsA("BasePart") then
-                        if eventActive then
-                                item.Transparency = 0
-                                item.CanCollide = true
-                        else
-                                item.Transparency = 1
-                                item.CanCollide = false
+                                
+                                for _, child in ipairs(barrel:GetChildren()) do
+                                        if child ~= body and child ~= camPart and child ~= spawnPart and child ~= finalPart and child ~= guiStand then
+                                                for _, descendant in ipairs(child:GetDescendants()) do
+                                                        if descendant:IsA("BasePart") then
+                                                                if eventActive then
+                                                                        descendant.Transparency = 0
+                                                                        descendant.CanCollide = true
+                                                                else
+                                                                        descendant.Transparency = 1
+                                                                        descendant.CanCollide = false
+                                                                end
+                                                        end
+                                                end
+                                                
+                                                if child:IsA("BasePart") then
+                                                        if eventActive then
+                                                                child.Transparency = 0
+                                                                child.CanCollide = true
+                                                        else
+                                                                child.Transparency = 1
+                                                                child.CanCollide = false
+                                                        end
+                                                end
+                                        end
+                                end
                         end
                 end
         end
