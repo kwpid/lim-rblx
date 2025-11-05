@@ -41,7 +41,7 @@ checkAdminFunction.OnServerInvoke = function(player)
   return AdminConfig:IsAdmin(player)
 end
 
-createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemValue, itemStock, isLimited, isEditMode)
+createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemValue, itemStock, isLimited, offsaleTimer, isEditMode)
   if not AdminConfig:IsAdmin(player) then
     warn("non-admin " .. player.Name .. " attempted to create/edit item!")
     return
@@ -49,13 +49,13 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
 
   itemStock = itemStock or 0
   isLimited = isLimited or false
+  offsaleTimer = offsaleTimer or 0
   isEditMode = isEditMode or false
 
   local success, result
   if isEditMode then
+    success, result = ItemDatabase:EditItem(robloxId, itemName, itemValue, itemStock, isLimited, offsaleTimer)
     if success then
-      local stockText = itemStock > 0 and " [Stock: " .. itemStock .. "]" or ""
-      local limitedText = isLimited and " [Limited]" or ""
       createItemEvent:FireClient(player, true, "Item edited successfully!", result)
 
       local notificationData = {
@@ -70,7 +70,7 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
       createItemEvent:FireClient(player, false, result)
     end
   else
-    success, result = ItemDatabase:AddItem(robloxId, itemName, itemValue, itemStock, isLimited)
+    success, result = ItemDatabase:AddItem(robloxId, itemName, itemValue, itemStock, isLimited, offsaleTimer)
     if success then
       createItemEvent:FireClient(player, true, "Item created successfully!", result)
 
@@ -82,18 +82,20 @@ createItemEvent.OnServerEvent:Connect(function(player, robloxId, itemName, itemV
       }
       notificationEvent:FireAllClients(notificationData)
 
-      task.spawn(function()
-        local allItems = ItemDatabase:GetAllItems()
-        local itemsWithPercentages = ItemRarityModule:CalculateAllRollPercentages(allItems)
-        local rollPercentage = 0
-        for _, itemData in ipairs(itemsWithPercentages) do
-          if itemData.RobloxId == robloxId then
-            rollPercentage = itemData.RollPercentage
-            break
+      if result.Rarity ~= "Limited" then
+        task.spawn(function()
+          local allItems = ItemDatabase:GetAllItems()
+          local itemsWithPercentages = ItemRarityModule:CalculateAllRollPercentages(allItems)
+          local rollPercentage = 0
+          for _, itemData in ipairs(itemsWithPercentages) do
+            if itemData.RobloxId == robloxId then
+              rollPercentage = itemData.RollPercentage
+              break
+            end
           end
-        end
-        WebhookHandler:SendItemRelease(result, rollPercentage)
-      end)
+          WebhookHandler:SendItemRelease(result, rollPercentage)
+        end)
+      end
     else
       warn("failed to create item: " .. result)
       createItemEvent:FireClient(player, false, result)
