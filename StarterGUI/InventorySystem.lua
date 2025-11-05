@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MarketplaceService = game:GetService("MarketplaceService")
-local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local gui = script.Parent -- This is now the "Inventory" Frame inside MainUI
@@ -27,7 +26,7 @@ if not popup then
   return
 end
 
-popup.Visible = false
+popup.Visible = true
 
 local searchBar = gui:FindFirstChild("SearchBar")
 
@@ -86,8 +85,6 @@ local rarityColors = {
   ["Insane"] = Color3.fromRGB(255, 0, 255)
 }
 
-local popupOriginalPosition = popup.Position
-
 function formatNumber(n)
   local formatted = tostring(n)
   while true do
@@ -97,72 +94,12 @@ function formatNumber(n)
   return formatted
 end
 
-function showInventory()
-end
-
-function hideInventory(callback)
-  if callback then
-    callback()
-  end
-end
-
-function showPopup()
-  popup.Visible = true
-
-  local startPos = UDim2.new(
-    popupOriginalPosition.X.Scale + 0.5,
-    popupOriginalPosition.X.Offset,
-    popupOriginalPosition.Y.Scale,
-    popupOriginalPosition.Y.Offset
-  )
-
-  popup.Position = startPos
-
-  local tweenInfo = TweenInfo.new(
-    0.3,
-    Enum.EasingStyle.Quart,
-    Enum.EasingDirection.Out
-  )
-
-  local tween = TweenService:Create(popup, tweenInfo, { Position = popupOriginalPosition })
-  tween:Play()
-end
-
-function hidePopup()
-  local endPos = UDim2.new(
-    popupOriginalPosition.X.Scale + 0.5,
-    popupOriginalPosition.X.Offset,
-    popupOriginalPosition.Y.Scale,
-    popupOriginalPosition.Y.Offset
-  )
-
-  local tweenInfo = TweenInfo.new(
-    0.2,
-    Enum.EasingStyle.Quart,
-    Enum.EasingDirection.In
-  )
-
-  local tween = TweenService:Create(popup, tweenInfo, { Position = endPos })
-  tween:Play()
-
-  tween.Completed:Connect(function()
-    popup.Visible = false
-  end)
-end
-
 function clearSelection()
   if selectedButton then
-    local contentFrame = selectedButton:FindFirstChild("Content")
-    local content2Frame = selectedButton:FindFirstChild("content2")
-
-    if contentFrame then
-      contentFrame.BorderSizePixel = 1
+    local uiStroke = selectedButton:FindFirstChildOfClass("UIStroke")
+    if uiStroke then
+      uiStroke.Thickness = 5.5
     end
-
-    if content2Frame then
-      content2Frame.BorderSizePixel = 1
-    end
-
     selectedButton = nil
   end
 
@@ -243,10 +180,10 @@ function refresh()
     local bEquipped = equippedItems[b.RobloxId] or false
 
     if aEquipped ~= bEquipped then
-      return aEquipped -- Equipped items come first
+      return aEquipped
     end
 
-    return a.Value > b.Value -- Then sort by value (highest to lowest)
+    return a.Value > b.Value
   end)
 
   for i, item in ipairs(inventory) do
@@ -256,36 +193,21 @@ function refresh()
     button.Visible = true
     button.Parent = handler
 
-    local contentFrame = button:FindFirstChild("Content")
-    local content2Frame = button:FindFirstChild("content2")
-
-    local isEquipped = equippedItems[item.RobloxId] or false
-
-    if contentFrame then
-      if isEquipped then
-        contentFrame.BorderColor3 = Color3.fromRGB(255, 165, 0) -- Orange border for equipped
-      else
-        local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-        contentFrame.BorderColor3 = rarityColor
-      end
-    end
-    if content2Frame then
-      if isEquipped then
-        content2Frame.BorderColor3 = Color3.fromRGB(255, 165, 0) -- Orange border for equipped
-      else
-        local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-        content2Frame.BorderColor3 = rarityColor
-      end
+    local uiStroke = button:FindFirstChildOfClass("UIStroke")
+    if uiStroke then
+      local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+      uiStroke.Color = rarityColor
+      uiStroke.Thickness = 5.5
     end
 
     local qtyLabel = button:FindFirstChild("Qty")
     if qtyLabel then
-      if item.SerialNumber then
-        qtyLabel.Text = "#" .. item.SerialNumber
-      elseif item.Amount then
-        qtyLabel.Text = item.Amount .. "x"
+      local amount = item.Amount or 1
+      if amount > 1 then
+        qtyLabel.Text = tostring(amount)
+        qtyLabel.Visible = true
       else
-        qtyLabel.Text = "1x"
+        qtyLabel.Visible = false
       end
     end
 
@@ -297,22 +219,6 @@ function refresh()
       else
         serialLabel.Visible = false
       end
-    end
-
-    local rarityLabel = contentFrame and contentFrame:FindFirstChild("Rarity")
-    if rarityLabel then
-      if item.Rarity == "Common" then
-        rarityLabel.Visible = false
-      else
-        rarityLabel.Visible = true
-        rarityLabel.Text = item.Rarity
-        rarityLabel.TextColor3 = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-      end
-    end
-
-    local t1Label = button:FindFirstChild("t1")
-    if t1Label then
-      t1Label.Visible = false
     end
 
     local copiesCount = 0
@@ -340,75 +246,23 @@ function refresh()
       end
     end
 
-    local copiesLabel = button:FindFirstChild("copies")
-    if copiesLabel then
-      local stockCount = item.Stock or 0
-
-      if copiesCount > 0 then
-        if stockCount > 0 then
-          copiesLabel.Text = copiesCount .. " / " .. stockCount .. " copies"
-        else
-          copiesLabel.Text = copiesCount .. " copies"
-        end
-        copiesLabel.Visible = true
-      else
-        copiesLabel.Visible = false
-      end
-    end
-
-    local o2Label = contentFrame and contentFrame:FindFirstChild("o2")
-    if o2Label then
-      if item.Stock and item.Stock > 0 then
-        o2Label.Text = formatNumber(copiesCount) .. "/" .. formatNumber(item.Stock)
-      else
-        o2Label.Text = formatNumber(copiesCount)
-      end
-    end
-
-    local valueLabel = contentFrame and contentFrame:FindFirstChild("Value")
-    if valueLabel then
-      valueLabel.Text = "R$ " .. formatNumber(item.Value)
-    end
-
-    local v2Label = contentFrame and contentFrame:FindFirstChild("v2")
-    if v2Label then
-      v2Label.Text = formatNumber(item.Value)
-    end
-
-    local nameLabel = content2Frame and content2Frame:FindFirstChild("name")
-    if nameLabel then
-      local displayName = item.Name
-      if #displayName > 20 then
-        displayName = string.sub(displayName, 1, 17) .. "..."
-      end
-      nameLabel.Text = displayName
-    end
-
-    local img = button:FindFirstChild("Image")
-    if img and img:IsA("ImageLabel") then
-      img.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
+    if button:IsA("ImageButton") then
+      button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
     end
 
     table.insert(buttons, button)
 
     button.MouseButton1Click:Connect(function()
       if selectedButton and selectedButton ~= button then
-        local prevContentFrame = selectedButton:FindFirstChild("Content")
-        local prevContent2Frame = selectedButton:FindFirstChild("content2")
-
-        if prevContentFrame then
-          prevContentFrame.BorderSizePixel = 1
-        end
-        if prevContent2Frame then
-          prevContent2Frame.BorderSizePixel = 1
+        local prevStroke = selectedButton:FindFirstChildOfClass("UIStroke")
+        if prevStroke then
+          prevStroke.Thickness = 5.5
         end
       end
 
-      if contentFrame then
-        contentFrame.BorderSizePixel = 3
-      end
-      if content2Frame then
-        content2Frame.BorderSizePixel = 3
+      local currentStroke = button:FindFirstChildOfClass("UIStroke")
+      if currentStroke then
+        currentStroke.Thickness = 9
       end
 
       selectedButton = button
@@ -489,12 +343,10 @@ function refresh()
           serialOwnerText.Visible = false
         end
       end
-
-      showPopup()
     end)
   end
 
-  return true -- Return true to indicate successful load
+  return true
 end
 
 if searchBar and searchBar:IsA("TextBox") then
@@ -545,7 +397,6 @@ end)
 local closeButton = popup:FindFirstChild("Close")
 if closeButton then
   closeButton.MouseButton1Click:Connect(function()
-    hidePopup()
     clearSelection()
   end)
 end
@@ -566,8 +417,7 @@ if equipButton and equipItemEvent then
         equipButton.Text = "Unequip"
       end
 
-      task.wait(0.1) -- Small delay to let server update
-      hidePopup()
+      task.wait(0.1)
       clearSelection()
       pcall(refresh)
     end
