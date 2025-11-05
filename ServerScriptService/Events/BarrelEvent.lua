@@ -136,22 +136,6 @@ local function handleBarrelPull(player, barrel)
         
         activePulls[player.UserId] = true
         
-        local hatItems = getHatItems()
-        if #hatItems == 0 then
-                warn("No hat items available for barrel pull")
-                activePulls[player.UserId] = nil
-                return
-        end
-        
-        local chromaValkExists = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID) ~= nil
-        local selectedItem = pickWeightedItem(hatItems, chromaValkExists)
-        
-        if not selectedItem then
-                warn("Failed to select item from barrel")
-                activePulls[player.UserId] = nil
-                return
-        end
-        
         local camPart = barrel:FindFirstChild("cam")
         local spawnPart = barrel:FindFirstChild("spawn")
         local finalPart = barrel:FindFirstChild("final")
@@ -168,16 +152,16 @@ local function handleBarrelPull(player, barrel)
                 return
         end
         
-        local itemModel = Instance.new("Part")
-        itemModel.Name = "BarrelItem_" .. selectedItem.Name
-        itemModel.Size = Vector3.new(2, 2, 2)
-        itemModel.Anchored = true
-        itemModel.CanCollide = false
-        itemModel.Color = getRarityColor(selectedItem.Rarity)
-        itemModel.Material = Enum.Material.Neon
-        itemModel.CFrame = spawnPart.CFrame
-        itemModel.Parent = workspace
-        itemModel:SetAttribute("BarrelPullOwner", player.UserId)
+        local placeholderPart = Instance.new("Part")
+        placeholderPart.Name = "BarrelItem_Loading"
+        placeholderPart.Size = Vector3.new(2, 2, 2)
+        placeholderPart.Anchored = true
+        placeholderPart.CanCollide = false
+        placeholderPart.Color = Color3.fromRGB(255, 255, 255)
+        placeholderPart.Material = Enum.Material.Neon
+        placeholderPart.CFrame = spawnPart.CFrame
+        placeholderPart.Parent = workspace
+        placeholderPart:SetAttribute("BarrelPullOwner", player.UserId)
         
         for _, prompt in ipairs(activeProximityPrompts) do
                 if prompt and prompt.Parent then
@@ -186,130 +170,169 @@ local function handleBarrelPull(player, barrel)
         end
         
         if setPlayerCameraEvent then
-                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemModel, itemModel, selectedItem.Rarity)
+                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, placeholderPart, placeholderPart, "Common")
         end
         
-        task.wait(6)
-        
-        for _, prompt in ipairs(activeProximityPrompts) do
-                if prompt and prompt.Parent then
-                        prompt.Enabled = true
-                end
-        end
-        
-        if itemModel and itemModel.Parent then
-                itemModel:Destroy()
-        end
-        
-        local cashDeducted = DataStoreAPI:AddCash(player, -PULL_COST)
-        if not cashDeducted then
-                warn("❌ Failed to deduct cash from " .. player.Name)
-                if createNotificationEvent then
-                        createNotificationEvent:FireClient(player, {
-                                Type = "ERROR",
-                                Title = "Payment Failed",
-                                Body = "Failed to process payment. Please try again."
-                        })
-                end
-                activePulls[player.UserId] = nil
-                return
-        end
-        
-        local itemToAdd = {
-                RobloxId = selectedItem.RobloxId,
-                Name = selectedItem.Name,
-                Value = selectedItem.Value,
-                Rarity = selectedItem.Rarity,
-                Amount = 1
-        }
-        
-        local stockIncremented = false
-        local serialNumber = nil
-        
-        if selectedItem.Stock and selectedItem.Stock > 0 then
-                local item = ItemDatabase:GetItemByRobloxId(selectedItem.RobloxId)
-                if item then
-                        serialNumber = ItemDatabase:IncrementStock(item)
-                        if serialNumber then
-                                itemToAdd.SerialNumber = serialNumber
-                                stockIncremented = true
-                        else
-                                warn("❌ Stock sold out for " .. selectedItem.Name .. " - refunding " .. player.Name)
-                                local refundSuccess = DataStoreAPI:AddCash(player, PULL_COST)
-                                if createNotificationEvent then
-                                        if refundSuccess then
-                                                createNotificationEvent:FireClient(player, {
-                                                        Type = "ERROR",
-                                                        Title = "Item Sold Out",
-                                                        Body = selectedItem.Name .. " is sold out! Your cash has been refunded."
-                                                })
-                                        else
-                                                createNotificationEvent:FireClient(player, {
-                                                        Type = "ERROR",
-                                                        Title = "Critical Error",
-                                                        Body = selectedItem.Name .. " is sold out and refund failed! Contact support. (UserId: " .. player.UserId .. ")"
-                                                })
-                                                warn("⚠️ CRITICAL: Failed to refund " .. formatNumber(PULL_COST) .. " Cash to " .. player.Name .. " (UserId: " .. player.UserId .. ") after stock sold out")
-                                        end
+        task.spawn(function()
+                local hatItems = getHatItems()
+                if #hatItems == 0 then
+                        warn("No hat items available for barrel pull")
+                        activePulls[player.UserId] = nil
+                        if placeholderPart and placeholderPart.Parent then
+                                placeholderPart:Destroy()
+                        end
+                        for _, prompt in ipairs(activeProximityPrompts) do
+                                if prompt and prompt.Parent then
+                                        prompt.Enabled = true
                                 end
-                                activePulls[player.UserId] = nil
-                                return
+                        end
+                        return
+                end
+                
+                local chromaValkExists = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID) ~= nil
+                local selectedItem = pickWeightedItem(hatItems, chromaValkExists)
+                
+                if not selectedItem then
+                        warn("Failed to select item from barrel")
+                        activePulls[player.UserId] = nil
+                        if placeholderPart and placeholderPart.Parent then
+                                placeholderPart:Destroy()
+                        end
+                        for _, prompt in ipairs(activeProximityPrompts) do
+                                if prompt and prompt.Parent then
+                                        prompt.Enabled = true
+                                end
+                        end
+                        return
+                end
+                
+                if placeholderPart and placeholderPart.Parent then
+                        placeholderPart.Color = getRarityColor(selectedItem.Rarity)
+                        placeholderPart.Name = "BarrelItem_" .. selectedItem.Name
+                end
+        
+                task.wait(6)
+                
+                for _, prompt in ipairs(activeProximityPrompts) do
+                        if prompt and prompt.Parent then
+                                prompt.Enabled = true
                         end
                 end
-        end
-        
-        local addSuccess = DataStoreAPI:AddItem(player, itemToAdd)
-        
-        if addSuccess then
-                local notificationBody = selectedItem.Name .. "\n" .. selectedItem.Rarity
-                if itemToAdd.SerialNumber then
-                        notificationBody = notificationBody .. " #" .. itemToAdd.SerialNumber
+                
+                if placeholderPart and placeholderPart.Parent then
+                        placeholderPart:Destroy()
                 end
                 
-                if createNotificationEvent then
-                        createNotificationEvent:FireClient(player, {
-                                Type = "EVENT_COLLECT",
-                                Title = "Barrel Pull!",
-                                Body = notificationBody,
-                                ImageId = "rbxthumb://type=Asset&id=" .. selectedItem.RobloxId .. "&w=150&h=150",
-                                Color = getRarityColor(selectedItem.Rarity)
-                        })
+                        local cashDeducted = DataStoreAPI:AddCash(player, -PULL_COST)
+                if not cashDeducted then
+                        warn("❌ Failed to deduct cash from " .. player.Name)
+                        if createNotificationEvent then
+                                createNotificationEvent:FireClient(player, {
+                                        Type = "ERROR",
+                                        Title = "Payment Failed",
+                                        Body = "Failed to process payment. Please try again."
+                                })
+                        end
+                        activePulls[player.UserId] = nil
+                        return
                 end
                 
-                print("✅ " .. player.Name .. " pulled " .. selectedItem.Name .. " from barrel (charged " .. formatNumber(PULL_COST) .. " Cash)")
-        else
-                warn("❌ Failed to add item to " .. player.Name .. "'s inventory")
+                local itemToAdd = {
+                        RobloxId = selectedItem.RobloxId,
+                        Name = selectedItem.Name,
+                        Value = selectedItem.Value,
+                        Rarity = selectedItem.Rarity,
+                        Amount = 1
+                }
                 
-                if stockIncremented and serialNumber then
+                local stockIncremented = false
+                local serialNumber = nil
+                
+                if selectedItem.Stock and selectedItem.Stock > 0 then
                         local item = ItemDatabase:GetItemByRobloxId(selectedItem.RobloxId)
-                        if item and item.CurrentStock then
-                                item.CurrentStock = item.CurrentStock - 1
-                                ItemDatabase:QueueSave()
-                                print("↩️ Rolled back stock for " .. selectedItem.Name .. " (was serial #" .. serialNumber .. ")")
+                        if item then
+                                serialNumber = ItemDatabase:IncrementStock(item)
+                                if serialNumber then
+                                        itemToAdd.SerialNumber = serialNumber
+                                        stockIncremented = true
+                                else
+                                        warn("❌ Stock sold out for " .. selectedItem.Name .. " - refunding " .. player.Name)
+                                        local refundSuccess = DataStoreAPI:AddCash(player, PULL_COST)
+                                        if createNotificationEvent then
+                                                if refundSuccess then
+                                                        createNotificationEvent:FireClient(player, {
+                                                                Type = "ERROR",
+                                                                Title = "Item Sold Out",
+                                                                Body = selectedItem.Name .. " is sold out! Your cash has been refunded."
+                                                        })
+                                                else
+                                                        createNotificationEvent:FireClient(player, {
+                                                                Type = "ERROR",
+                                                                Title = "Critical Error",
+                                                                Body = selectedItem.Name .. " is sold out and refund failed! Contact support. (UserId: " .. player.UserId .. ")"
+                                                        })
+                                                        warn("⚠️ CRITICAL: Failed to refund " .. formatNumber(PULL_COST) .. " Cash to " .. player.Name .. " (UserId: " .. player.UserId .. ") after stock sold out")
+                                                end
+                                        end
+                                        activePulls[player.UserId] = nil
+                                        return
+                                end
                         end
                 end
                 
-                local refundSuccess = DataStoreAPI:AddCash(player, PULL_COST)
+                local addSuccess = DataStoreAPI:AddItem(player, itemToAdd)
                 
-                if createNotificationEvent then
-                        if refundSuccess then
+                if addSuccess then
+                        local notificationBody = selectedItem.Name .. "\n" .. selectedItem.Rarity
+                        if itemToAdd.SerialNumber then
+                                notificationBody = notificationBody .. " #" .. itemToAdd.SerialNumber
+                        end
+                        
+                        if createNotificationEvent then
                                 createNotificationEvent:FireClient(player, {
-                                        Type = "ERROR",
-                                        Title = "Error",
-                                        Body = "Failed to add item. Your cash has been refunded."
+                                        Type = "EVENT_COLLECT",
+                                        Title = "Barrel Pull!",
+                                        Body = notificationBody,
+                                        ImageId = "rbxthumb://type=Asset&id=" .. selectedItem.RobloxId .. "&w=150&h=150",
+                                        Color = getRarityColor(selectedItem.Rarity)
                                 })
-                        else
-                                createNotificationEvent:FireClient(player, {
-                                        Type = "ERROR",
-                                        Title = "Critical Error",
-                                        Body = "Failed to add item and refund failed! Contact support. (UserId: " .. player.UserId .. ")"
-                                })
-                                warn("⚠️ CRITICAL: Failed to refund " .. formatNumber(PULL_COST) .. " Cash to " .. player.Name .. " (UserId: " .. player.UserId .. ") after item add failed")
+                        end
+                        
+                        print("✅ " .. player.Name .. " pulled " .. selectedItem.Name .. " from barrel (charged " .. formatNumber(PULL_COST) .. " Cash)")
+                else
+                        warn("❌ Failed to add item to " .. player.Name .. "'s inventory")
+                        
+                        if stockIncremented and serialNumber then
+                                local item = ItemDatabase:GetItemByRobloxId(selectedItem.RobloxId)
+                                if item and item.CurrentStock then
+                                        item.CurrentStock = item.CurrentStock - 1
+                                        ItemDatabase:QueueSave()
+                                        print("↩️ Rolled back stock for " .. selectedItem.Name .. " (was serial #" .. serialNumber .. ")")
+                                end
+                        end
+                        
+                        local refundSuccess = DataStoreAPI:AddCash(player, PULL_COST)
+                        
+                        if createNotificationEvent then
+                                if refundSuccess then
+                                        createNotificationEvent:FireClient(player, {
+                                                Type = "ERROR",
+                                                Title = "Error",
+                                                Body = "Failed to add item. Your cash has been refunded."
+                                        })
+                                else
+                                        createNotificationEvent:FireClient(player, {
+                                                Type = "ERROR",
+                                                Title = "Critical Error",
+                                                Body = "Failed to add item and refund failed! Contact support. (UserId: " .. player.UserId .. ")"
+                                        })
+                                        warn("⚠️ CRITICAL: Failed to refund " .. formatNumber(PULL_COST) .. " Cash to " .. player.Name .. " (UserId: " .. player.UserId .. ") after item add failed")
+                                end
                         end
                 end
-        end
-        
-        activePulls[player.UserId] = nil
+                
+                activePulls[player.UserId] = nil
+        end)
 end
 
 local function setBarrelVisibility(eventActive)
