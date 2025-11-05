@@ -10,7 +10,13 @@ ItemRarityModule.RarityTiers = {
   { Name = "Insane",     Min = 10000000, Max = math.huge, Color = Color3.fromRGB(255, 0, 255) }
 }
 
-function ItemRarityModule:GetRarity(value)
+ItemRarityModule.LimitedColor = Color3.fromRGB(255, 215, 0)
+
+function ItemRarityModule:GetRarity(value, isLimited)
+  if isLimited then
+    return "Limited"
+  end
+  
   for _, tier in ipairs(self.RarityTiers) do
     if value >= tier.Min and value <= tier.Max then
       return tier.Name
@@ -19,12 +25,25 @@ function ItemRarityModule:GetRarity(value)
   return "Unknown"
 end
 
-function ItemRarityModule:GetRarityColor(value)
-  for _, tier in ipairs(self.RarityTiers) do
-    if value >= tier.Min and value <= tier.Max then
-      return tier.Color
+function ItemRarityModule:GetRarityColor(rarity)
+  if type(rarity) == "string" then
+    if rarity == "Limited" then
+      return self.LimitedColor
+    end
+    
+    for _, tier in ipairs(self.RarityTiers) do
+      if tier.Name == rarity then
+        return tier.Color
+      end
+    end
+  else
+    for _, tier in ipairs(self.RarityTiers) do
+      if rarity >= tier.Min and rarity <= tier.Max then
+        return tier.Color
+      end
     end
   end
+  
   return Color3.fromRGB(255, 255, 255)
 end
 
