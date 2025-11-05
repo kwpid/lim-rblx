@@ -82,7 +82,8 @@ local rarityColors = {
   ["Epic"] = Color3.fromRGB(255, 170, 0),
   ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
   ["Mythic"] = Color3.fromRGB(255, 0, 0),
-  ["Insane"] = Color3.fromRGB(255, 0, 255)
+  ["Insane"] = Color3.fromRGB(255, 0, 255),
+  ["Limited"] = Color3.fromRGB(255, 215, 0)
 }
 
 function formatNumber(n)
@@ -239,7 +240,7 @@ function refresh()
 
     local limText = button:FindFirstChild("LimText")
     if limText then
-      if item.Limited then
+      if item.Rarity == "Limited" then
         limText.Visible = true
       else
         limText.Visible = false
