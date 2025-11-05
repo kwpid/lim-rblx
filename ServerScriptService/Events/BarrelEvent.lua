@@ -168,64 +168,16 @@ local function handleBarrelPull(player, barrel)
                 return
         end
         
-        local itemModel = nil
-        local loadSuccess = false
-        
-        local success, assetContainer = pcall(function()
-                return InsertService:LoadAsset(selectedItem.RobloxId)
-        end)
-        
-        if success and assetContainer then
-                for _, child in ipairs(assetContainer:GetChildren()) do
-                        if child:IsA("Accoutrement") or child:IsA("Hat") then
-                                itemModel = child:Clone()
-                                itemModel.Name = "BarrelItem_" .. selectedItem.Name
-                                loadSuccess = true
-                                break
-                        end
-                end
-                assetContainer:Destroy()
-        end
-        
-        if not loadSuccess then
-                itemModel = Instance.new("Part")
-                itemModel.Name = "BarrelItem_" .. selectedItem.Name
-                itemModel.Size = Vector3.new(2, 2, 2)
-                itemModel.Anchored = true
-                itemModel.CanCollide = false
-                itemModel.Color = getRarityColor(selectedItem.Rarity)
-                itemModel.Material = Enum.Material.Neon
-        end
-        
-        local primaryPart = nil
-        
-        if itemModel:IsA("Accoutrement") or itemModel:IsA("Hat") then
-                local handle = itemModel:FindFirstChild("Handle")
-                if handle and handle:IsA("BasePart") then
-                        handle.Anchored = true
-                        handle.CanCollide = false
-                        primaryPart = handle
-                end
-        elseif itemModel:IsA("Model") then
-                primaryPart = itemModel.PrimaryPart or itemModel:FindFirstChild("Handle")
-                if primaryPart and primaryPart:IsA("BasePart") then
-                        primaryPart.Anchored = true
-                        primaryPart.CanCollide = false
-                end
-        elseif itemModel:IsA("BasePart") then
-                itemModel.Anchored = true
-                itemModel.CanCollide = false
-                primaryPart = itemModel
-        end
-        
+        local itemModel = Instance.new("Part")
+        itemModel.Name = "BarrelItem_" .. selectedItem.Name
+        itemModel.Size = Vector3.new(2, 2, 2)
+        itemModel.Anchored = true
+        itemModel.CanCollide = false
+        itemModel.Color = getRarityColor(selectedItem.Rarity)
+        itemModel.Material = Enum.Material.Neon
+        itemModel.CFrame = spawnPart.CFrame
         itemModel.Parent = workspace
         itemModel:SetAttribute("BarrelPullOwner", player.UserId)
-        
-        if primaryPart and primaryPart:IsA("BasePart") then
-                primaryPart.CFrame = spawnPart.CFrame
-        else
-                warn("⚠️ Could not find primaryPart for barrel item: " .. itemModel.Name)
-        end
         
         for _, prompt in ipairs(activeProximityPrompts) do
                 if prompt and prompt.Parent then
@@ -234,7 +186,7 @@ local function handleBarrelPull(player, barrel)
         end
         
         if setPlayerCameraEvent then
-                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemModel, primaryPart, selectedItem.Rarity)
+                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemModel, itemModel, selectedItem.Rarity)
         end
         
         task.wait(6)

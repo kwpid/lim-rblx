@@ -5,7 +5,8 @@ This project is a Roblox crate opening/unboxing game designed to provide an enga
 
 ## Recent Changes
 **November 5, 2025 - Barrel Event Animation Improvements:**
-- Fixed timing delay: Animation now starts instantly when prompt is activated (no 10-second delay)
+- Fixed timing delay: Animation now starts INSTANTLY when prompt is activated (removed InsertService blocking)
+- Simplified visual: Uses colored neon part instead of loading actual asset model (eliminates network delay)
 - Improved player visibility: Both own player and other players are now hidden during barrel pull
 - Added item reveal timing: Item stays in barrel for 1 second before floating out
 - Added rarity-based camera shake: Higher rarity items create more intense shake effects (Common: 0.05 → Insane: 1.2)
