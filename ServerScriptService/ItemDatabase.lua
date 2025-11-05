@@ -175,16 +175,14 @@ end
 function ItemDatabase:GetRollableItems()
   local rollableItems = {}
   for _, item in ipairs(self.Items) do
-    if item.Rarity == "Limited" then
-      continue
-    end
-    
-    local stock = item.Stock or 0
-    local currentStock = item.CurrentStock or 0
-    if stock == 0 or currentStock < stock then
-      local offsaleAt = item.OffsaleAt
-      if not offsaleAt or os.time() < offsaleAt then
-        table.insert(rollableItems, item)
+    if item.Rarity ~= "Limited" then
+      local stock = item.Stock or 0
+      local currentStock = item.CurrentStock or 0
+      if stock == 0 or currentStock < stock then
+        local offsaleAt = item.OffsaleAt
+        if not offsaleAt or os.time() < offsaleAt then
+          table.insert(rollableItems, item)
+        end
       end
     end
   end

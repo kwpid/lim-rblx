@@ -88,4 +88,12 @@ notificationPresets.EVENT_COLLECT = {
   DEFAULT_COLOR = Color3.fromRGB(255, 215, 0),
 }
 
+notificationPresets.BARREL_PULL = {
+  DEFAULT_TITLE = "Barrel Pull!",
+  DEFAULT_BODY = "You pulled an item from the barrel!",
+  DEFAULT_IMAGE = "rbxassetid://8150337440",
+  DEFAULT_SOUND = "rbxassetid://10066947742",
+  DEFAULT_COLOR = Color3.fromRGB(139, 69, 19),
+}
+
 return notificationPresets
