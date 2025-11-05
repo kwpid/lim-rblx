@@ -68,7 +68,12 @@ function ItemDatabase:LoadItems()
         item.Owners = item.Owners or 0
         item.TotalCopies = item.TotalCopies or 0
         item.SerialOwners = item.SerialOwners or {}
-        item.Limited = item.Limited or false
+        item.OffsaleAt = item.OffsaleAt or nil
+        
+        if item.Limited == true and item.Rarity ~= "Limited" then
+          item.Rarity = "Limited"
+        end
+        item.Limited = nil
       end
     else
       self.Items = {}
@@ -93,17 +98,20 @@ function ItemDatabase:SaveItems()
   return success
 end
 
-function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock, isLimited)
+function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock, isLimited, offsaleTimer)
   if type(robloxId) ~= "number" then return false, "RobloxId must be a number" end
   if type(itemName) ~= "string" or itemName == "" then return false, "Item name cannot be empty" end
   if type(itemValue) ~= "number" or itemValue < 0 then return false, "Item value must be a positive number" end
   stock = stock or 0
   if type(stock) ~= "number" or stock < 0 or stock > 100 then return false, "Stock must be between 0 and 100" end
   isLimited = isLimited or false
+  offsaleTimer = offsaleTimer or 0
+  
   for _, item in ipairs(self.Items) do
     if item.RobloxId == robloxId then return false, "Item with this Roblox ID already exists" end
   end
-  local rarity = ItemRarityModule:GetRarity(itemValue)
+  
+  local rarity = ItemRarityModule:GetRarity(itemValue, isLimited)
   local newItem = {
     RobloxId = robloxId,
     Name = itemName,
@@ -114,7 +122,7 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock, isLimited)
     Owners = 0,
     TotalCopies = 0,
     SerialOwners = {},
-    Limited = isLimited,
+    OffsaleAt = offsaleTimer > 0 and (os.time() + offsaleTimer) or nil,
     CreatedAt = os.time()
   }
   table.insert(self.Items, newItem)
@@ -127,13 +135,15 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock, isLimited)
   end
 end
 
-function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited)
+function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited, offsaleTimer)
   if type(robloxId) ~= "number" then return false, "RobloxId must be a number" end
   if type(itemName) ~= "string" or itemName == "" then return false, "Item name cannot be empty" end
   if type(itemValue) ~= "number" or itemValue < 0 then return false, "Item value must be a positive number" end
   stock = stock or 0
   if type(stock) ~= "number" or stock < 0 or stock > 100 then return false, "Stock must be between 0 and 100" end
   isLimited = isLimited or false
+  offsaleTimer = offsaleTimer or 0
+  
   local itemToEdit
   for _, item in ipairs(self.Items) do
     if item.RobloxId == robloxId then
@@ -142,12 +152,14 @@ function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited)
     end
   end
   if not itemToEdit then return false, "Item with this Roblox ID does not exist" end
-  local rarity = ItemRarityModule:GetRarity(itemValue)
+  
+  local rarity = ItemRarityModule:GetRarity(itemValue, isLimited)
   itemToEdit.Name = itemName
   itemToEdit.Value = itemValue
   itemToEdit.Rarity = rarity
   itemToEdit.Stock = stock
-  itemToEdit.Limited = isLimited
+  itemToEdit.OffsaleAt = offsaleTimer > 0 and (os.time() + offsaleTimer) or nil
+  
   local saveSuccess = self:SaveItems()
   if saveSuccess then
     return true, itemToEdit
@@ -163,10 +175,17 @@ end
 function ItemDatabase:GetRollableItems()
   local rollableItems = {}
   for _, item in ipairs(self.Items) do
+    if item.Rarity == "Limited" then
+      continue
+    end
+    
     local stock = item.Stock or 0
     local currentStock = item.CurrentStock or 0
     if stock == 0 or currentStock < stock then
-      table.insert(rollableItems, item)
+      local offsaleAt = item.OffsaleAt
+      if not offsaleAt or os.time() < offsaleAt then
+        table.insert(rollableItems, item)
+      end
     end
   end
   return rollableItems
