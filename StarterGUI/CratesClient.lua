@@ -34,14 +34,14 @@ local hideRollsEnabled = false
 
 local function stopAutoRoll()
   isAutoRolling, shouldStopAutoRoll = false, false
-  autoRollButton.Text, autoRollButton.TextColor3 = "[AUTOROLL: OFF]", Color3.fromRGB(255, 0, 0)
+  autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0)
   if autoRollButton:FindFirstChild("UIStroke") then autoRollButton.UIStroke.Color = Color3.fromRGB(255, 0, 0) end
   setAutoRollEvent:FireServer(false)
 end
 
 local function startAutoRoll()
   isAutoRolling, shouldStopAutoRoll = true, false
-  autoRollButton.Text, autoRollButton.TextColor3 = "[AUTOROLL: ON]", Color3.fromRGB(0, 255, 0)
+  autoRollButton.TextColor3 = Color3.fromRGB(0, 255, 0)
   if autoRollButton:FindFirstChild("UIStroke") then autoRollButton.UIStroke.Color = Color3.fromRGB(0, 255, 0) end
   setAutoRollEvent:FireServer(true)
 end
@@ -56,12 +56,12 @@ closeOpenedBtn.MouseButton1Click:Connect(function()
   openedFrame.Visible, openedGui.Enabled = false, false
   for _, c in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do if c:IsA("Frame") or c:IsA("ImageLabel") then c
           :Destroy() end end
-  rollButton.Visible, autoRollButton.Visible = true, true
 end)
 
 rollButton.MouseButton1Click:Connect(function()
   if isCurrentlyRolling then return end
-  isCurrentlyRolling, rollButton.Visible = true, false
+  isCurrentlyRolling = true
+  rollButton.Text = "[ROLLING...]"
   rollCrateEvent:FireServer()
 end)
 
@@ -70,13 +70,14 @@ autoRollButton.MouseButton1Click:Connect(function()
   if isAutoRolling then
     startAutoRoll()
     if not isCurrentlyRolling then
-      isCurrentlyRolling, rollButton.Visible = true, false
+      isCurrentlyRolling = true
+      rollButton.Text = "[ROLLING...]"
       rollCrateEvent:FireServer()
     end
   else
     if isCurrentlyRolling then
       shouldStopAutoRoll = true
-      autoRollButton.Text, autoRollButton.TextColor3 = "[AUTOROLL: OFF]", Color3.fromRGB(255, 0, 0)
+      autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0)
       if autoRollButton:FindFirstChild("UIStroke") then autoRollButton.UIStroke.Color = Color3.fromRGB(255, 0, 0) end
       setAutoRollEvent:FireServer(false)
     else
@@ -87,8 +88,7 @@ end)
 
 hideRollsButton.MouseButton1Click:Connect(function()
   hideRollsEnabled = not hideRollsEnabled
-  hideRollsButton.Text = hideRollsEnabled and "[HIDE ROLLS: ON]" or "[HIDE ROLLS: OFF]"
-  local color = hideRollsEnabled and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(170, 0, 0)
+  local color = hideRollsEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
   hideRollsButton.TextColor3 = color
   if hideRollsButton:FindFirstChild("UIStroke") then hideRollsButton.UIStroke.Color = color end
   setHideRollsEvent:FireServer(hideRollsEnabled)
@@ -140,7 +140,8 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   currentChosenItem = chosenItem
   openedFrame.CrateName.Text = "You won: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")!"
   if not hideRollsEnabled then closeOpenedBtn.Visible = true end
-  isCurrentlyRolling, rollButton.Visible = false, true
+  isCurrentlyRolling = false
+  rollButton.Text = "[ROLL]"
 
   if isAutoRolling and not shouldStopAutoRoll then
     task.delay(hideRollsEnabled and 0.5 or 1.5, function()
@@ -148,7 +149,8 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
         openedFrame.Visible, openedGui.Enabled = false, false
         for _, c in pairs(openedItemsFrame.ItemsContainer:GetChildren()) do if c:IsA("Frame") or c:IsA("ImageLabel") then
             c:Destroy() end end
-        isCurrentlyRolling, rollButton.Visible = true, false
+        isCurrentlyRolling = true
+        rollButton.Text = "[ROLLING...]"
         rollCrateEvent:FireServer()
       end
     end)
@@ -170,10 +172,13 @@ updateResultEvent.OnClientEvent:Connect(function(serial)
   end
 end)
 
+rollButton.Text = "[ROLL]"
+autoRollButton.Text = "[AUTOROLL]"
 autoRollButton.TextColor3 = Color3.fromRGB(255, 0, 0)
 if autoRollButton:FindFirstChild("UIStroke") then autoRollButton.UIStroke.Color = Color3.fromRGB(255, 0, 0) end
-hideRollsButton.Text, hideRollsButton.TextColor3 = "[HIDE ROLLS: OFF]", Color3.fromRGB(170, 0, 0)
-if hideRollsButton:FindFirstChild("UIStroke") then hideRollsButton.UIStroke.Color = Color3.fromRGB(170, 0, 0) end
+hideRollsButton.Text = "[HIDE ROLLS]"
+hideRollsButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+if hideRollsButton:FindFirstChild("UIStroke") then hideRollsButton.UIStroke.Color = Color3.fromRGB(255, 0, 0) end
 
 remoteEvents:WaitForChild("ChatNotificationEvent").OnClientEvent:Connect(function(msg)
   local channel = game:GetService("TextChatService"):FindFirstChild("TextChannels"):FindFirstChild("RBXGeneral")
@@ -186,19 +191,20 @@ task.spawn(function()
   if ok and saved then
     startAutoRoll()
     if not isCurrentlyRolling then
-      isCurrentlyRolling, rollButton.Visible = true, false
+      isCurrentlyRolling = true
+      rollButton.Text = "[ROLLING...]"
       rollCrateEvent:FireServer()
     end
   end
   local ok2, hide = pcall(function() return getHideRollsFunction:InvokeServer() end)
   if ok2 and hide then
     hideRollsEnabled = true
-    hideRollsButton.Text, hideRollsButton.TextColor3 = "[HIDE ROLLS: ON]", Color3.fromRGB(255, 0, 0)
-    if hideRollsButton:FindFirstChild("UIStroke") then hideRollsButton.UIStroke.Color = Color3.fromRGB(255, 0, 0) end
+    hideRollsButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+    if hideRollsButton:FindFirstChild("UIStroke") then hideRollsButton.UIStroke.Color = Color3.fromRGB(0, 255, 0) end
   else
     hideRollsEnabled = false
-    hideRollsButton.Text, hideRollsButton.TextColor3 = "[HIDE ROLLS: OFF]", Color3.fromRGB(170, 0, 0)
-    if hideRollsButton:FindFirstChild("UIStroke") then hideRollsButton.UIStroke.Color = Color3.fromRGB(170, 0, 0) end
+    hideRollsButton.TextColor3 = Color3.fromRGB(255, 0, 0)
+    if hideRollsButton:FindFirstChild("UIStroke") then hideRollsButton.UIStroke.Color = Color3.fromRGB(255, 0, 0) end
   end
 end)
 
