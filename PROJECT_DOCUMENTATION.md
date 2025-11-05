@@ -227,6 +227,60 @@ Items are automatically assigned rarity based on their value:
   - RecordSerialOwner() called by DataStoreAPI when adding stock items
   - Data persists across sessions in DataStore
 
+### 13. Barrel Event System
+- **Overview:**
+  - Players can pull items from barrels in Workspace.Barrels for 5,000 Cash
+  - Only hat-type items can be pulled (no tools or faces)
+  - Features camera animation, item spawning with floating/spinning effects
+  - Full transaction safety with automatic refunds on failures
+- **Pull Cost:** 5,000 Cash per pull
+- **Item Pool:**
+  - Only Roblox hat/accessory items (AssetTypeIds: 8, 41-48, 61)
+  - Weighted RNG favors commons-rares
+  - Very rare to get epics
+  - 0.5% chance to pull Chroma Valkyrie (Item ID: 88275556285191)
+- **Interaction:**
+  - Proximity prompt on Barrel.Body part
+  - Golden highlight when prompt is visible
+  - 0.5 second hold duration
+  - 10 stud activation distance
+- **Animation Flow:**
+  1. Player activates proximity prompt
+  2. Camera switches to barrel's "cam" part
+  3. Item model spawns at "spawn" part
+  4. Item floats up to "final" part (2 second tween)
+  5. Item spins for 3 seconds
+  6. Camera returns to player
+  7. Item is added to inventory
+- **Transaction Safety:**
+  - Cash deducted FIRST (before item addition)
+  - If cash deduction fails: Player notified, no changes made
+  - Stock incremented AFTER cash deduction
+  - If stock sold out: Cash refunded, player notified with refund status
+  - If item addition fails: Stock rolled back, cash refunded, player notified
+  - Refund failures logged with UserId for manual support
+  - Critical errors include player UserId in notification for support escalation
+- **Weighted RNG:**
+  - Common: 100x weight
+  - Uncommon: 50x weight
+  - Rare: 20x weight
+  - Ultra Rare: 5x weight
+  - Epic: 2x weight
+  - Ultra Epic: 0.5x weight
+  - Mythic: 0.1x weight
+  - Insane: 0.05x weight
+  - Chroma Valkyrie: 0.5% override chance (checked before weighted selection)
+- **Notifications:**
+  - Displays item name, serial number (if applicable), value, and rarity
+  - Notification color matches item rarity
+  - Error notifications for insufficient cash, sold out items, and transaction failures
+- **Technical Details:**
+  - Server script: ServerScriptService/Events/BarrelEvent.lua
+  - Client script: StarterGUI/BarrelCameraHandler.lua
+  - Uses SetPlayerCamera RemoteEvent for camera control
+  - Respects serial number system for stock items
+  - Prevents multiple simultaneous pulls per player
+
 ## 🗂️ File Structure Explained
 
 ### ReplicatedStorage/
