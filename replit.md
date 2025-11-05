@@ -4,14 +4,18 @@
 This project is a Roblox crate opening/unboxing game designed to provide an engaging unboxing experience. Players can open virtual crates to acquire items of varying rarities and values, managed by a weighted probability system. Key features include a player-to-player trading system, comprehensive admin tools for item management, robust data persistence, an interactive inventory, Discord webhook notifications, and the ability to equip virtual goods. The project aims to offer a feature-rich and dynamic virtual economy within Roblox.
 
 ## Recent Changes
-**November 5, 2025 - Barrel Event System Overhaul:**
-- Fixed barrel visibility: Barrel bodies now always visible; decorations hidden when event inactive
+**November 5, 2025 - Barrel Event System Complete Fix:**
+- Fixed barrel visibility: Barrels and decorations now properly hidden when event is inactive
 - Made cam, spawn, and final parts always transparent (even during active events)
 - Added GUI_Stand billboard GUI toggle: disabled when event inactive, enabled when active
-- Implemented fully client-side barrel pulls allowing multiple players to pull simultaneously
+- Implemented client-side barrel pulls allowing multiple players to pull simultaneously
 - Added player hiding system during pull animations (other players hidden, then restored after pull)
 - Added pull prevention while already pulling (both client and server-side checks)
 - Fixed InsertService asset loading (server-side only, client receives replicated model)
+- Fixed Accessory/Hat handling: explicit Handle detection and positioning for all item types
+- Fixed ItemRarityModule colon syntax error (was using dot instead of colon)
+- Added proximity prompt hiding during pulls (prevents pulling from multiple barrels)
+- Added comprehensive error recovery: camera always restores even on animation errors
 - Fixed particle effect restoration (properly saves and restores original Enabled states)
 
 ## User Preferences
