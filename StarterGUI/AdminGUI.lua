@@ -20,6 +20,7 @@ local itemIdBox = uiFrame:WaitForChild("Item_Id")
 local itemNameBox = uiFrame:WaitForChild("Item_Name")
 local itemValueBox = uiFrame:WaitForChild("Item_Value")
 local itemStockBox = uiFrame:WaitForChild("Item_Stock_Optional")
+local itemTimerBox = uiFrame:FindFirstChild("Item_Timer_Optional")
 local createButton = uiFrame:WaitForChild("CreateItem")
 local limitedToggle = uiFrame:WaitForChild("LimitedToggle")
 
@@ -111,8 +112,15 @@ itemIdBox:GetPropertyChangedSignal("Text"):Connect(function()
         itemNameBox.Text = existingItem.Name
         itemValueBox.Text = tostring(existingItem.Value)
         itemStockBox.Text = existingItem.Stock > 0 and tostring(existingItem.Stock) or ""
+        
+        if itemTimerBox and existingItem.OffsaleAt then
+          local remainingTime = math.max(0, existingItem.OffsaleAt - os.time())
+          itemTimerBox.Text = tostring(math.floor(remainingTime / 3600))
+        elseif itemTimerBox then
+          itemTimerBox.Text = ""
+        end
 
-        isLimitedEnabled = existingItem.Limited or false
+        isLimitedEnabled = existingItem.Rarity == "Limited"
         if isLimitedEnabled then
           limitedToggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
           limitedToggle.Text = "Limited: ON"
@@ -168,6 +176,13 @@ createButton.MouseButton1Click:Connect(function()
   local itemName = itemNameBox.Text
   local itemValue = tonumber(itemValueBox.Text)
   local itemStock = tonumber(itemStockBox.Text) or 0
+  local itemTimerHours = 0
+  
+  if itemTimerBox and itemTimerBox.Text ~= "" then
+    itemTimerHours = tonumber(itemTimerBox.Text) or 0
+  end
+  
+  local itemTimerSeconds = itemTimerHours * 3600
 
   if not itemId then
     warn("item id must be a number")
@@ -196,7 +211,7 @@ createButton.MouseButton1Click:Connect(function()
   end
   createButton.Active = false
 
-  createItemEvent:FireServer(itemId, itemName, itemValue, itemStock, isLimitedEnabled, isEditMode)
+  createItemEvent:FireServer(itemId, itemName, itemValue, itemStock, isLimitedEnabled, itemTimerSeconds, isEditMode)
 end)
 
 createItemEvent.OnClientEvent:Connect(function(success, message, itemData)
@@ -211,6 +226,9 @@ createItemEvent.OnClientEvent:Connect(function(success, message, itemData)
     itemNameBox.Text = ""
     itemValueBox.Text = ""
     itemStockBox.Text = ""
+    if itemTimerBox then
+      itemTimerBox.Text = ""
+    end
     itemPreview.Image = ""
     if infoPreview then
       infoPreview.Text = ""
