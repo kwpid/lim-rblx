@@ -513,6 +513,8 @@ local function showSellConfirm(rarity, count, totalValue)
     confirmConnection = confirmBtn.MouseButton1Click:Connect(function()
       sellByRarityEvent:FireServer(currentRarityForSell)
       sellConfirmFrame.Visible = false
+      task.wait(0.1)
+      pcall(refresh)
     end)
   end
   
