@@ -13,6 +13,13 @@ This project is a Roblox crate opening/unboxing game designed to provide an enga
 - **Better Warnings**: Clear console messages when data operations fail, including attempt counts
 - **Studio-Specific**: Data loss was most common in Studio when API access wasn't enabled
 
+**November 6, 2025 - Barrel Event Out-of-Stock Prevention:**
+- **IMPROVEMENT**: Out-of-stock items now completely excluded from barrel event pool
+- **Prevention Points**: Filtered at getAllRollableItems(), pickWeightedItem(), and createEventPool()
+- **Stock Check**: Items with Stock > 0 and CurrentStock >= Stock are skipped
+- **Chroma Valk**: Special check ensures sold-out Chroma Valk can't be pulled
+- **Refund Safety**: Refund logic remains as backup, but should never be needed now
+
 **November 6, 2025 - Barrel Event Multi-Player Pull Fix:**
 - **BUG FIX**: Fixed barrel event so multiple players can pull simultaneously
 - **Root Cause**: Code was disabling ALL proximity prompts globally when any player pulled

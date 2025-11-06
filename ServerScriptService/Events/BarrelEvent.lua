@@ -139,7 +139,14 @@ local function getAllRollableItems()
         local rollableItems = {}
         for _, item in ipairs(ItemDatabase.Items) do
                 if item.Rarity ~= "Limited" then
-                        table.insert(rollableItems, item)
+                        local isSoldOut = false
+                        if item.Stock and item.Stock > 0 then
+                                isSoldOut = (item.CurrentStock or 0) >= item.Stock
+                        end
+                        
+                        if not isSoldOut then
+                                table.insert(rollableItems, item)
+                        end
                 end
         end
         return rollableItems
@@ -151,7 +158,14 @@ local function pickWeightedItem(items, includeChromaValk)
         if includeChromaValk and math.random() < CHROMA_VALK_CHANCE then
                 local chromaValk = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID)
                 if chromaValk then
-                        return chromaValk
+                        local isSoldOut = false
+                        if chromaValk.Stock and chromaValk.Stock > 0 then
+                                isSoldOut = (chromaValk.CurrentStock or 0) >= chromaValk.Stock
+                        end
+                        
+                        if not isSoldOut then
+                                return chromaValk
+                        end
                 end
         end
         
@@ -183,7 +197,14 @@ local function createEventPool(allItems)
         
         local chromaValk = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID)
         if chromaValk then
-                table.insert(pool, chromaValk)
+                local isSoldOut = false
+                if chromaValk.Stock and chromaValk.Stock > 0 then
+                        isSoldOut = (chromaValk.CurrentStock or 0) >= chromaValk.Stock
+                end
+                
+                if not isSoldOut then
+                        table.insert(pool, chromaValk)
+                end
         end
         
         local itemsToSelect = EVENT_POOL_SIZE - #pool
