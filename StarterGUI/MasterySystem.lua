@@ -12,6 +12,7 @@ local MasteryFrame = script.Parent
 local Handler = MasteryFrame:WaitForChild("Handler")
 local MasteryInfo = MasteryFrame:WaitForChild("Mastery_Info")
 local MasteryInfoHandler = MasteryInfo:WaitForChild("Handler")
+local MasteryName = MasteryInfo:WaitForChild("Mastery_Name")
 local BackButton = MasteryInfo:WaitForChild("Back")
 
 local Sample = script:WaitForChild("Sample")
@@ -91,6 +92,13 @@ end
 local function showCollectionDetails(collection)
         clearHandler(MasteryInfoHandler)
         
+        MasteryName.Text = collection.Name
+        
+        if #collection.Items == 0 then
+                warn("Collection '" .. collection.Name .. "' has no items configured")
+        end
+        
+        local itemsFound = 0
         for _, itemId in ipairs(collection.Items) do
                 local itemData = getItemFromDatabase(itemId)
                 if itemData then
@@ -114,8 +122,13 @@ local function showCollectionDetails(collection)
                         end
                         
                         itemButton.Parent = MasteryInfoHandler
+                        itemsFound = itemsFound + 1
+                else
+                        warn("Item ID " .. itemId .. " not found in database for collection '" .. collection.Name .. "'")
                 end
         end
+        
+        print("Loaded " .. itemsFound .. " items for collection: " .. collection.Name)
         
         MasteryInfo.Visible = true
 end
