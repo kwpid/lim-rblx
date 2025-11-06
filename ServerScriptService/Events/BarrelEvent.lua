@@ -13,7 +13,7 @@ local PULL_COST = 5000
 local CHROMA_VALK_ID = 88275556285191
 local CHROMA_VALK_CHANCE = 0.005
 local EVENT_DURATION = 10 * 60
-local EVENT_POOL_SIZE = 50
+local EVENT_POOL_SIZE = 25
 
 local RARITY_WEIGHTS = {
         ["Common"] = 100,
@@ -51,24 +51,17 @@ local function formatNumber(n)
         return formatted
 end
 
-local function getAllHatItems()
-        local hatItems = {}
+local function getAllRollableItems()
+        local rollableItems = {}
         for _, item in ipairs(ItemDatabase.Items) do
-                local success, assetInfo = pcall(function()
-                        return game:GetService("MarketplaceService"):GetProductInfo(item.RobloxId, Enum.InfoType.Asset)
-                end)
-                
-                if success and assetInfo then
-                        local assetType = assetInfo.AssetTypeId
-                        if assetType == 8 or assetType == 41 or assetType == 42 or assetType == 43 or assetType == 44 or assetType == 45 or assetType == 46 or assetType == 47 or assetType == 48 or assetType == 61 then
-                                table.insert(hatItems, item)
-                        end
+                if item.Rarity ~= "Limited" then
+                        table.insert(rollableItems, item)
                 end
         end
-        return hatItems
+        return rollableItems
 end
 
-local function createEventPool(hatItems)
+local function createEventPool(allItems)
         local pool = {}
         
         local chromaValk = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID)
@@ -77,16 +70,21 @@ local function createEventPool(hatItems)
                 print("✅ Added Chroma Valkyrie to barrel event pool")
         end
         
-        local itemsToSelect = math.min(EVENT_POOL_SIZE - #pool, #hatItems)
+        local itemsToSelect = EVENT_POOL_SIZE - #pool
+        local availableItems = {}
+        for _, item in ipairs(allItems) do
+                table.insert(availableItems, item)
+        end
         
         for i = 1, itemsToSelect do
-                local selectedItem = pickWeightedItem(hatItems, false)
+                if #availableItems == 0 then break end
+                local selectedItem = pickWeightedItem(availableItems, false)
                 if selectedItem then
                         table.insert(pool, selectedItem)
                 end
         end
         
-        print("✅ Created barrel event pool with " .. #pool .. " items")
+        print("✅ Created barrel event pool with " .. #pool .. " items (target: " .. EVENT_POOL_SIZE .. ")")
         return pool
 end
 
@@ -447,18 +445,6 @@ function BarrelEvent.Start(onEventEnd)
                 return
         end
         
-        print("🎲 Creating barrel event item pool...")
-        local allHatItems = getAllHatItems()
-        eventItemPool = createEventPool(allHatItems)
-        
-        if #eventItemPool == 0 then
-                warn("⚠️ Failed to create event pool, no items available")
-                if onEventEnd then
-                        onEventEnd()
-                end
-                return
-        end
-        
         setPlayerCameraEvent = remoteEvents:FindFirstChild("SetPlayerCamera")
         if not setPlayerCameraEvent then
                 setPlayerCameraEvent = Instance.new("RemoteEvent")
@@ -466,7 +452,22 @@ function BarrelEvent.Start(onEventEnd)
                 setPlayerCameraEvent.Parent = remoteEvents
         end
         
+        print("🎲 Showing barrels immediately...")
         setBarrelVisibility(true)
+        
+        print("🎲 Creating barrel event item pool...")
+        local allRollableItems = getAllRollableItems()
+        print("📦 Found " .. #allRollableItems .. " rollable items in database")
+        eventItemPool = createEventPool(allRollableItems)
+        
+        if #eventItemPool == 0 then
+                warn("⚠️ Failed to create event pool, no items available")
+                setBarrelVisibility(false)
+                if onEventEnd then
+                        onEventEnd()
+                end
+                return
+        end
         
         for _, barrel in ipairs(barrelsFolder:GetChildren()) do
                 if barrel:IsA("Model") then
