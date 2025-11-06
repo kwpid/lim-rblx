@@ -100,7 +100,6 @@ local function createEventPool(allItems)
         local chromaValk = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID)
         if chromaValk then
                 table.insert(pool, chromaValk)
-                print("✅ Added Chroma Valkyrie to barrel event pool")
         end
         
         local itemsToSelect = EVENT_POOL_SIZE - #pool
@@ -117,7 +116,6 @@ local function createEventPool(allItems)
                 end
         end
         
-        print("✅ Created barrel event pool with " .. #pool .. " items (target: " .. EVENT_POOL_SIZE .. ")")
         return pool
 end
 
@@ -344,8 +342,6 @@ local function handleBarrelPull(player, barrel)
                                         Color = getRarityColor(selectedItem.Rarity)
                                 })
                         end
-                        
-                        print("✅ " .. player.Name .. " pulled " .. selectedItem.Name .. " from barrel (charged " .. formatNumber(PULL_COST) .. " Cash)")
                 else
                         warn("❌ Failed to add item to " .. player.Name .. "'s inventory")
                         
@@ -354,7 +350,6 @@ local function handleBarrelPull(player, barrel)
                                 if item and item.CurrentStock then
                                         item.CurrentStock = item.CurrentStock - 1
                                         ItemDatabase:QueueSave()
-                                        print("↩️ Rolled back stock for " .. selectedItem.Name .. " (was serial #" .. serialNumber .. ")")
                                 end
                         end
                         
@@ -431,12 +426,9 @@ function BarrelEvent.Start(onEventEnd)
                 setPlayerCameraEvent.Parent = remoteEvents
         end
         
-        print("🎲 Enabling barrel GUI...")
         toggleBarrelGUI(true)
         
-        print("🎲 Creating barrel event item pool...")
         local allRollableItems = getAllRollableItems()
-        print("📦 Found " .. #allRollableItems .. " rollable items in database")
         eventItemPool = createEventPool(allRollableItems)
         
         if #eventItemPool == 0 then
@@ -488,12 +480,10 @@ function BarrelEvent.Start(onEventEnd)
                                         handleBarrelPull(player, barrel)
                                 end)
                                 
-                                print("✅ Barrel event initialized for: " .. barrel.Name)
                         end
                 end
         end
         
-        print("✅ Barrel Event started for " .. EVENT_DURATION .. " seconds")
         
         task.wait(EVENT_DURATION)
         
@@ -514,7 +504,6 @@ function BarrelEvent.Start(onEventEnd)
         
         toggleBarrelGUI(false)
         
-        print("✅ Barrel Event ended")
         
         if onEventEnd then
                 onEventEnd()

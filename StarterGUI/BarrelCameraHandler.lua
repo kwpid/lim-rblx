@@ -76,7 +76,6 @@ local function restoreCamera()
         originalCameraSubject = nil
         isPulling = false
         
-        print("📷 Camera restored to player")
 end
 
 local function getCameraShakeIntensity(rarity)
@@ -138,7 +137,6 @@ setPlayerCameraEvent.OnClientEvent:Connect(function(camPart, spawnPart, finalPar
                         
                         hideOtherPlayers()
                         
-                        print("📷 Camera switched to barrel view")
                         
                         local targetPart = primaryPart
                         
