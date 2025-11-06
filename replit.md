@@ -4,6 +4,24 @@
 This project is a Roblox crate opening/unboxing game designed to provide an engaging unboxing experience. Players can open virtual crates to acquire items of varying rarities and values, managed by a weighted probability system. Key features include a player-to-player trading system, comprehensive admin tools for item management, robust data persistence, an interactive inventory, Discord webhook notifications, and the ability to equip virtual goods. The project aims to offer a feature-rich and dynamic virtual economy within Roblox.
 
 ## Recent Changes
+**November 6, 2025 - Critical Data Loss Bug Fix:**
+- **CRITICAL FIX**: Fixed data loss bug where players would lose their data when joining
+- **Root Cause**: DataStore errors (Studio API access disabled, temporary outages) were immediately returning empty data
+- **Solution**: Added retry logic with 3 attempts and exponential backoff (1s, 2s, 3s delays)
+- **Load Protection**: System now retries failed loads before falling back to default data
+- **Save Protection**: Added retry logic to save operations to prevent data loss on server issues
+- **Better Warnings**: Clear console messages when data operations fail, including attempt counts
+- **Studio-Specific**: Data loss was most common in Studio when API access wasn't enabled
+
+**November 6, 2025 - Barrel Event Chat Messages & Webhooks:**
+- **Chat Notifications**: Barrel pulls now send colored chat messages (like crate system)
+  - Local chat for 250k+ Robux items
+  - Cross-server [GLOBAL] announcements for 5M+ Robux items (especially Chroma Valk!)
+  - Shows player name, item name, serial number, and formatted value
+- **Discord Webhooks**: High-value barrel pulls (250k+) now send Discord notifications
+  - Labeled as "Barrel Pull" source to distinguish from crates and events
+  - Shows player avatar, item image, value, and serial number
+
 **November 6, 2025 - Barrel Event Complete Overhaul:**
 - **CRITICAL FIX**: Removed slow MarketplaceService API calls that were causing 30+ second delays
 - **Fast Pooling**: Now uses getAllRollableItems() which filters directly from ItemDatabase (instant)
