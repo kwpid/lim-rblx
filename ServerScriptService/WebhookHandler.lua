@@ -98,8 +98,16 @@ function WebhookHandler:SendHighValueUnbox(player, item, source)
         local rarityColor = getRarityColor(item.Rarity)
 
         source = source or "roll"
-        local sourceText = source == "event" and "Event Drop" or "Rolled"
-        local title = source == "event" and "High-Value Item from Event" or "High-Value Item Rolled"
+        local sourceText = "Rolled"
+        local title = "High-Value Item Rolled"
+        
+        if source == "event" then
+                sourceText = "Event Drop"
+                title = "High-Value Item from Event"
+        elseif source == "barrel" then
+                sourceText = "Barrel Pull"
+                title = "High-Value Item from Barrel"
+        end
 
         local description = string.format("**Player:**\n%s\n\n**Item:**\n%s\n\n**Value:**\nR$ %s\n\n**Source:**\n%s",
                 player.Name,

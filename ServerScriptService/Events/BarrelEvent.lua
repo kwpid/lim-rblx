@@ -2,10 +2,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local InsertService = game:GetService("InsertService")
+local MessagingService = game:GetService("MessagingService")
 
 local ItemDatabase = require(script.Parent.Parent.ItemDatabase)
 local DataStoreAPI = require(script.Parent.Parent.DataStoreAPI)
 local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
+local WebhookHandler = require(script.Parent.Parent.WebhookHandler)
 
 local BarrelEvent = {}
 
@@ -28,6 +30,9 @@ local RARITY_WEIGHTS = {
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local createNotificationEvent = remoteEvents:FindFirstChild("CreateNotification")
+local chatNotificationEvent = remoteEvents:FindFirstChild("ChatNotificationEvent") or Instance.new("RemoteEvent")
+chatNotificationEvent.Name = "ChatNotificationEvent"
+chatNotificationEvent.Parent = remoteEvents
 
 local activePulls = {}
 local activeProximityPrompts = {}
@@ -49,6 +54,85 @@ local function formatNumber(n)
                 if k == 0 then break end
         end
         return formatted
+end
+
+local function getValueColorTag(value)
+        if value >= 10000000 then
+                return "<font color=\"#FF00FF\">"
+        elseif value >= 2500000 then
+                return "<font color=\"#FF0000\">"
+        elseif value >= 750000 then
+                return "<font color=\"#FF5500\">"
+        elseif value >= 250000 then
+                return "<font color=\"#FFAA00\">"
+        elseif value >= 50000 then
+                return "<font color=\"#AA55FF\">"
+        elseif value >= 10000 then
+                return "<font color=\"#5555FF\">"
+        elseif value >= 2500 then
+                return "<font color=\"#55AA55\">"
+        else
+                return "<font color=\"#AAAAAA\">"
+        end
+end
+
+local function sendBarrelChatMessage(player, item, serialNumber, isCrossServer)
+        local success, err = pcall(function()
+                local colorTag = getValueColorTag(item.Value)
+                local closeTag = "</font>"
+                local message = colorTag .. player.Name .. " pulled " .. item.Name .. " from a barrel"
+                
+                if serialNumber then
+                        message = message .. " #" .. serialNumber
+                end
+                
+                message = message .. " (R$" .. formatNumber(item.Value) .. ")" .. closeTag
+                chatNotificationEvent:FireAllClients(message)
+                
+                if isCrossServer then
+                        local messageData = {
+                                PlayerName = player.Name,
+                                ItemName = item.Name,
+                                ItemValue = item.Value,
+                                SerialNumber = serialNumber,
+                                Source = "barrel"
+                        }
+                        
+                        local publishSuccess, publishErr = pcall(function()
+                                MessagingService:PublishAsync("HighValueBarrelPull", messageData)
+                        end)
+                        
+                        if not publishSuccess then
+                                warn("failed to publish cross-server barrel message: " .. tostring(publishErr))
+                        end
+                end
+        end)
+        
+        if not success then
+                warn("failed to send barrel chat message: " .. tostring(err))
+        end
+end
+
+local subscribeSuccess, subscribeErr = pcall(function()
+        MessagingService:SubscribeAsync("HighValueBarrelPull", function(message)
+                local data = message.Data
+                if data and data.PlayerName and data.ItemName and data.ItemValue then
+                        local colorTag = getValueColorTag(data.ItemValue)
+                        local closeTag = "</font>"
+                        local crossServerMessage = colorTag .. "[GLOBAL] " .. data.PlayerName .. " pulled " .. data.ItemName .. " from a barrel"
+                        
+                        if data.SerialNumber then
+                                crossServerMessage = crossServerMessage .. " #" .. data.SerialNumber
+                        end
+                        
+                        crossServerMessage = crossServerMessage .. " (R$" .. formatNumber(data.ItemValue) .. ")" .. closeTag
+                        chatNotificationEvent:FireAllClients(crossServerMessage)
+                end
+        end)
+end)
+
+if not subscribeSuccess then
+        warn("failed to subscribe to cross-server barrel messages: " .. tostring(subscribeErr))
 end
 
 local function getAllRollableItems()
@@ -341,6 +425,25 @@ local function handleBarrelPull(player, barrel)
                                         ImageId = "rbxthumb://type=Asset&id=" .. selectedItem.RobloxId .. "&w=150&h=150",
                                         Color = getRarityColor(selectedItem.Rarity)
                                 })
+                        end
+                        
+                        if selectedItem.Value >= 5000000 then
+                                sendBarrelChatMessage(player, selectedItem, itemToAdd.SerialNumber, true)
+                        elseif selectedItem.Value >= 250000 then
+                                sendBarrelChatMessage(player, selectedItem, itemToAdd.SerialNumber, false)
+                        end
+                        
+                        if selectedItem.Value >= 250000 then
+                                task.spawn(function()
+                                        local itemData = {
+                                                RobloxId = selectedItem.RobloxId,
+                                                Name = selectedItem.Name,
+                                                Value = selectedItem.Value,
+                                                Rarity = selectedItem.Rarity,
+                                                SerialNumber = itemToAdd.SerialNumber
+                                        }
+                                        WebhookHandler:SendHighValueUnbox(player, itemData, "barrel")
+                                end)
                         end
                 else
                         warn("❌ Failed to add item to " .. player.Name .. "'s inventory")
