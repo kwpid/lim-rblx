@@ -14,6 +14,7 @@ local MasteryInfo = MasteryFrame:WaitForChild("Mastery_Info")
 local MasteryInfoHandler = MasteryInfo:WaitForChild("Handler")
 local MasteryName = MasteryInfo:WaitForChild("Mastery_Name")
 local BackButton = MasteryInfo:WaitForChild("Back")
+local CloseButton = MasteryFrame:WaitForChild("Close")
 
 local Sample = script:WaitForChild("Sample")
 local ItemSample = script:WaitForChild("ItemSample")
@@ -101,10 +102,9 @@ local function showCollectionDetails(collection)
         end
         
         local totalInverseValue = 0
-        for _, itemId in ipairs(collection.Items) do
-                local itemData = getItemFromDatabase(itemId)
-                if itemData and itemData.Rarity ~= "Limited" then
-                        totalInverseValue = totalInverseValue + (1 / (itemData.Value ^ 0.9))
+        for _, item in ipairs(itemDatabase) do
+                if item.Rarity ~= "Limited" then
+                        totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
                 end
         end
         
@@ -192,6 +192,10 @@ end
 
 BackButton.MouseButton1Click:Connect(function()
         hideCollectionDetails()
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+        MasteryFrame.Visible = false
 end)
 
 local function initialize()
