@@ -13,6 +13,13 @@ This project is a Roblox crate opening/unboxing game designed to provide an enga
 - **Better Warnings**: Clear console messages when data operations fail, including attempt counts
 - **Studio-Specific**: Data loss was most common in Studio when API access wasn't enabled
 
+**November 6, 2025 - Trade Total Owners Bug Fix:**
+- **BUG FIX**: Total Owners no longer incremented during player-to-player trades
+- **Root Cause**: AddItem() was incrementing owners even when `preserveSerialOwner=true` (trade flag)
+- **Solution**: Skip IncrementOwners() when items are transferred via trade
+- **Behavior**: Total Owners only increases when items are FIRST obtained (crates, barrels, admin gifts)
+- **Trade Logic**: Trades now properly TRANSFER ownership without creating new owners
+
 **November 6, 2025 - Barrel Event Out-of-Stock Prevention:**
 - **IMPROVEMENT**: Out-of-stock items now completely excluded from barrel event pool
 - **Prevention Points**: Filtered at getAllRollableItems(), pickWeightedItem(), and createEventPool()

@@ -101,7 +101,9 @@ function DataStoreAPI:AddItem(player, itemData, preserveSerialOwner)
 
   self:UpdateInventoryValue(player)
 
-  if isNewOwner then
+  -- Only increment owners if this is a NEW owner AND not from a trade
+  -- During trades, ownership is just transferred, not created
+  if isNewOwner and not preserveSerialOwner then
     local newOwnerCount = ItemDatabase:IncrementOwners(itemData.RobloxId)
     if not newOwnerCount then
       warn("Failed to increment owners for item: " ..
