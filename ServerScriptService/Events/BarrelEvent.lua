@@ -196,16 +196,53 @@ local function handleBarrelPull(player, barrel)
                 return
         end
         
-        local itemPart = Instance.new("Part")
-        itemPart.Name = "BarrelItem_" .. selectedItem.Name
-        itemPart.Size = Vector3.new(2, 2, 2)
-        itemPart.Anchored = true
-        itemPart.CanCollide = false
-        itemPart.Color = getRarityColor(selectedItem.Rarity)
-        itemPart.Material = Enum.Material.Neon
-        itemPart.CFrame = spawnPart.CFrame
-        itemPart.Parent = workspace
-        itemPart:SetAttribute("BarrelPullOwner", player.UserId)
+        local itemModel = nil
+        local primaryPart = nil
+        
+        local insertSuccess, insertedModel = pcall(function()
+                return InsertService:LoadAsset(selectedItem.RobloxId)
+        end)
+        
+        if insertSuccess and insertedModel then
+                local actualItem = insertedModel:GetChildren()[1]
+                if actualItem then
+                        actualItem.Parent = workspace
+                        itemModel = actualItem
+                        
+                        if itemModel:IsA("Accessory") or itemModel:IsA("Hat") then
+                                primaryPart = itemModel:FindFirstChild("Handle")
+                        elseif itemModel:IsA("Model") then
+                                primaryPart = itemModel.PrimaryPart or itemModel:FindFirstChild("Handle") or itemModel:FindFirstChildWhichIsA("BasePart")
+                        elseif itemModel:IsA("BasePart") then
+                                primaryPart = itemModel
+                        end
+                        
+                        if primaryPart then
+                                primaryPart.Anchored = true
+                                primaryPart.CanCollide = false
+                                primaryPart.CFrame = spawnPart.CFrame
+                        end
+                        
+                        itemModel:SetAttribute("BarrelPullOwner", player.UserId)
+                end
+                insertedModel:Destroy()
+        end
+        
+        if not itemModel or not primaryPart then
+                warn("⚠️ Failed to load item model for " .. selectedItem.Name .. ", using fallback box")
+                local fallbackPart = Instance.new("Part")
+                fallbackPart.Name = "BarrelItem_" .. selectedItem.Name
+                fallbackPart.Size = Vector3.new(2, 2, 2)
+                fallbackPart.Anchored = true
+                fallbackPart.CanCollide = false
+                fallbackPart.Color = getRarityColor(selectedItem.Rarity)
+                fallbackPart.Material = Enum.Material.Neon
+                fallbackPart.CFrame = spawnPart.CFrame
+                fallbackPart.Parent = workspace
+                fallbackPart:SetAttribute("BarrelPullOwner", player.UserId)
+                itemModel = fallbackPart
+                primaryPart = fallbackPart
+        end
         
         task.wait(0.1)
         
@@ -216,7 +253,7 @@ local function handleBarrelPull(player, barrel)
         end
         
         if setPlayerCameraEvent then
-                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemPart, itemPart, selectedItem.Rarity)
+                setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemModel, primaryPart, selectedItem.Rarity)
         end
         
         task.spawn(function()
@@ -229,8 +266,8 @@ local function handleBarrelPull(player, barrel)
                         end
                 end
                 
-                if itemPart and itemPart.Parent then
-                        itemPart:Destroy()
+                if itemModel and itemModel.Parent then
+                        itemModel:Destroy()
                 end
                 
                         local cashDeducted = DataStoreAPI:AddCash(player, -PULL_COST)
