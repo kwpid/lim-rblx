@@ -61,33 +61,6 @@ local function getAllRollableItems()
         return rollableItems
 end
 
-local function createEventPool(allItems)
-        local pool = {}
-        
-        local chromaValk = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID)
-        if chromaValk then
-                table.insert(pool, chromaValk)
-                print("✅ Added Chroma Valkyrie to barrel event pool")
-        end
-        
-        local itemsToSelect = EVENT_POOL_SIZE - #pool
-        local availableItems = {}
-        for _, item in ipairs(allItems) do
-                table.insert(availableItems, item)
-        end
-        
-        for i = 1, itemsToSelect do
-                if #availableItems == 0 then break end
-                local selectedItem = pickWeightedItem(availableItems, false)
-                if selectedItem then
-                        table.insert(pool, selectedItem)
-                end
-        end
-        
-        print("✅ Created barrel event pool with " .. #pool .. " items (target: " .. EVENT_POOL_SIZE .. ")")
-        return pool
-end
-
 local function pickWeightedItem(items, includeChromaValk)
         if #items == 0 then return nil end
         
@@ -119,6 +92,33 @@ local function pickWeightedItem(items, includeChromaValk)
         end
         
         return items[#items]
+end
+
+local function createEventPool(allItems)
+        local pool = {}
+        
+        local chromaValk = ItemDatabase:GetItemByRobloxId(CHROMA_VALK_ID)
+        if chromaValk then
+                table.insert(pool, chromaValk)
+                print("✅ Added Chroma Valkyrie to barrel event pool")
+        end
+        
+        local itemsToSelect = EVENT_POOL_SIZE - #pool
+        local availableItems = {}
+        for _, item in ipairs(allItems) do
+                table.insert(availableItems, item)
+        end
+        
+        for i = 1, itemsToSelect do
+                if #availableItems == 0 then break end
+                local selectedItem = pickWeightedItem(availableItems, false)
+                if selectedItem then
+                        table.insert(pool, selectedItem)
+                end
+        end
+        
+        print("✅ Created barrel event pool with " .. #pool .. " items (target: " .. EVENT_POOL_SIZE .. ")")
+        return pool
 end
 
 local function handleBarrelPull(player, barrel)
