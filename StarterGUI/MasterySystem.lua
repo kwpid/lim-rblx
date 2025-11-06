@@ -23,6 +23,18 @@ local playerInventory = {}
 local itemDatabase = {}
 local currentCollection = nil
 
+local function formatNumber(num)
+        local formatted = tostring(num)
+        local k
+        while true do
+                formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+                if k == 0 then
+                        break
+                end
+        end
+        return formatted
+end
+
 local function getPlayerInventory()
         local success, inventory = pcall(function()
                 return GetInventoryFunction:InvokeServer()
@@ -129,6 +141,9 @@ local function showCollectionDetails(collection)
                         
                         local imageLabel = itemButton:WaitForChild("ImageLabel")
                         imageLabel.Image = "rbxthumb://type=Asset&id=" .. itemData.RobloxId .. "&w=150&h=150"
+                        
+                        local valueLabel = itemButton:WaitForChild("Value")
+                        valueLabel.Text = "R$ " .. formatNumber(itemData.Value)
                         
                         local uiStroke = itemButton:FindFirstChildOfClass("UIStroke")
                         if uiStroke then
