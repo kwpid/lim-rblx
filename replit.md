@@ -4,12 +4,15 @@
 This project is a Roblox crate opening/unboxing game designed to provide an engaging unboxing experience. Players can open virtual crates to acquire items of varying rarities and values, managed by a weighted probability system. Key features include a player-to-player trading system, comprehensive admin tools for item management, robust data persistence, an interactive inventory, Discord webhook notifications, and the ability to equip virtual goods. The project aims to offer a feature-rich and dynamic virtual economy within Roblox.
 
 ## Recent Changes
-**November 6, 2025 - Barrel Event Performance & Visibility Fix:**
+**November 6, 2025 - Barrel Event Complete Overhaul:**
 - **CRITICAL FIX**: Removed slow MarketplaceService API calls that were causing 30+ second delays
 - **Fast Pooling**: Now uses getAllRollableItems() which filters directly from ItemDatabase (instant)
 - **Instant Barrel Visibility**: Barrels now appear immediately when event starts (before pooling)
 - **Reduced Pool Size**: Changed from 50 to 25 items as requested for faster pooling
-- **No Re-Pooling**: Fixed the endless loop issue - pool is created once and used throughout event
+- **Function Order Fix**: Fixed Lua function order issue that was causing pool creation to fail silently
+- **Event Duration Fixed**: Event now properly runs for full 10 minutes instead of ending immediately
+- **Real Item Models**: Barrels now display actual item models using InsertService instead of colored boxes
+- **Smart Model Detection**: Properly handles Accessories, Hats, Models, and BaseParts with fallback for failures
 - **Performance**: Event startup now takes <1 second instead of 30+ seconds
 
 **November 5, 2025 - Barrel Event Pool & Animation Fix:**
