@@ -22,6 +22,7 @@ local ItemSample = script:WaitForChild("ItemSample")
 local playerInventory = {}
 local itemDatabase = {}
 local currentCollection = nil
+local isLoadingCollection = false
 
 local function formatNumber(num)
         local formatted = tostring(num)
@@ -104,6 +105,11 @@ local function clearHandler(handler)
 end
 
 local function showCollectionDetails(collection)
+        if isLoadingCollection then
+                return
+        end
+        isLoadingCollection = true
+        
         currentCollection = collection
         clearHandler(MasteryInfoHandler)
         
@@ -167,6 +173,7 @@ local function showCollectionDetails(collection)
         print("Loaded " .. itemsFound .. " items for collection: " .. collection.Name)
         
         MasteryInfo.Visible = true
+        isLoadingCollection = false
 end
 
 local function populateCollections()
