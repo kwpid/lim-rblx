@@ -130,6 +130,11 @@ local function showCollectionDetails(collection)
                         local imageLabel = itemButton:WaitForChild("ImageLabel")
                         imageLabel.Image = "rbxthumb://type=Asset&id=" .. itemData.RobloxId .. "&w=150&h=150"
                         
+                        local uiStroke = itemButton:FindFirstChildOfClass("UIStroke")
+                        if uiStroke then
+                                uiStroke.Color = ItemRarityModule:GetRarityColor(itemData.Rarity)
+                        end
+                        
                         local lockedFrame = itemButton:WaitForChild("LockedFrame")
                         if playerOwnsItem(itemId) then
                                 lockedFrame.Visible = false
