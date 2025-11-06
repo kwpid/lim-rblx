@@ -382,7 +382,7 @@ local function handleBarrelPull(player, barrel)
         end)
 end
 
-local function setBarrelVisibility(eventActive)
+local function toggleBarrelGUI(eventActive)
         local workspace = game:GetService("Workspace")
         local barrelsFolder = workspace:FindFirstChild("Barrels")
         
@@ -392,70 +392,12 @@ local function setBarrelVisibility(eventActive)
         
         for _, barrel in ipairs(barrelsFolder:GetChildren()) do
                 if barrel:IsA("Model") then
-                        local body = barrel:FindFirstChild("Body")
-                        local camPart = barrel:FindFirstChild("cam")
-                        local spawnPart = barrel:FindFirstChild("spawn")
-                        local finalPart = barrel:FindFirstChild("final")
                         local guiStand = barrel:FindFirstChild("GUI_Stand")
                         
-                        local isBarrel = body and camPart and spawnPart and finalPart
-                        
-                        if isBarrel then
-                                if body and body:IsA("BasePart") then
-                                        if eventActive then
-                                                body.Transparency = 0
-                                                body.CanCollide = true
-                                        else
-                                                body.Transparency = 1
-                                                body.CanCollide = false
-                                        end
-                                end
-                                
-                                if camPart and camPart:IsA("BasePart") then
-                                        camPart.Transparency = 1
-                                        camPart.CanCollide = false
-                                end
-                                if spawnPart and spawnPart:IsA("BasePart") then
-                                        spawnPart.Transparency = 1
-                                        spawnPart.CanCollide = false
-                                end
-                                if finalPart and finalPart:IsA("BasePart") then
-                                        finalPart.Transparency = 1
-                                        finalPart.CanCollide = false
-                                end
-                                
-                                if guiStand then
-                                        for _, descendant in ipairs(guiStand:GetDescendants()) do
-                                                if descendant:IsA("BillboardGui") or descendant:IsA("SurfaceGui") then
-                                                        descendant.Enabled = eventActive
-                                                end
-                                        end
-                                end
-                                
-                                for _, child in ipairs(barrel:GetChildren()) do
-                                        if child ~= body and child ~= camPart and child ~= spawnPart and child ~= finalPart and child ~= guiStand then
-                                                for _, descendant in ipairs(child:GetDescendants()) do
-                                                        if descendant:IsA("BasePart") then
-                                                                if eventActive then
-                                                                        descendant.Transparency = 0
-                                                                        descendant.CanCollide = true
-                                                                else
-                                                                        descendant.Transparency = 1
-                                                                        descendant.CanCollide = false
-                                                                end
-                                                        end
-                                                end
-                                                
-                                                if child:IsA("BasePart") then
-                                                        if eventActive then
-                                                                child.Transparency = 0
-                                                                child.CanCollide = true
-                                                        else
-                                                                child.Transparency = 1
-                                                                child.CanCollide = false
-                                                        end
-                                                end
-                                        end
+                        if guiStand then
+                                local billboardGui = guiStand:FindFirstChild("BillboardGui")
+                                if billboardGui and billboardGui:IsA("BillboardGui") then
+                                        billboardGui.Enabled = eventActive
                                 end
                         end
                 end
@@ -489,8 +431,8 @@ function BarrelEvent.Start(onEventEnd)
                 setPlayerCameraEvent.Parent = remoteEvents
         end
         
-        print("🎲 Showing barrels immediately...")
-        setBarrelVisibility(true)
+        print("🎲 Enabling barrel GUI...")
+        toggleBarrelGUI(true)
         
         print("🎲 Creating barrel event item pool...")
         local allRollableItems = getAllRollableItems()
@@ -499,7 +441,7 @@ function BarrelEvent.Start(onEventEnd)
         
         if #eventItemPool == 0 then
                 warn("⚠️ Failed to create event pool, no items available")
-                setBarrelVisibility(false)
+                toggleBarrelGUI(false)
                 if onEventEnd then
                         onEventEnd()
                 end
@@ -519,6 +461,7 @@ function BarrelEvent.Start(onEventEnd)
                                 proximityPrompt.ObjectText = "Barrel (" .. formatNumber(PULL_COST) .. " Cash)"
                                 proximityPrompt.HoldDuration = 0.5
                                 proximityPrompt.MaxActivationDistance = 10
+                                proximityPrompt.RequiresLineOfSight = false
                                 proximityPrompt.Parent = body
                                 
                                 table.insert(activeProximityPrompts, proximityPrompt)
@@ -569,7 +512,7 @@ function BarrelEvent.Start(onEventEnd)
         activeHighlights = {}
         eventItemPool = {}
         
-        setBarrelVisibility(false)
+        toggleBarrelGUI(false)
         
         print("✅ Barrel Event ended")
         
@@ -578,6 +521,6 @@ function BarrelEvent.Start(onEventEnd)
         end
 end
 
-setBarrelVisibility(false)
+toggleBarrelGUI(false)
 
 return BarrelEvent
