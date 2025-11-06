@@ -4,6 +4,16 @@
 This project is a Roblox crate opening/unboxing game designed to provide an engaging unboxing experience. Players can open virtual crates to acquire items of varying rarities and values, managed by a weighted probability system. Key features include a player-to-player trading system, comprehensive admin tools for item management, robust data persistence, an interactive inventory, Discord webhook notifications, and the ability to equip virtual goods. The project aims to offer a feature-rich and dynamic virtual economy within Roblox.
 
 ## Recent Changes
+**November 6, 2025 - Mastery System Implementation:**
+- **NEW FEATURE**: Collection tracking system that shows player progress across item series
+- **Collections Module**: MasteryCollections.lua defines collections with name, image, and item IDs
+- **Main Collection View**: Displays all collections with progress bars showing % completion
+- **Detailed Item View**: Click collections to see individual items with lock/unlock states
+- **Progress Tracking**: Automatically calculates owned vs. total items in each collection
+- **Dynamic Updates**: Refreshes when inventory changes via InventoryUpdatedEvent
+- **UI Components**: Uses Sample template for collections, ItemSample for individual items
+- **Integration**: Works seamlessly with existing ItemDatabase and player inventory systems
+
 **November 6, 2025 - Serial Owner Not Updating on Trade Bug Fix:**
 - **BUG FIX**: Serial item ownership now properly updates in Index UI after trades
 - **Root Cause**: DataStoreAPI was skipping RecordSerialOwner() call when `preserveSerialOwner=true` during trades
@@ -113,6 +123,7 @@ This project is a Roblox crate opening/unboxing game designed to provide an enga
 -   **Selling Items**: Players can sell regular items for 80% of their value; stock items cannot be sold.
 -   **Index System**: Displays all game items with details, owner lists (including serial numbers), roll percentages (or "Not Rollable" for Limited items), and "RareText"/"LimText."
 -   **Trading System**: Player-to-player trading with trade requests, stacked/serial item support, dual acceptance, item transfer (preserving serial numbers and ownership), and cancellation features. Max 8 items per player per trade with a 0.5s confirmation delay. Features real-time value tracking and persistent trade history (last 50 trades) with full details.
+-   **Mastery System**: Collection tracking system displaying player progress across themed item series. Shows completion percentages, unlocked/locked items, and roll chances. Collections defined in MasteryCollections.lua module with configurable names, images, and item lists.
 
 ### UI/UX Decisions
 -   Item names are color-coded by rarity in animations and inventory. Limited items use gold color (RGB 255, 215, 0).

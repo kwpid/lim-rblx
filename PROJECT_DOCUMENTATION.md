@@ -227,7 +227,39 @@ Items are automatically assigned rarity based on their value:
   - RecordSerialOwner() called by DataStoreAPI when adding stock items
   - Data persists across sessions in DataStore
 
-### 13. Barrel Event System
+### 13. Mastery System
+- **Overview:**
+  - Collection tracking system that displays player progress across themed item series
+  - Shows which items players have collected and which are still locked
+  - Progress bars indicate completion percentage for each collection
+- **Collections Configuration:**
+  - Defined in ReplicatedStorage/MasteryCollections.lua
+  - Each collection has: Name, ImageId (for collection thumbnail), Items (array of RobloxIds)
+  - Easy to add new collections by editing the MasteryCollections module
+- **Main Collection Display:**
+  - Shows all available collections using Sample template (buttons)
+  - Each collection displays: Name, Image, Progress bar with percentage
+  - Progress bar fills based on owned items / total items in collection
+  - If 0% complete, progress bar shows size of 0
+  - Collections are clickable to view details
+- **Detailed Item View (Mastery_Info):**
+  - Opens when clicking a collection button
+  - Shows all items in that collection using ItemSample template
+  - Each item displays: Name, Roll percentage, Item image
+  - LockedFrame visible for items player doesn't own (shows as locked)
+  - LockedFrame hidden for owned items (shows as unlocked)
+  - Back button returns to main collection view and clears displayed items
+- **Dynamic Updates:**
+  - Refreshes automatically when inventory changes
+  - Uses InventoryUpdatedEvent to detect when player gets new items
+  - Closes detail view and updates progress when inventory changes
+- **Technical Implementation:**
+  - Client-side LocalScript in StarterGUI/MasterySystem.lua
+  - Uses GetInventoryFunction to fetch player's inventory
+  - Uses GetAllItemsFunction to access item database for details
+  - Integrates with ItemRarityModule for roll percentage calculations
+
+### 14. Barrel Event System
 - **Overview:**
   - Players can pull items from barrels in Workspace.Barrels for 5,000 Cash
   - Only hat-type items can be pulled (no tools or faces)
@@ -286,6 +318,9 @@ Items are automatically assigned rarity based on their value:
 ### ReplicatedStorage/
 Contains modules shared between client and server:
 - **ItemRarityModule.lua**: Determines rarity from value, calculates roll percentages
+- **MasteryCollections.lua**: Defines all item collections for the Mastery system
+- **NotificationPresets.lua**: Notification type configurations
+- **TradeConfiguration.lua**: Trading system configuration
 
 ### ServerScriptService/
 Server-side game logic:
@@ -302,6 +337,10 @@ Client-side UI scripts:
 - **AdminGUI.lua**: Admin panel for creating items (LocalScript)
 - **CratesClient.lua**: Crate opening animation and UI (LocalScript)
 - **InventorySystem.lua**: Inventory display and management (LocalScript)
+- **MasterySystem.lua**: Collection tracking and progress display (LocalScript)
+- **TradeClient.lua**: Player-to-player trading UI and logic (LocalScript)
+- **NotificationHandler.lua**: Notification display system (LocalScript)
+- **MainUIToggle.lua**: Main UI toggle between Inventory and Index (LocalScript)
 
 ## 🔧 How Systems Connect
 
