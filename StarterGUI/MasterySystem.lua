@@ -20,6 +20,7 @@ local ItemSample = script:WaitForChild("ItemSample")
 
 local playerInventory = {}
 local itemDatabase = {}
+local currentCollection = nil
 
 local function getPlayerInventory()
         local success, inventory = pcall(function()
@@ -90,6 +91,7 @@ local function clearHandler(handler)
 end
 
 local function showCollectionDetails(collection)
+        currentCollection = collection
         clearHandler(MasteryInfoHandler)
         
         MasteryName.Text = collection.Name
@@ -183,6 +185,7 @@ local function populateCollections()
 end
 
 local function hideCollectionDetails()
+        currentCollection = nil
         MasteryInfo.Visible = false
         clearHandler(MasteryInfoHandler)
 end
@@ -207,7 +210,7 @@ InventoryUpdatedEvent.OnClientEvent:Connect(function()
         getPlayerInventory()
         populateCollections()
         
-        if MasteryInfo.Visible then
-                hideCollectionDetails()
+        if MasteryInfo.Visible and currentCollection then
+                showCollectionDetails(currentCollection)
         end
 end)
