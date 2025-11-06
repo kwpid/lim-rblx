@@ -328,12 +328,6 @@ local function handleBarrelPull(player, barrel)
         
         task.wait(0.1)
         
-        for _, prompt in ipairs(activeProximityPrompts) do
-                if prompt and prompt.Parent then
-                        prompt.Enabled = false
-                end
-        end
-        
         if setPlayerCameraEvent then
                 setPlayerCameraEvent:FireClient(player, camPart, spawnPart, finalPart, itemModel, primaryPart, selectedItem.Rarity)
         end
@@ -341,12 +335,6 @@ local function handleBarrelPull(player, barrel)
         task.spawn(function()
         
                 task.wait(6)
-                
-                for _, prompt in ipairs(activeProximityPrompts) do
-                        if prompt and prompt.Parent then
-                                prompt.Enabled = true
-                        end
-                end
                 
                 if itemModel and itemModel.Parent then
                         itemModel:Destroy()

@@ -13,6 +13,13 @@ This project is a Roblox crate opening/unboxing game designed to provide an enga
 - **Better Warnings**: Clear console messages when data operations fail, including attempt counts
 - **Studio-Specific**: Data loss was most common in Studio when API access wasn't enabled
 
+**November 6, 2025 - Barrel Event Multi-Player Pull Fix:**
+- **BUG FIX**: Fixed barrel event so multiple players can pull simultaneously
+- **Root Cause**: Code was disabling ALL proximity prompts globally when any player pulled
+- **Solution**: Removed global prompt disabling since pulls are client-side (each player sees their own)
+- **Per-Player Prevention**: Still prevents individual players from pulling multiple times simultaneously
+- **Performance**: Multiple players can now interact with barrels at the same time without blocking
+
 **November 6, 2025 - Barrel Event Chat Messages & Webhooks:**
 - **Chat Notifications**: Barrel pulls now send colored chat messages (like crate system)
   - Local chat for 250k+ Robux items
