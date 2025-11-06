@@ -98,6 +98,14 @@ local function showCollectionDetails(collection)
                 warn("Collection '" .. collection.Name .. "' has no items configured")
         end
         
+        local totalInverseValue = 0
+        for _, itemId in ipairs(collection.Items) do
+                local itemData = getItemFromDatabase(itemId)
+                if itemData and itemData.Rarity ~= "Limited" then
+                        totalInverseValue = totalInverseValue + (1 / (itemData.Value ^ 0.9))
+                end
+        end
+        
         local itemsFound = 0
         for _, itemId in ipairs(collection.Items) do
                 local itemData = getItemFromDatabase(itemId)
@@ -108,8 +116,14 @@ local function showCollectionDetails(collection)
                         
                         itemButton:WaitForChild("Name").Text = itemData.Name
                         
-                        local rollPercent = ItemRarityModule:GetRollPercentage(itemData.Value)
-                        itemButton:WaitForChild("Roll").Text = string.format("%.4f%%", rollPercent)
+                        local rollPercent
+                        if itemData.Rarity == "Limited" then
+                                rollPercent = 0
+                                itemButton:WaitForChild("Roll").Text = "Not Rollable"
+                        else
+                                rollPercent = ItemRarityModule:GetRollPercentage(itemData.Value, totalInverseValue)
+                                itemButton:WaitForChild("Roll").Text = string.format("%.4f%%", rollPercent)
+                        end
                         
                         local imageLabel = itemButton:WaitForChild("ImageLabel")
                         imageLabel.Image = "rbxthumb://type=Asset&id=" .. itemData.RobloxId .. "&w=150&h=150"
