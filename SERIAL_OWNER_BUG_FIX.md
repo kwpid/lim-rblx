@@ -1,7 +1,7 @@
-# Serial Owner Not Updating on Trade - Bug Fix Summary
+# Serial Owner Not Updating on Trade - Bug Fix & Repair System
 
 **Date:** November 6, 2025  
-**Status:** ✅ FIXED  
+**Status:** ✅ FIXED + REPAIR TOOL ADDED  
 **Severity:** Medium (Data Display Issue)
 
 ## Problem Description
@@ -102,13 +102,62 @@ The fix separates these two concerns:
 - **ItemDatabase.lua**: `RecordSerialOwner()` updates the SerialOwners array (lines 303-322)
 - **IndexLocal.lua**: Displays serial owners from `GetItemOwnersFunction` (lines 397-427)
 
+## Repair System for Existing Broken Records
+
+### The Challenge
+Items that were traded **before** the bug fix still have incorrect ownership records in the database. These can't be automatically fixed without intervention.
+
+### The Solution: RepairSerialOwners() Command
+
+**Added:** `ServerScriptService/ItemDatabase.lua` - New function `RepairAllSerialOwners()`
+
+A new admin console command that repairs serial ownership records for currently online players:
+
+```lua
+RepairSerialOwners()
+```
+
+**How It Works:**
+1. Scans all online player inventories (_G.PlayerData)
+2. For each serial item found, updates the SerialOwners record
+3. Uses the existing RecordSerialOwner() function which safely updates or creates records
+4. Does NOT delete any existing records (safe to run multiple times)
+5. Saves to DataStore and refreshes Index UI for all players
+
+**Important Limitations:**
+- ⚠️ Only repairs ownership for players currently in the server
+- Players must be online for their ownership to be updated
+- As players join, you can run the command again to update their items
+- Offline players' incorrect records remain until they come online
+
+**Usage Example:**
+1. Open Roblox Studio server console
+2. Wait for players with broken serial items to join
+3. Run: `RepairSerialOwners()`
+4. Console shows: `Updated: X serial ownership records`
+5. All players' Index UI automatically refreshes
+6. Run again as more players join to repair their items
+
+**Safety:**
+- ✅ Does not delete any data
+- ✅ Safe to run multiple times
+- ✅ Only updates records, never removes them
+- ✅ Architect-reviewed and approved
+
 ## Code Review Status
 
-✅ **Reviewed by Architect Agent**
+✅ **Initial Bug Fix - Reviewed by Architect Agent**
 - Fix confirmed correct
 - No side effects identified
 - Security: None observed
 - Recommendation: Test trade flow in-game to verify Index UI updates
+
+✅ **Repair System - Reviewed by Architect Agent**
+- Safe implementation (no data loss)
+- Only updates online player records
+- Does not delete existing data
+- Security: None observed
+- Recommendation: Run during coordinated sessions when affected players are online
 
 ---
 

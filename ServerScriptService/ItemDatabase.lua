@@ -388,6 +388,59 @@ _G.ResetOwnershipData = function()
   return ItemDatabase:ResetOwnershipData()
 end
 
+function ItemDatabase:RepairAllSerialOwners()
+  print("🔧 Starting serial owner repair process...")
+  print("⚠️ NOTE: Only repairs ownership for ONLINE players. Run when all players are online for best results.")
+  
+  local repairedCount = 0
+  
+  if not _G.PlayerData then
+    warn("⚠️ No player data found (_G.PlayerData is nil)")
+    return false, 0
+  end
+  
+  for userId, playerData in pairs(_G.PlayerData) do
+    if playerData.Inventory then
+      for _, invItem in ipairs(playerData.Inventory) do
+        if invItem.SerialNumber then
+          local player = game.Players:GetPlayerByUserId(userId)
+          local username = player and player.Name or playerData.Username or "Unknown"
+          
+          self:RecordSerialOwner(
+            invItem.RobloxId,
+            userId,
+            username,
+            invItem.SerialNumber
+          )
+          
+          repairedCount = repairedCount + 1
+        end
+      end
+    end
+  end
+  
+  self:SaveItems()
+  
+  print("✅ Serial owner repair complete!")
+  print("   - Updated: " .. repairedCount .. " serial ownership records")
+  print("   - Note: Only updated records for currently online players")
+  
+  local ReplicatedStorage = game:GetService("ReplicatedStorage")
+  local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+  if remoteEvents then
+    local createItemEvent = remoteEvents:FindFirstChild("CreateItemEvent")
+    if createItemEvent then
+      createItemEvent:FireAllClients()
+    end
+  end
+  
+  return true, repairedCount
+end
+
+_G.RepairSerialOwners = function()
+  return ItemDatabase:RepairAllSerialOwners()
+end
+
 game:BindToClose(function()
   ItemDatabase._saveQueued = false
   ItemDatabase:SaveItems()
