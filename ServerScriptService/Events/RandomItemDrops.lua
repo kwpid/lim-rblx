@@ -16,21 +16,16 @@ local EVENT_DURATION = 3 * 60
 local ITEM_LIFETIME = math.random(60, 120) 
 local DROP_INTERVAL = EVENT_DURATION / NUM_ITEMS_TO_DROP
 
-local CHROMA_VALK_ID = 88275556285191
-local BARREL_EXCLUSIVE_ITEMS = {
-        [CHROMA_VALK_ID] = true
-}
-
 
 local RARITY_MULTIPLIERS = {
-        ["Common"] = 1,       
-        ["Uncommon"] = 2,     
-        ["Rare"] = 1300,       
-        ["Ultra Rare"] = 940,  
-        ["Epic"] = 1204,         
-        ["Ultra Epic"] = 1000,   
-        ["Mythic"] = 915,       
-        ["Insane"] = 1000        
+	["Common"] = 1,       
+	["Uncommon"] = 2,     
+	["Rare"] = 1300,       
+	["Ultra Rare"] = 940,  
+	["Epic"] = 1204,         
+	["Ultra Epic"] = 1000,   
+	["Mythic"] = 915,       
+	["Insane"] = 1000        
 }
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
@@ -448,46 +443,28 @@ function RandomItemDrops.Start(onEventEnd)
     return
   end
 
-  -- Get all rollable items (excludes Limited items automatically)
+  -- Get all rollable items
   local allItems = ItemDatabase:GetRollableItems()
-  
-  -- Filter out barrel-exclusive items (like Chroma Valk)
-  local eventItems = {}
-  for _, item in ipairs(allItems) do
-    if not BARREL_EXCLUSIVE_ITEMS[item.RobloxId] then
-      table.insert(eventItems, item)
-    end
-  end
-  
-  if #eventItems == 0 then
+  if #allItems == 0 then
     warn("❌ No items available for event!")
     if onEventEnd then onEventEnd() end
     return
   end
 
-  print("✅ Found " .. #eventItems .. " items available for event drops (excluded barrel-exclusive items)")
+  print("✅ Found " .. #allItems .. " items available for event drops")
 
   -- Spawn items over time
   task.spawn(function()
     for i = 1, NUM_ITEMS_TO_DROP do
       -- Get fresh rollable items (in case stock changed)
       local currentRollableItems = ItemDatabase:GetRollableItems()
-      
-      -- Filter out barrel-exclusive items
-      local filteredItems = {}
-      for _, item in ipairs(currentRollableItems) do
-        if not BARREL_EXCLUSIVE_ITEMS[item.RobloxId] then
-          table.insert(filteredItems, item)
-        end
-      end
-      
-      if #filteredItems == 0 then
+      if #currentRollableItems == 0 then
         warn("⚠️ No rollable items available, ending event early")
         break
       end
 
       -- Pick random item (with event probability)
-      local randomItem = pickRandomEventItem(filteredItems)
+      local randomItem = pickRandomEventItem(currentRollableItems)
       if randomItem then
         -- Prepare item data (serial number will be claimed when collected, not now)
         local itemData = {
