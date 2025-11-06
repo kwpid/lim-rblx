@@ -2,7 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
-local ItemRarityModule = ReplicatedStorage:WaitForChild("ItemRarityModule")
+local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
 local MasteryCollections = require(ReplicatedStorage:WaitForChild("MasteryCollections"))
 
 local GetInventoryFunction = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("GetInventoryFunction")
