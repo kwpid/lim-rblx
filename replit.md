@@ -14,6 +14,9 @@ This project is a Roblox crate opening/unboxing game designed to provide an enga
 - **Real Item Models**: Barrels now display actual item models using InsertService instead of colored boxes
 - **Smart Model Detection**: Properly handles Accessories, Hats, Models, and BaseParts with fallback for failures
 - **Performance**: Event startup now takes <1 second instead of 30+ seconds
+- **QoL: Always Visible Barrels**: Barrels remain visible at all times, only GUI and prompts toggle based on event state
+- **QoL: BillboardGui Toggle**: GUI_Stand.BillboardGui properly enabled during events, disabled when inactive
+- **QoL: No Line of Sight**: Proximity prompts no longer require line of sight for better interaction
 
 **November 5, 2025 - Barrel Event Pool & Animation Fix:**
 - **Event Pool System**: Pre-selects 50 random weighted items when event starts (eliminates slow MarketplaceService calls during pulls)
