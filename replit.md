@@ -4,16 +4,6 @@
 This project is a Roblox crate opening/unboxing game designed to provide an engaging unboxing experience. Players can open virtual crates to acquire items of varying rarities and values, managed by a weighted probability system. Key features include a player-to-player trading system, comprehensive admin tools for item management, robust data persistence, an interactive inventory, Discord webhook notifications, and the ability to equip virtual goods. The project aims to offer a feature-rich and dynamic virtual economy within Roblox.
 
 ## Recent Changes
-**November 6, 2025 - Serial Owner Repair System:**
-- **NEW FEATURE**: Added RepairSerialOwners() console command to fix serial item ownership records
-- **Purpose**: Repairs ownership data for items that were traded before the bug fix
-- **How It Works**: Scans online player inventories and updates SerialOwners in ItemDatabase to match current ownership
-- **Safety**: Does not delete existing records, only updates them - safe to run multiple times
-- **Limitation**: Only repairs ownership for players currently in the server (works as players join)
-- **Usage**: Run `RepairSerialOwners()` in server console when affected players are online
-- **Output**: Shows count of serial ownership records updated
-- **Auto-Refresh**: Automatically refreshes Index UI for all players after repair completes
-
 **November 6, 2025 - Serial Owner Not Updating on Trade Bug Fix:**
 - **BUG FIX**: Serial item ownership now properly updates in Index UI after trades
 - **Root Cause**: DataStoreAPI was skipping RecordSerialOwner() call when `preserveSerialOwner=true` during trades

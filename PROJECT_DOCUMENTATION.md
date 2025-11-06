@@ -82,7 +82,6 @@ Items are automatically assigned rarity based on their value:
   - `CheckDatabase()` - View all items sorted by value
   - `CheckRarities()` - View item count by rarity tier
   - `ResetOwnershipData()` - Reset all ownership data (CurrentStock, Owners, TotalCopies, SerialOwners) while keeping all items intact. Use this for a fresh reset during testing. Automatically refreshes the Index UI for all players.
-  - `RepairSerialOwners()` - Repair/update serial item ownership records for currently online players. Scans online player inventories and updates the SerialOwners database to match who owns each serial item. Safe to run multiple times - does not delete existing records, only updates them. **Note:** Only repairs ownership for players currently in the server. Best used when all affected players are online. Returns count of updated records.
   - **Regular Luck (Epic+ items, 250k+):**
     - `SetPlayerLuck(username, multiplier)` - Set a player's luck multiplier (e.g., `SetPlayerLuck("2kwpid", 300)`)
     - `ResetPlayerLuck(username)` - Reset a player's luck to 1.0 (default/normal)
