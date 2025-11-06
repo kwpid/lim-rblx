@@ -37,15 +37,13 @@ function DataStoreAPI:AddItem(player, itemData, preserveSerialOwner)
     })
     isNewOwner = true
 
-    -- Only record serial owner if this is NOT from a trade (preserve original owner during trades)
-    if not preserveSerialOwner then
-      ItemDatabase:RecordSerialOwner(
-        itemData.RobloxId,
-        player.UserId,
-        player.Name,
-        itemData.SerialNumber
-      )
-    end
+    -- Always update serial owner to the current player (including during trades)
+    ItemDatabase:RecordSerialOwner(
+      itemData.RobloxId,
+      player.UserId,
+      player.Name,
+      itemData.SerialNumber
+    )
   else
     local found = false
     local currentAmount = 0
