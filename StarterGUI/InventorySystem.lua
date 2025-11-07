@@ -44,6 +44,7 @@ end
 
 local selectedItemData = nil
 local selectedButton = nil
+local selectedItemId = nil
 local equippedItems = {}
 local sellConfirmation = false
 local sellAllConfirmation = false
@@ -267,6 +268,7 @@ function refresh()
       end
 
       selectedButton = button
+      selectedItemId = item.RobloxId
 
       local itemNameText = popup:WaitForChild("ItemName")
       local itemValueText = popup:WaitForChild("Value")
@@ -345,6 +347,14 @@ function refresh()
         end
       end
     end)
+    
+    if selectedItemId and item.RobloxId == selectedItemId then
+      selectedButton = button
+      local currentStroke = button:FindFirstChildOfClass("UIStroke")
+      if currentStroke then
+        currentStroke.Thickness = 9
+      end
+    end
   end
 
   return true
@@ -419,7 +429,6 @@ if equipButton and equipItemEvent then
       end
 
       task.wait(0.1)
-      clearSelection()
       pcall(refresh)
     end
   end)
