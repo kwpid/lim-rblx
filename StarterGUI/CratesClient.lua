@@ -1,22 +1,4 @@
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local player = Players.LocalPlayer
-local camera = workspace.CurrentCamera
-
-local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
-local rollCrateEvent = remoteEvents:WaitForChild("RollCrateEvent")
-local crateOpenedEvent = remoteEvents:WaitForChild("CrateOpenedEvent")
-local updateResultEvent = remoteEvents:FindFirstChild("UpdateCrateResult") or Instance.new("RemoteEvent")
-updateResultEvent.Name = "UpdateCrateResult"
-updateResultEvent.Parent = remoteEvents
-
-local setAutoRollEvent = remoteEvents:WaitForChild("SetAutoRollEvent")
-local getAutoRollFunction = remoteEvents:WaitForChild("GetAutoRollFunction")
-local serverShutdownEvent = remoteEvents:WaitForChild("ServerShutdownEvent")
-local setHideRollsEvent = remoteEvents:WaitForChild("SetHideRollsEvent")
-local getHideRollsFunction = remoteEvents:WaitForChild("GetHideRollsFunction")
-local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
+equire(ReplicatedStorage:WaitForChild("ItemRarityModule"))
 
 local openedGui = script.Parent:WaitForChild("OpenedCrateGui")
 local openedFrame = openedGui:WaitForChild("CrateFrame")
