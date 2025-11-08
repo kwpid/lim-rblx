@@ -36,13 +36,14 @@ end
 
 local gui = script.Parent
 
+local openBtn = gui:WaitForChild("OpenSendTrades")
 local sendTradesFrame = gui:WaitForChild("SendTradesFrame")
 local tradeRequestFrame = gui:WaitForChild("TradeRequestFrame")
 local tradeFrame = gui:WaitForChild("TradeFrame")
 local tradeHistoryFrame = gui:WaitForChild("TradeHistoryFrame")
 local viewInventoryFrame = gui:WaitForChild("ViewInventoryFrame")
 
-sendTradesFrame.Visible = true
+sendTradesFrame.Visible = false
 tradeRequestFrame.Visible = false
 tradeFrame.Visible = false
 tradeHistoryFrame.Visible = false
@@ -325,7 +326,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                 clientValue.AncestryChanged:Connect(function()
                         if clientValue.Parent == nil then
                                 tradeFrame.Visible = false
-                                sendTradesFrame.Visible = true
+                                openBtn.Visible = true
                                 for _, btn in pairs(currentInventoryButtons) do
                                         if btn then
                                                 btn:Destroy()
@@ -337,6 +338,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                 tradeRequestFrame.Visible = false
                 sendTradesFrame.Visible = false
+                openBtn.Visible = false
 
                 tradeFrame.TradingFrame.TradingWithName.Text = "Trading with " .. otherPlrValue.Value
                 tradeFrame.TradingFrame.TheirOfferFrame.TheirOfferText.Text = otherPlrValue.Value .. "'s offer"
@@ -716,42 +718,44 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
         end
 end)
 
-local function populatePlayerList()
-        for _, child in pairs(sendTradesFrame.PlayerList:GetChildren()) do
-                if child:IsA("Frame") then
-                        child:Destroy()
-                end
-        end
-
-        for _, plr in pairs(game.Players:GetPlayers()) do
-                if plr ~= client then
-                        local playerFrame = script:WaitForChild("PlayerFrame"):Clone()
-                        playerFrame.PlayerDisplayName.Text = plr.DisplayName
-                        playerFrame.PlayerUserName.Text = "@" .. plr.Name
-                        playerFrame.PlayerImage.Image = game.Players:GetUserThumbnailAsync(plr.UserId, Enum.ThumbnailType.HeadShot,
-                                Enum.ThumbnailSize.Size100x100)
-
-                        playerFrame.SendButton.MouseButton1Click:Connect(function()
-                                if tradeRequestFrame.Visible == false then
-                                        tradeEvent:FireServer("send trade request", { plr })
-                                end
-                        end)
-
-                        local viewInvBtn = playerFrame:FindFirstChild("ViewInventory")
-                        if viewInvBtn then
-                                viewInvBtn.MouseButton1Click:Connect(function()
-                                        populateViewInventory(plr)
-                                end)
+openBtn.MouseButton1Click:Connect(function()
+        if sendTradesFrame.Visible == true then
+                sendTradesFrame.Visible = false
+        elseif tradeFrame.Visible == false then
+                for _, child in pairs(sendTradesFrame.PlayerList:GetChildren()) do
+                        if child:IsA("Frame") then
+                                child:Destroy()
                         end
-
-                        playerFrame.Parent = sendTradesFrame.PlayerList
                 end
-        end
-end
 
-populatePlayerList()
-game.Players.PlayerAdded:Connect(populatePlayerList)
-game.Players.PlayerRemoving:Connect(populatePlayerList)
+                for _, plr in pairs(game.Players:GetPlayers()) do
+                        if plr ~= client then
+                                local playerFrame = script:WaitForChild("PlayerFrame"):Clone()
+                                playerFrame.PlayerDisplayName.Text = plr.DisplayName
+                                playerFrame.PlayerUserName.Text = "@" .. plr.Name
+                                playerFrame.PlayerImage.Image = game.Players:GetUserThumbnailAsync(plr.UserId, Enum.ThumbnailType.HeadShot,
+                                        Enum.ThumbnailSize.Size100x100)
+
+                                playerFrame.SendButton.MouseButton1Click:Connect(function()
+                                        if tradeRequestFrame.Visible == false then
+                                                tradeEvent:FireServer("send trade request", { plr })
+                                        end
+                                end)
+
+                                local viewInvBtn = playerFrame:FindFirstChild("ViewInventory")
+                                if viewInvBtn then
+                                        viewInvBtn.MouseButton1Click:Connect(function()
+                                                populateViewInventory(plr)
+                                        end)
+                                end
+
+                                playerFrame.Parent = sendTradesFrame.PlayerList
+                        end
+                end
+
+                sendTradesFrame.Visible = true
+        end
+end)
 
 sendTradesFrame.CloseButton.MouseButton1Click:Connect(function()
         sendTradesFrame.Visible = false
@@ -888,13 +892,12 @@ tradeEvent.OnClientEvent:Connect(function(instruction, data)
 
         elseif instruction == "trade completed" then
                 tradeFrame.Visible = false
-                sendTradesFrame.Visible = true
+                openBtn.Visible = true
                 for _, btn in pairs(currentInventoryButtons) do
                         if btn then
                                 btn:Destroy()
                         end
                 end
                 currentInventoryButtons = {}
-                populatePlayerList()
         end
 end)

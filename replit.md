@@ -37,7 +37,7 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   Tix Shop UI with item display, countdown timer, and purchase confirmation dialog.
 -   Notification system for trade requests.
 -   Hover effects for viewing other players' inventories.
--   **Unified Tab System**: All main UI sections (Inventory, Index, Mastery, Marketplace, Trading) are consolidated into a single ScreenGUI with dedicated open buttons (InventoryOpen, IndexOpen, MasteryOpen, MarketplaceOpen, TradingOpen). The TabManager automatically ensures only one tab is visible at a time - opening a new tab closes any currently open tab. Managed by `TabManager.lua` in StarterGUI.
+-   **Unified Tab System**: Main UI sections (Inventory, Index, Mastery, Marketplace) are consolidated into a single ScreenGUI with dedicated open buttons (InventoryOpen, IndexOpen, MasteryOpen, MarketplaceOpen). The TabManager automatically ensures only one tab is visible at a time - opening a new tab closes any currently open tab. Managed by `TabManager.lua` in StarterGUI. Trading UI is handled separately with its own toggle button system.
 -   Smooth slide-in/out animations for popups.
 -   UIStroke colors indicate button states (AutoRoll, HideRolls).
 -   Event status displayed in MainUI.
