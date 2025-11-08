@@ -189,6 +189,13 @@ function refresh()
                         return aEquipped
                 end
 
+                local aLocked = a.IsLocked or false
+                local bLocked = b.IsLocked or false
+
+                if aLocked ~= bLocked then
+                        return aLocked
+                end
+
                 local aVanity = a.Rarity == "Vanity"
                 local bVanity = b.Rarity == "Vanity"
 
