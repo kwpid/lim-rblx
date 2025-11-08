@@ -195,9 +195,9 @@ function refresh()
                         local buyPriceLabel = popFrame:FindFirstChild("BuyPrice")
                         if buyPriceLabel then
                                 if listing.ListingType == "cash" then
-                                        buyPriceLabel.Text = "Price: $" .. formatNumber(listing.Price)
+                                        buyPriceLabel.Text = "$" .. formatNumber(listing.Price)
                                 elseif listing.ListingType == "robux" then
-                                        buyPriceLabel.Text = "Price: R$" .. formatNumber(listing.Price) .. " (Gamepass)"
+                                        buyPriceLabel.Text = "R$" .. formatNumber(listing.Price) .. " (Gamepass)"
                                 end
                         end
 
@@ -205,8 +205,18 @@ function refresh()
                         if confirmBtn then
                                 if listing.IsOwnListing then
                                         confirmBtn.Text = "Cancel Listing"
+                                        confirmBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+                                        local confirmStroke = confirmBtn:FindFirstChildOfClass("UIStroke")
+                                        if confirmStroke then
+                                                confirmStroke.Color = Color3.fromRGB(255, 0, 0)
+                                        end
                                 else
                                         confirmBtn.Text = "Purchase"
+                                        confirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+                                        local confirmStroke = confirmBtn:FindFirstChildOfClass("UIStroke")
+                                        if confirmStroke then
+                                                confirmStroke.Color = Color3.fromRGB(255, 255, 255)
+                                        end
                                 end
                         end
                 end)
