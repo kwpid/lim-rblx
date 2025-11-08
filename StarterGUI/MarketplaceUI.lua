@@ -197,7 +197,7 @@ function refresh()
                                 if listing.ListingType == "cash" then
                                         buyPriceLabel.Text = "$" .. formatNumber(listing.Price)
                                 elseif listing.ListingType == "robux" then
-                                        buyPriceLabel.Text = "R$" .. formatNumber(listing.Price) .. " (Gamepass)"
+                                        buyPriceLabel.Text = "R$" .. formatNumber(listing.Price)
                                 end
                         end
 
