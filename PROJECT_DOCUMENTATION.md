@@ -241,15 +241,26 @@ Items are automatically assigned rarity based on their value:
   - Collection tracking system that displays player progress across themed item series
   - Shows which items players have collected and which are still locked
   - Progress bars indicate completion percentage for each collection
+  - **Persistent Completion:** Masteries stay completed forever via Roblox badges - even if items are lost/traded
 - **Collections Configuration:**
   - Defined in ReplicatedStorage/MasteryCollections.lua
-  - Each collection has: Name, ImageId (for collection thumbnail), Items (array of RobloxIds)
+  - Each collection has: Name, ImageId (for collection thumbnail), BadgeId (Roblox badge), Items (array of RobloxIds)
+  - BadgeId field: Set to the Roblox badge ID for the collection (0 = not configured)
   - Easy to add new collections by editing the MasteryCollections module
+- **Badge System (Persistent Completion):**
+  - When a player completes a mastery (owns all items), they receive a Roblox badge
+  - Badge ownership is the source of truth for mastery completion
+  - **Permanent Completion:** Once completed, the mastery stays at 100% forever
+  - Even if the player loses/sells/trades items from the collection, it remains completed
+  - Server uses BadgeService to check and award badges
+  - Completion status is verified on player join by checking badge ownership
 - **Main Collection Display:**
   - Shows all available collections using Sample template (buttons)
   - Each collection displays: Name, Image, Progress bar with percentage
   - Progress bar fills based on owned items / total items in collection
+  - **CompletedFrame:** Visible overlay on completed masteries (shows completion)
   - If 0% complete, progress bar shows size of 0
+  - Completed masteries always show 100% progress
   - Collections are clickable to view details
 - **Detailed Item View (Mastery_Info):**
   - Opens when clicking a collection button
@@ -261,12 +272,17 @@ Items are automatically assigned rarity based on their value:
 - **Dynamic Updates:**
   - Refreshes automatically when inventory changes
   - Uses InventoryUpdatedEvent to detect when player gets new items
+  - Automatically awards badges when a player completes a mastery
   - Closes detail view and updates progress when inventory changes
 - **Technical Implementation:**
   - Client-side LocalScript in StarterGUI/MasterySystem.lua
+  - Server-side script in ServerScriptService/MasteryHandler.lua
+  - Uses CheckMasteryCompletedFunction to verify badge ownership
+  - Uses AwardMasteryBadgeEvent to award badges on first completion
   - Uses GetInventoryFunction to fetch player's inventory
   - Uses GetAllItemsFunction to access item database for details
   - Integrates with ItemRarityModule for roll percentage calculations
+  - Badge checks run asynchronously on player join for all collections
 
 ### 14. Barrel Event System
 - **Overview:**
@@ -339,6 +355,7 @@ Server-side game logic:
 - **DataStoreAPI.lua**: Public API for other scripts to modify player data
 - **DataStoreManager.lua**: Low-level DataStore save/load operations
 - **ItemDatabase.lua**: Global item database, stores all available items
+- **MasteryHandler.lua**: Badge-based mastery completion tracking and awards
 - **PlayerDataHandler.lua**: Manages player join/leave, creates leaderstats, auto-save
 
 ### StarterGUI/

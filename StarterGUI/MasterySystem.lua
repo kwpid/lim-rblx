@@ -8,7 +8,7 @@ local MasteryCollections = require(ReplicatedStorage:WaitForChild("MasteryCollec
 local GetInventoryFunction = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("GetInventoryFunction")
 local GetAllItemsFunction = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("GetAllItemsFunction")
 local CheckMasteryCompletedFunction = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("CheckMasteryCompletedFunction")
-local AwardMasteryBadgeEvent = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("AwardMasteryBadgeEvent")
+local AwardMasteryBadgeFunction = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("AwardMasteryBadgeFunction")
 
 local MasteryFrame = script.Parent
 local Handler = MasteryFrame:WaitForChild("Handler")
@@ -121,9 +121,17 @@ local function calculateCollectionProgress(collection)
         local percentage = math.floor((owned / #collection.Items) * 100)
         
         if percentage == 100 and not isCompleted then
-                AwardMasteryBadgeEvent:FireServer(collection.Name)
-                completedMasteries[collection.Name] = true
-                isCompleted = true
+                local success, badgeAwarded = pcall(function()
+                        return AwardMasteryBadgeFunction:InvokeServer(collection.Name)
+                end)
+                
+                if success and badgeAwarded then
+                        completedMasteries[collection.Name] = true
+                        isCompleted = true
+                        percentage = 100
+                else
+                        percentage = 99
+                end
         end
         
         return owned, percentage, isCompleted
