@@ -35,6 +35,11 @@ popup.Visible = false
 
 local searchBar = gui:FindFirstChild("SearchBar")
 
+local tooltip = gui:FindFirstChild("Tooltip")
+if tooltip then
+  tooltip.Visible = false
+end
+
 local selected = handler:FindFirstChild("Selected")
 if not selected then
   selected = Instance.new("StringValue")
@@ -100,22 +105,59 @@ end
 
 function clearSelection()
   if selectedButton then
-    local contentFrame = selectedButton:FindFirstChild("Content")
-    local content2Frame = selectedButton:FindFirstChild("content2")
-
-    if contentFrame then
-      contentFrame.BorderSizePixel = 1
+    local uiStroke = selectedButton:FindFirstChildOfClass("UIStroke")
+    if uiStroke then
+      uiStroke.Thickness = 2
     end
-
-    if content2Frame then
-      content2Frame.BorderSizePixel = 1
-    end
-
     selectedButton = nil
   end
 
   selectedItemData = nil
   selected.Value = ""
+end
+
+function showTooltip(item, button)
+  if not tooltip then return end
+  
+  local valueLabel = tooltip:FindFirstChild("Value")
+  if valueLabel then
+    valueLabel.Text = "R$ " .. formatNumber(item.Value)
+  end
+  
+  local rollLabel = tooltip:FindFirstChild("RollPercent")
+  if rollLabel then
+    if item.Rarity == "Limited" then
+      rollLabel.Text = "Not Rollable"
+    else
+      local percentage = item.RollPercentage or 0
+      local percentText = string.format("%.10f", percentage)
+      
+      local decimalPart = percentText:match("%.(%d+)")
+      local firstNonZeroPos = 4
+      
+      if decimalPart then
+        for i = 1, #decimalPart do
+          if decimalPart:sub(i, i) ~= "0" then
+            firstNonZeroPos = math.max(4, i)
+            break
+          end
+        end
+      end
+      
+      percentText = string.format("%." .. firstNonZeroPos .. "f%%", percentage)
+      percentText = percentText:gsub("(%d)0+%%", "%1%%"):gsub("%.0+%%", "%%")
+      rollLabel.Text = percentText
+    end
+  end
+  
+  tooltip.Position = UDim2.new(0, button.AbsolutePosition.X + button.AbsoluteSize.X + 10, 0, button.AbsolutePosition.Y)
+  tooltip.Visible = true
+end
+
+function hideTooltip()
+  if tooltip then
+    tooltip.Visible = false
+  end
 end
 
 function refresh()
@@ -156,164 +198,63 @@ function refresh()
       button.Visible = true
       button.Parent = handler
 
-    local contentFrame = button:FindFirstChild("Content")
-    local content2Frame = button:FindFirstChild("content2")
-
-    if contentFrame then
-      local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-      contentFrame.BorderColor3 = rarityColor
-    end
-    if content2Frame then
-      local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-      content2Frame.BorderColor3 = rarityColor
-    end
-
-    local copiesCount = 0
-    if item.Stock and item.Stock > 0 then
-      copiesCount = item.CurrentStock or 0
-    else
-      copiesCount = item.TotalCopies or 0
-    end
-
-    local qtyLabel = button:FindFirstChild("Qty")
-    if qtyLabel then
-      if item.Stock and item.Stock > 0 then
-        qtyLabel.Text = copiesCount .. "/" .. item.Stock
-      else
-        qtyLabel.Text = "∞"
+      local uiStroke = button:FindFirstChildOfClass("UIStroke")
+      if uiStroke then
+        local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+        uiStroke.Color = rarityColor
+        uiStroke.Thickness = 2
       end
-    end
 
-    local rarityLabel = contentFrame and contentFrame:FindFirstChild("Rarity")
-    if rarityLabel then
-      if item.Rarity == "Common" then
-        rarityLabel.Visible = false
-      elseif item.Rarity == "Limited" then
-        rarityLabel.Visible = true
-        rarityLabel.Text = "Limited | Not Rollable"
-        rarityLabel.TextColor3 = rarityColors["Limited"] or Color3.new(1, 1, 1)
+      local copiesCount = 0
+      if item.Stock and item.Stock > 0 then
+        copiesCount = item.CurrentStock or 0
       else
-        rarityLabel.Visible = true
-        local percentage = item.RollPercentage or 0
-        local percentText = string.format("%.10f", percentage)
+        copiesCount = item.TotalCopies or 0
+      end
 
-        local decimalPart = percentText:match("%.(%d+)")
-        local firstNonZeroPos = 4
+      local rareText = button:FindFirstChild("RareText")
+      if rareText then
+        if copiesCount > 0 and copiesCount <= 25 then
+          rareText.Visible = true
+        else
+          rareText.Visible = false
+        end
+      end
 
-        if decimalPart then
-          for i = 1, #decimalPart do
-            if decimalPart:sub(i, i) ~= "0" then
-              firstNonZeroPos = math.max(4, i)
-              break
-            end
+      local limText = button:FindFirstChild("LimText")
+      if limText then
+        if item.Rarity == "Limited" then
+          limText.Visible = true
+        else
+          limText.Visible = false
+        end
+      end
+
+      table.insert(buttons, button)
+
+      button.MouseButton1Click:Connect(function()
+        if selectedButton and selectedButton ~= button then
+          local prevStroke = selectedButton:FindFirstChildOfClass("UIStroke")
+          if prevStroke then
+            prevStroke.Thickness = 2
           end
         end
 
-        percentText = string.format("%." .. firstNonZeroPos .. "f%%", percentage)
-        percentText = percentText:gsub("(%d)0+%%", "%1%%"):gsub("%.0+%%", "%%")
-
-        rarityLabel.Text = item.Rarity .. " | " .. percentText
-        rarityLabel.TextColor3 = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-      end
-    end
-
-    local t1Label = button:FindFirstChild("t1")
-    if t1Label then
-      t1Label.Visible = false
-    end
-
-    local copiesLabel = button:FindFirstChild("copies")
-    if copiesLabel then
-      local stockCount = item.Stock or 0
-
-      if copiesCount > 0 then
-        if stockCount > 0 then
-          copiesLabel.Text = copiesCount .. " / " .. stockCount .. " copies"
-        else
-          copiesLabel.Text = copiesCount .. " copies"
+        if uiStroke then
+          uiStroke.Thickness = 4
         end
-        copiesLabel.Visible = true
-      else
-        copiesLabel.Visible = false
-      end
-    end
 
-    local o2Label = contentFrame and contentFrame:FindFirstChild("o2")
-    if o2Label then
-      if item.Stock and item.Stock > 0 then
-        o2Label.Text = formatNumber(copiesCount) .. "/" .. formatNumber(item.Stock)
-      else
-        o2Label.Text = formatNumber(copiesCount)
-      end
-    end
+        selectedButton = button
+        updateItemDetails(item)
+      end)
 
-    local rareText = button:FindFirstChild("RareText")
-    if rareText then
-      if copiesCount > 0 and copiesCount <= 25 then
-        rareText.Visible = true
-      else
-        rareText.Visible = false
-      end
-    end
+      button.MouseEnter:Connect(function()
+        showTooltip(item, button)
+      end)
 
-    local limText = button:FindFirstChild("LimText")
-    if limText then
-      if item.Rarity == "Limited" then
-        limText.Visible = true
-      else
-        limText.Visible = false
-      end
-    end
-
-    local valueLabel = contentFrame and contentFrame:FindFirstChild("Value")
-    if valueLabel then
-      valueLabel.Text = "R$ " .. formatNumber(item.Value)
-    end
-
-    local v2Label = contentFrame and contentFrame:FindFirstChild("v2")
-    if v2Label then
-      v2Label.Text = formatNumber(item.Value)
-    end
-
-    local nameLabel = content2Frame and content2Frame:FindFirstChild("name")
-    if nameLabel then
-      local displayName = item.Name
-      if #displayName > 20 then
-        displayName = string.sub(displayName, 1, 17) .. "..."
-      end
-      nameLabel.Text = displayName
-    end
-
-    local img = button:FindFirstChild("Image")
-    if img and img:IsA("ImageLabel") then
-      img.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
-    end
-
-    table.insert(buttons, button)
-
-    button.MouseButton1Click:Connect(function()
-      if selectedButton and selectedButton ~= button then
-        local prevContentFrame = selectedButton:FindFirstChild("Content")
-        local prevContent2Frame = selectedButton:FindFirstChild("content2")
-
-        if prevContentFrame then
-          prevContentFrame.BorderSizePixel = 1
-        end
-        if prevContent2Frame then
-          prevContent2Frame.BorderSizePixel = 1
-        end
-      end
-
-      if contentFrame then
-        contentFrame.BorderSizePixel = 3
-      end
-      if content2Frame then
-        content2Frame.BorderSizePixel = 3
-      end
-
-      selectedButton = button
-      updateItemDetails(item)
-    end)
+      button.MouseLeave:Connect(function()
+        hideTooltip()
+      end)
     end
   end
 
@@ -331,61 +272,41 @@ function updateItemDetails(item)
   selectedItemData = item
   selected.Value = item.Name
 
-  local itemNameText = popup:FindFirstChild("ItemName")
-  local totalOwnersText = popup:FindFirstChild("TotalOwners")
-  local valueText = popup:FindFirstChild("Value")
-  local ownerList = popup:FindFirstChild("OwnerList")
-  local imgFrame = popup:FindFirstChild("ImageLabel")
-
-  if itemNameText then
-    itemNameText.Text = item.Name
+  local pop = popup:FindFirstChild("Pop")
+  if not pop then
+    warn("Pop frame not found in Popup")
+    return
   end
 
-  if totalOwnersText then
-    totalOwnersText.Visible = true
-    totalOwnersText.Text = "Total Owners: " .. formatNumber(item.Owners or 0)
-  end
+  local itemInfo = pop:FindFirstChild("ItemInfo")
+  local itemInfo2 = pop:FindFirstChild("ItemInfo2")
+  local ownerList = pop:FindFirstChild("OwnerList")
 
-  if valueText then
-    valueText.Text = "R$ " .. formatNumber(item.Value)
-  end
+  if itemInfo then
+    local itemPhoto = itemInfo:FindFirstChild("ItemPhoto")
+    if itemPhoto and itemPhoto:IsA("ImageLabel") then
+      itemPhoto.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
+    end
 
-  local isStockItem = item.Stock and item.Stock > 0
+    local itemName = itemInfo:FindFirstChild("ItemName")
+    if itemName then
+      itemName.Text = item.Name
+    end
 
-  if imgFrame and imgFrame:IsA("ImageLabel") then
-    imgFrame.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
-  elseif imgFrame then
-    local existingImg = imgFrame:FindFirstChildOfClass("ImageLabel")
-
-    if existingImg then
-      existingImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
-    else
-      local uiCorner = imgFrame:FindFirstChildOfClass("UICorner")
-
-      for _, child in ipairs(imgFrame:GetChildren()) do
-        if child:IsA("ImageLabel") then
-          child:Destroy()
-        end
-      end
-
-      local previewImg = Instance.new("ImageLabel")
-      previewImg.Size = UDim2.new(1, 0, 1, 0)
-      previewImg.BackgroundTransparency = 1
-      previewImg.BorderSizePixel = 0
-      previewImg.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=420&h=420"
-      previewImg.Parent = imgFrame
-
-      if not uiCorner then
-        uiCorner = Instance.new("UICorner")
-        uiCorner.Parent = imgFrame
-      end
+    local valueText = itemInfo:FindFirstChild("Value")
+    if valueText then
+      valueText.Text = "R$ " .. formatNumber(item.Value)
     end
   end
 
-  local ownerListText = popup:FindFirstChild("OwnerListText")
-  if ownerListText then
-    ownerListText.Visible = isStockItem
+  if itemInfo2 then
+    local totalOwnersText = itemInfo2:FindFirstChild("TotalOwners")
+    if totalOwnersText then
+      totalOwnersText.Text = "Total Owners: " .. formatNumber(item.Owners or 0)
+    end
   end
+
+  local isStockItem = item.Stock and item.Stock > 0
 
   if ownerList then
     ownerList.Visible = isStockItem
