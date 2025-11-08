@@ -35,10 +35,7 @@ popup.Visible = false
 
 local searchBar = gui:FindFirstChild("SearchBar")
 
-local tooltip = gui:FindFirstChild("Tooltip")
-if tooltip then
-  tooltip.Visible = false
-end
+local tooltip = nil
 
 local selected = handler:FindFirstChild("Selected")
 if not selected then
@@ -117,46 +114,74 @@ function clearSelection()
 end
 
 function showTooltip(item, button)
-  if not tooltip then return end
+  hideTooltip()
   
-  local valueLabel = tooltip:FindFirstChild("Value")
-  if valueLabel then
-    valueLabel.Text = "R$ " .. formatNumber(item.Value)
-  end
+  tooltip = Instance.new("Frame")
+  tooltip.Name = "Tooltip"
+  tooltip.Size = UDim2.new(0, 150, 0, 60)
+  tooltip.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+  tooltip.BorderSizePixel = 2
+  tooltip.BorderColor3 = Color3.fromRGB(255, 255, 255)
+  tooltip.ZIndex = 1000
+  tooltip.Parent = gui
   
-  local rollLabel = tooltip:FindFirstChild("RollPercent")
-  if rollLabel then
-    if item.Rarity == "Limited" then
-      rollLabel.Text = "Not Rollable"
-    else
-      local percentage = item.RollPercentage or 0
-      local percentText = string.format("%.10f", percentage)
-      
-      local decimalPart = percentText:match("%.(%d+)")
-      local firstNonZeroPos = 4
-      
-      if decimalPart then
-        for i = 1, #decimalPart do
-          if decimalPart:sub(i, i) ~= "0" then
-            firstNonZeroPos = math.max(4, i)
-            break
-          end
+  local uiCorner = Instance.new("UICorner")
+  uiCorner.CornerRadius = UDim.new(0, 8)
+  uiCorner.Parent = tooltip
+  
+  local valueLabel = Instance.new("TextLabel")
+  valueLabel.Name = "Value"
+  valueLabel.Size = UDim2.new(1, -10, 0, 25)
+  valueLabel.Position = UDim2.new(0, 5, 0, 5)
+  valueLabel.BackgroundTransparency = 1
+  valueLabel.Text = "R$ " .. formatNumber(item.Value)
+  valueLabel.TextColor3 = Color3.fromRGB(85, 255, 85)
+  valueLabel.TextSize = 16
+  valueLabel.Font = Enum.Font.GothamBold
+  valueLabel.TextXAlignment = Enum.TextXAlignment.Left
+  valueLabel.Parent = tooltip
+  
+  local rollLabel = Instance.new("TextLabel")
+  rollLabel.Name = "RollPercent"
+  rollLabel.Size = UDim2.new(1, -10, 0, 20)
+  rollLabel.Position = UDim2.new(0, 5, 0, 30)
+  rollLabel.BackgroundTransparency = 1
+  rollLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+  rollLabel.TextSize = 14
+  rollLabel.Font = Enum.Font.Gotham
+  rollLabel.TextXAlignment = Enum.TextXAlignment.Left
+  rollLabel.Parent = tooltip
+  
+  if item.Rarity == "Limited" then
+    rollLabel.Text = "Not Rollable"
+  else
+    local percentage = item.RollPercentage or 0
+    local percentText = string.format("%.10f", percentage)
+    
+    local decimalPart = percentText:match("%.(%d+)")
+    local firstNonZeroPos = 4
+    
+    if decimalPart then
+      for i = 1, #decimalPart do
+        if decimalPart:sub(i, i) ~= "0" then
+          firstNonZeroPos = math.max(4, i)
+          break
         end
       end
-      
-      percentText = string.format("%." .. firstNonZeroPos .. "f%%", percentage)
-      percentText = percentText:gsub("(%d)0+%%", "%1%%"):gsub("%.0+%%", "%%")
-      rollLabel.Text = percentText
     end
+    
+    percentText = string.format("%." .. firstNonZeroPos .. "f%%", percentage)
+    percentText = percentText:gsub("(%d)0+%%", "%1%%"):gsub("%.0+%%", "%%")
+    rollLabel.Text = percentText
   end
   
   tooltip.Position = UDim2.new(0, button.AbsolutePosition.X + button.AbsoluteSize.X + 10, 0, button.AbsolutePosition.Y)
-  tooltip.Visible = true
 end
 
 function hideTooltip()
   if tooltip then
-    tooltip.Visible = false
+    tooltip:Destroy()
+    tooltip = nil
   end
 end
 
