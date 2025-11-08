@@ -51,6 +51,15 @@ Items are automatically assigned rarity based on their value:
 - **Roll Cost**: FREE (currently set to 0)
 - **Roll Time**: 5 seconds animation (2 seconds with Fast Roll gamepass)
 - **Animation**: Scrolling items with chosen item landing in view
+- **Camera Shake**: Screen shake when winning items, intensity scales with rarity:
+  - Common & Uncommon: No shake
+  - Rare: Light shake (0.15 intensity, 0.4s)
+  - Ultra Rare: Medium shake (0.35 intensity, 0.6s)
+  - Epic: Strong shake (0.6 intensity, 0.8s)
+  - Ultra Epic: Very strong shake (1.0 intensity, 1.0s)
+  - Mythic: Intense shake (1.5 intensity, 1.2s)
+  - Insane: Maximum shake (2.5 intensity, 1.5s)
+  - Shake fades out smoothly over duration
 - **Stock Protection**: If a stock item sells out during animation, automatically rerolls
 - **Chat Notifications**: 
   - Items worth 250k+ Robux: Colored chat message to the player

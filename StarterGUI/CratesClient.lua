@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local rollCrateEvent = remoteEvents:WaitForChild("RollCrateEvent")
@@ -31,6 +32,47 @@ local hideRollsButton = mainUI:WaitForChild("HideRolls")
 
 local isAutoRolling, isCurrentlyRolling, currentChosenItem, shouldStopAutoRoll = false, false, nil, false
 local hideRollsEnabled = false
+
+local RARITY_SHAKE_SETTINGS = {
+        ["Common"] = {intensity = 0, duration = 0},
+        ["Uncommon"] = {intensity = 0, duration = 0},
+        ["Rare"] = {intensity = 0.15, duration = 0.4},
+        ["Ultra Rare"] = {intensity = 0.35, duration = 0.6},
+        ["Epic"] = {intensity = 0.6, duration = 0.8},
+        ["Ultra Epic"] = {intensity = 1.0, duration = 1.0},
+        ["Mythic"] = {intensity = 1.5, duration = 1.2},
+        ["Insane"] = {intensity = 2.5, duration = 1.5}
+}
+
+local function shakeCamera(rarity)
+        local shakeSettings = RARITY_SHAKE_SETTINGS[rarity]
+        if not shakeSettings or shakeSettings.intensity == 0 then return end
+        
+        local intensity = shakeSettings.intensity
+        local duration = shakeSettings.duration
+        local startTime = tick()
+        local originalCF = camera.CFrame
+        
+        task.spawn(function()
+                while tick() - startTime < duration do
+                        local elapsed = tick() - startTime
+                        local fadeOut = 1 - (elapsed / duration)
+                        local currentIntensity = intensity * fadeOut
+                        
+                        local randomX = (math.random() - 0.5) * currentIntensity
+                        local randomY = (math.random() - 0.5) * currentIntensity
+                        local randomZ = (math.random() - 0.5) * currentIntensity
+                        
+                        camera.CFrame = camera.CFrame * CFrame.Angles(
+                                math.rad(randomX),
+                                math.rad(randomY),
+                                math.rad(randomZ)
+                        )
+                        
+                        RunService.Heartbeat:Wait()
+                end
+        end)
+end
 
 local function stopAutoRoll()
   isAutoRolling, shouldStopAutoRoll = false, false
@@ -140,6 +182,9 @@ crateOpenedEvent.OnClientEvent:Connect(function(allItems, chosenItem, unboxTime)
   currentChosenItem = chosenItem
   openedFrame.CrateName.Text = "You won: " .. chosenItem.Name .. " (" .. chosenItem.Rarity .. ")!"
   if not hideRollsEnabled then closeOpenedBtn.Visible = true end
+  
+  shakeCamera(chosenItem.Rarity)
+  
   isCurrentlyRolling = false
   rollButton.Text = "[ROLL]"
 
