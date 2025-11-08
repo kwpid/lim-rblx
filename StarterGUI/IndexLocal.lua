@@ -125,7 +125,16 @@ function showTooltip(item, button)
   tooltip.BorderSizePixel = 2
   tooltip.BorderColor3 = Color3.fromRGB(255, 255, 255)
   tooltip.ZIndex = 1000
-  tooltip.Parent = gui
+  
+  local screenGui = player.PlayerGui:FindFirstChildOfClass("ScreenGui")
+  if not screenGui then
+    screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "TooltipGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = player.PlayerGui
+  end
+  tooltip.Parent = screenGui
   
   local uiCorner = Instance.new("UICorner")
   uiCorner.CornerRadius = UDim.new(0, 8)
@@ -177,16 +186,11 @@ function showTooltip(item, button)
     rollLabel.Text = percentText
   end
   
-  local mouseX = mouse.X
-  local mouseY = mouse.Y
-  tooltip.Position = UDim2.new(0, mouseX + 5, 0, mouseY + 5)
-  
   local connection
   connection = game:GetService("RunService").RenderStepped:Connect(function()
     if tooltip and tooltip.Parent then
-      local currentMouseX = mouse.X
-      local currentMouseY = mouse.Y
-      tooltip.Position = UDim2.new(0, currentMouseX + 5, 0, currentMouseY + 5)
+      local mouseLocation = UserInputService:GetMouseLocation()
+      tooltip.Position = UDim2.new(0, mouseLocation.X + 10, 0, mouseLocation.Y - 36 + 10)
     else
       connection:Disconnect()
     end
