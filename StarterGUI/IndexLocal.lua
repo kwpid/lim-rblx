@@ -77,7 +77,8 @@ local rarityColors = {
   ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
   ["Mythic"] = Color3.fromRGB(255, 0, 0),
   ["Insane"] = Color3.fromRGB(255, 0, 255),
-  ["Limited"] = Color3.fromRGB(255, 215, 0)
+  ["Limited"] = Color3.fromRGB(255, 215, 0),
+  ["Vanity"] = Color3.fromRGB(255, 105, 180)
 }
 
 function formatNumber(n)
@@ -148,15 +149,12 @@ function refresh()
   end)
 
   for i, item in ipairs(itemsWithPercentages) do
-    if item.Rarity == "Vanity" then
-      continue
-    end
-    
-    local button = sample:Clone()
-    button.Name = item.Name or "Item_" .. i
-    button.LayoutOrder = i
-    button.Visible = true
-    button.Parent = handler
+    if item.Rarity ~= "Vanity" then
+      local button = sample:Clone()
+      button.Name = item.Name or "Item_" .. i
+      button.LayoutOrder = i
+      button.Visible = true
+      button.Parent = handler
 
     local contentFrame = button:FindFirstChild("Content")
     local content2Frame = button:FindFirstChild("content2")
@@ -316,6 +314,7 @@ function refresh()
       selectedButton = button
       updateItemDetails(item)
     end)
+    end
   end
 
   if currentlySelectedId then

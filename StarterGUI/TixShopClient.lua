@@ -54,7 +54,7 @@ end
 
 local function ClearItems()
         for _, child in ipairs(Handler:GetChildren()) do
-                if child:IsA("Frame") and child ~= Sample then
+                if child:IsA("GuiObject") and child ~= Sample and not child:IsA("UIListLayout") then
                         child:Destroy()
                 end
         end

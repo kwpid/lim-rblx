@@ -54,7 +54,8 @@ local rarityColors = {
         ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
         ["Mythic"] = Color3.fromRGB(255, 0, 0),
         ["Insane"] = Color3.fromRGB(255, 0, 255),
-        ["Limited"] = Color3.fromRGB(255, 215, 0)
+        ["Limited"] = Color3.fromRGB(255, 215, 0),
+        ["Vanity"] = Color3.fromRGB(255, 105, 180)
 }
 
 local selectedListing = nil

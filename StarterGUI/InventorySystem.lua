@@ -86,7 +86,8 @@ local rarityColors = {
   ["Ultra Epic"] = Color3.fromRGB(255, 85, 0),
   ["Mythic"] = Color3.fromRGB(255, 0, 0),
   ["Insane"] = Color3.fromRGB(255, 0, 255),
-  ["Limited"] = Color3.fromRGB(255, 215, 0)
+  ["Limited"] = Color3.fromRGB(255, 215, 0),
+  ["Vanity"] = Color3.fromRGB(255, 105, 180)
 }
 
 function formatNumber(n)
@@ -185,6 +186,13 @@ function refresh()
 
     if aEquipped ~= bEquipped then
       return aEquipped
+    end
+
+    local aVanity = a.Rarity == "Vanity"
+    local bVanity = b.Rarity == "Vanity"
+
+    if aVanity ~= bVanity then
+      return aVanity
     end
 
     return a.Value > b.Value
