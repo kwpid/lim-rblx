@@ -89,7 +89,7 @@ local function setupPlayer(player)
                                         local excessAmount = currentAmount - MAX_REGULAR_ITEM_STACK
                                         local sellValue = math.floor(invItem.Value * 0.8 * excessAmount)
                                         invItem.Amount = MAX_REGULAR_ITEM_STACK
-                                        totalAutoSellValue += sellValue
+                                        totalAutoSellValue = totalAutoSellValue + sellValue
                                         ItemDatabase:DecrementTotalCopies(invItem.RobloxId, excessAmount)
                                         table.insert(itemsAutoSold, { name = invItem.Name, amount = excessAmount, value = sellValue })
                                 end
@@ -154,7 +154,7 @@ local function setupPlayer(player)
         local totalValue = 0
         if data.Inventory then
                 for _, item in ipairs(data.Inventory) do
-                        totalValue += (item.Value or 0) * (item.Amount or 1)
+                        totalValue = totalValue + ((item.Value or 0) * (item.Amount or 1))
                 end
         end
         data.InvValue, invValue.Value = totalValue, totalValue
@@ -253,7 +253,7 @@ getInventoryFunction.Parent = remoteEventsFolder
 getInventoryFunction.OnServerInvoke = function(player)
         local attempts = 0
         while not _G.PlayerData[player.UserId] and attempts < 10 do
-                attempts += 1
+                attempts = attempts + 1
                 task.wait(0.1)
         end
 
@@ -279,7 +279,7 @@ getPlayerInventoryFunction.OnServerInvoke = function(player, targetUserId)
         end
         local attempts = 0
         while not _G.PlayerData[targetUserId] and attempts < 10 do
-                attempts += 1
+                attempts = attempts + 1
                 task.wait(0.1)
         end
         if not _G.PlayerData[targetUserId] then

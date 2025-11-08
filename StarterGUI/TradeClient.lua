@@ -173,6 +173,12 @@ local function populateViewInventory(targetPlayer)
                         button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
                 end
 
+                local uiStroke = button:FindFirstChildOfClass("UIStroke")
+                if uiStroke then
+                        local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+                        uiStroke.Color = rarityColor
+                end
+
                 local copiesCount = 0
                 if item.Stock and item.Stock > 0 then
                         copiesCount = item.CurrentStock or 0
