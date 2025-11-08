@@ -13,6 +13,7 @@ local DEFAULT_DATA = {
   Cash = 0,
   InvValue = 0,
   EquippedItems = {},
+  LockedItems = {},
   AutoRoll = false,
   TradeHistory = {},
   PendingNotifications = {},
@@ -73,6 +74,7 @@ function DataStoreManager:LoadData(player)
       if not data.Cash then data.Cash = 0 end
       if not data.InvValue then data.InvValue = 0 end
       if not data.EquippedItems then data.EquippedItems = {} end
+      if not data.LockedItems then data.LockedItems = {} end
       if data.AutoRoll == nil then data.AutoRoll = false end
       if not data.TradeHistory then data.TradeHistory = {} end
       if not data.PendingNotifications then data.PendingNotifications = {} end
@@ -104,6 +106,7 @@ function DataStoreManager:GetDefaultData()
     Cash = 0,
     InvValue = 0,
     EquippedItems = {},
+    LockedItems = {},
     AutoRoll = false,
     TradeHistory = {},
     PendingNotifications = {},

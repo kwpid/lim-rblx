@@ -198,6 +198,11 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
   end
   if not item then return end
   
+  if DataStoreAPI:IsItemLocked(player, robloxId, serialNumber) then
+    notificationEvent:FireClient(player, { Type = "ERROR", Title = "Cannot Sell", Body = "This item is locked! Unlock it first to sell." })
+    return
+  end
+  
   if item.Rarity == "Vanity" then
     notificationEvent:FireClient(player, { Type = "ERROR", Title = "Cannot Sell", Body = "Vanity items cannot be sold!" })
     return
@@ -259,6 +264,11 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
     if invItem.RobloxId == robloxId then
       firstItem = firstItem or invItem
       
+      if DataStoreAPI:IsItemLocked(player, invItem.RobloxId, invItem.SerialNumber) then
+        notificationEvent:FireClient(player, { Type = "ERROR", Title = "Cannot Sell", Body = "Some items are locked! Unlock them first to sell." })
+        return
+      end
+      
       if invItem.Rarity == "Vanity" then
         notificationEvent:FireClient(player, { Type = "ERROR", Title = "Cannot Sell", Body = "Vanity items cannot be sold!" })
         return
@@ -317,18 +327,20 @@ sellByRarityEvent.OnServerEvent:Connect(function(player, rarity)
   for i, invItem in ipairs(data.Inventory) do
     local isStockItem = invItem.SerialNumber ~= nil
     if not isStockItem and invItem.Rarity == rarity then
-      local amount = invItem.Amount or 1
-      local sellValue = math.floor(invItem.Value * 0.8 * amount)
-      totalSellValue = totalSellValue + sellValue
-      itemsSold = itemsSold + amount
-      
-      table.insert(itemsToRemove, { index = i, item = invItem, amount = amount })
-      
-      -- Track total copies per RobloxId for database updates
-      if not totalCopiesPerItem[invItem.RobloxId] then
-        totalCopiesPerItem[invItem.RobloxId] = 0
+      if not DataStoreAPI:IsItemLocked(player, invItem.RobloxId, invItem.SerialNumber) then
+        local amount = invItem.Amount or 1
+        local sellValue = math.floor(invItem.Value * 0.8 * amount)
+        totalSellValue = totalSellValue + sellValue
+        itemsSold = itemsSold + amount
+        
+        table.insert(itemsToRemove, { index = i, item = invItem, amount = amount })
+        
+        -- Track total copies per RobloxId for database updates
+        if not totalCopiesPerItem[invItem.RobloxId] then
+          totalCopiesPerItem[invItem.RobloxId] = 0
+        end
+        totalCopiesPerItem[invItem.RobloxId] = totalCopiesPerItem[invItem.RobloxId] + amount
       end
-      totalCopiesPerItem[invItem.RobloxId] = totalCopiesPerItem[invItem.RobloxId] + amount
     end
   end
   

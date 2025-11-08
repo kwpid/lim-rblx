@@ -249,6 +249,8 @@ function DataStoreAPI:GetInventory(player)
       end
     end
 
+    itemCopy.IsLocked = self:IsItemLocked(player, item.RobloxId, item.SerialNumber)
+
     table.insert(inventoryWithOwners, itemCopy)
   end
 
@@ -369,6 +371,60 @@ function DataStoreAPI:GetPlayerInventoryByUserId(userId)
   end
 
   return inventoryWithOwners
+end
+
+function DataStoreAPI:IsItemLocked(player, robloxId, serialNumber)
+  local data = self:GetPlayerData(player)
+  if not data or not data.LockedItems then return false end
+  
+  for _, lockedItem in ipairs(data.LockedItems) do
+    if lockedItem.RobloxId == robloxId then
+      if serialNumber then
+        if lockedItem.SerialNumber == serialNumber then
+          return true
+        end
+      else
+        if not lockedItem.SerialNumber then
+          return true
+        end
+      end
+    end
+  end
+  
+  return false
+end
+
+function DataStoreAPI:ToggleLockItem(player, robloxId, serialNumber)
+  local data = self:GetPlayerData(player)
+  if not data then return false end
+  
+  if not data.LockedItems then
+    data.LockedItems = {}
+  end
+  
+  local isLocked = false
+  for i, lockedItem in ipairs(data.LockedItems) do
+    if lockedItem.RobloxId == robloxId then
+      if serialNumber then
+        if lockedItem.SerialNumber == serialNumber then
+          table.remove(data.LockedItems, i)
+          return false
+        end
+      else
+        if not lockedItem.SerialNumber then
+          table.remove(data.LockedItems, i)
+          return false
+        end
+      end
+    end
+  end
+  
+  local lockEntry = { RobloxId = robloxId }
+  if serialNumber then
+    lockEntry.SerialNumber = serialNumber
+  end
+  table.insert(data.LockedItems, lockEntry)
+  return true
 end
 
 return DataStoreAPI
