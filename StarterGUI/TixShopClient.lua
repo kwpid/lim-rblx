@@ -8,6 +8,7 @@ local GetCurrentRotationFunction = RemoteEvents:WaitForChild("GetCurrentRotation
 local PurchaseTixItemEvent = RemoteEvents:WaitForChild("PurchaseTixItemEvent")
 local ShopRotationEvent = RemoteEvents:WaitForChild("ShopRotationEvent")
 local OpenTixShopEvent = RemoteEvents:WaitForChild("OpenTixShopEvent")
+local RefreshTixShopEvent = RemoteEvents:WaitForChild("RefreshTixShopEvent")
 local GetInventoryFunction = RemoteEvents:WaitForChild("GetInventoryFunction")
 local InventoryUpdatedEvent = RemoteEvents:WaitForChild("InventoryUpdatedEvent")
 local MarketplaceService = game:GetService("MarketplaceService")
@@ -179,4 +180,8 @@ InventoryUpdatedEvent.OnClientEvent:Connect(function()
         if TixShopFrame.Visible then
                 PopulateShop()
         end
+end)
+
+RefreshTixShopEvent.OnClientEvent:Connect(function()
+        PopulateShop()
 end)

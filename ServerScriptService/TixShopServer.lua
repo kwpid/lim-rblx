@@ -33,6 +33,22 @@ local ForceRefreshEvent = Instance.new("RemoteEvent")
 ForceRefreshEvent.Name = "ForceRefreshTixShopEvent"
 ForceRefreshEvent.Parent = RemoteEvents
 
+local RefreshTixShopEvent = Instance.new("RemoteEvent")
+RefreshTixShopEvent.Name = "RefreshTixShopEvent"
+RefreshTixShopEvent.Parent = RemoteEvents
+
+local function FormatCash(amount)
+        if amount >= 1000000000 then
+                return "$" .. string.format("%.2f", amount / 1000000000) .. "B"
+        elseif amount >= 1000000 then
+                return "$" .. string.format("%.2f", amount / 1000000) .. "M"
+        elseif amount >= 1000 then
+                return "$" .. string.format("%.2f", amount / 1000) .. "K"
+        else
+                return "$" .. tostring(amount)
+        end
+end
+
 local function SelectRotationItems()
         local availableItems = TixShopDatabase.VanityItems
         if #availableItems == 0 then
@@ -157,7 +173,12 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemRobloxId)
         
         local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
         if NotificationEvent then
-                NotificationEvent:FireClient(player, "VICTORY", "Purchased " .. itemData.Name .. " for $" .. itemData.Price .. "!", itemData.RobloxId)
+                NotificationEvent:FireClient(player, "VICTORY", "Purchased " .. itemData.Name .. " for " .. FormatCash(itemData.Price) .. "!", itemData.RobloxId)
+        end
+        
+        local RefreshTixShopEvent = RemoteEvents:FindFirstChild("RefreshTixShopEvent")
+        if RefreshTixShopEvent then
+                RefreshTixShopEvent:FireClient(player)
         end
         
         print("[TixShop] Player " .. player.Name .. " purchased " .. itemData.Name .. " for $" .. itemData.Price)
@@ -218,10 +239,16 @@ ForceRefreshEvent.OnServerEvent:Connect(function(player)
 end)
 
 local function RegisterVanityItems()
+        ItemDatabase:WaitForReady()
+        
+        local count = 0
         for _, vanityItem in ipairs(TixShopDatabase.VanityItems) do
-                ItemDatabase:EnsureVanityItem(vanityItem.RobloxId, vanityItem.Name, vanityItem.Price)
+                local result = ItemDatabase:EnsureVanityItem(vanityItem.RobloxId, vanityItem.Name, vanityItem.Price)
+                if result then
+                        count = count + 1
+                end
         end
-        print("[TixShop] Registered " .. #TixShopDatabase.VanityItems .. " Vanity items in database")
+        print("[TixShop] Registered " .. count .. " Vanity items in database")
 end
 
 task.spawn(RegisterVanityItems)

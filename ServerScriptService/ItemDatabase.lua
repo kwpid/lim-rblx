@@ -19,6 +19,7 @@ ItemDatabase.Items = {}
 ItemDatabase.DataVersion = DATA_VERSION
 ItemDatabase._saveQueued = false
 ItemDatabase._lastSaveTime = 0
+ItemDatabase._isReady = false
 
 local SAVE_DEBOUNCE_TIME = 3
 
@@ -84,6 +85,14 @@ function ItemDatabase:LoadItems()
     self.Items = {}
     self.DataVersion = DATA_VERSION
   end
+  self._isReady = true
+end
+
+function ItemDatabase:WaitForReady()
+  while not self._isReady do
+    task.wait(0.1)
+  end
+  return true
 end
 
 function ItemDatabase:SaveItems()
@@ -222,6 +231,11 @@ function ItemDatabase:GetItemByRobloxId(robloxId)
 end
 
 function ItemDatabase:EnsureVanityItem(robloxId, itemName, itemValue)
+  if not self._isReady then
+    warn("[ItemDatabase] Attempted to add Vanity item before database ready!")
+    return nil
+  end
+  
   local existingItem = self:GetItemByRobloxId(robloxId)
   if existingItem then
     if existingItem.Rarity ~= "Vanity" then
