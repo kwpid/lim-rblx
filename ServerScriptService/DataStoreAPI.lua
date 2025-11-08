@@ -379,6 +379,26 @@ function DataStoreAPI:GetPlayerInventoryByUserId(userId)
       end
     end
 
+    local isLocked = false
+    if playerData.LockedItems then
+      for _, lockedItem in ipairs(playerData.LockedItems) do
+        if lockedItem.RobloxId == item.RobloxId then
+          if item.SerialNumber then
+            if lockedItem.SerialNumber == item.SerialNumber then
+              isLocked = true
+              break
+            end
+          else
+            if not lockedItem.SerialNumber then
+              isLocked = true
+              break
+            end
+          end
+        end
+      end
+    end
+    itemCopy.IsLocked = isLocked
+
     table.insert(inventoryWithOwners, itemCopy)
   end
 
