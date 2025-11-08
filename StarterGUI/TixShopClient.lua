@@ -27,6 +27,7 @@ local CloseButton = TixShopFrame:WaitForChild("Close")
 local CurrentRotation = {}
 local NextRotationTime = 0
 local SelectedItem = nil
+local isPopulating = false
 
 local function FormatCash(amount)
         if amount >= 1000000000 then
@@ -64,6 +65,9 @@ local function ClearItems()
 end
 
 local function PopulateShop()
+        if isPopulating then return end
+        isPopulating = true
+        
         ClearItems()
         
         local inventory = {}
@@ -115,6 +119,8 @@ local function PopulateShop()
                 
                 itemFrame.Parent = Handler
         end
+        
+        isPopulating = false
 end
 
 local function LoadRotation()
