@@ -19,7 +19,6 @@ ItemDatabase.Items = {}
 ItemDatabase.DataVersion = DATA_VERSION
 ItemDatabase._saveQueued = false
 ItemDatabase._lastSaveTime = 0
-ItemDatabase._isReady = false
 
 local SAVE_DEBOUNCE_TIME = 3
 
@@ -70,7 +69,7 @@ function ItemDatabase:LoadItems()
         item.TotalCopies = item.TotalCopies or 0
         item.SerialOwners = item.SerialOwners or {}
         item.OffsaleAt = item.OffsaleAt or nil
-        
+
         if item.Limited == true and item.Rarity ~= "Limited" then
           item.Rarity = "Limited"
         end
@@ -85,14 +84,6 @@ function ItemDatabase:LoadItems()
     self.Items = {}
     self.DataVersion = DATA_VERSION
   end
-  self._isReady = true
-end
-
-function ItemDatabase:WaitForReady()
-  while not self._isReady do
-    task.wait(0.1)
-  end
-  return true
 end
 
 function ItemDatabase:SaveItems()
@@ -115,11 +106,11 @@ function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock, isLimited, o
   if type(stock) ~= "number" or stock < 0 or stock > 100 then return false, "Stock must be between 0 and 100" end
   isLimited = isLimited or false
   offsaleTimer = offsaleTimer or 0
-  
+
   for _, item in ipairs(self.Items) do
     if item.RobloxId == robloxId then return false, "Item with this Roblox ID already exists" end
   end
-  
+
   local rarity = ItemRarityModule:GetRarity(itemValue, isLimited)
   local newItem = {
     RobloxId = robloxId,
@@ -152,7 +143,7 @@ function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited, 
   if type(stock) ~= "number" or stock < 0 or stock > 100 then return false, "Stock must be between 0 and 100" end
   isLimited = isLimited or false
   offsaleTimer = offsaleTimer or 0
-  
+
   local itemToEdit
   for _, item in ipairs(self.Items) do
     if item.RobloxId == robloxId then
@@ -161,14 +152,14 @@ function ItemDatabase:EditItem(robloxId, itemName, itemValue, stock, isLimited, 
     end
   end
   if not itemToEdit then return false, "Item with this Roblox ID does not exist" end
-  
+
   local rarity = ItemRarityModule:GetRarity(itemValue, isLimited)
   itemToEdit.Name = itemName
   itemToEdit.Value = itemValue
   itemToEdit.Rarity = rarity
   itemToEdit.Stock = stock
   itemToEdit.OffsaleAt = offsaleTimer > 0 and (os.time() + offsaleTimer) or nil
-  
+
   local saveSuccess = self:SaveItems()
   if saveSuccess then
     return true, itemToEdit
@@ -228,39 +219,6 @@ function ItemDatabase:GetItemByRobloxId(robloxId)
     if item.RobloxId == numericId then return item end
   end
   return nil
-end
-
-function ItemDatabase:EnsureVanityItem(robloxId, itemName, itemValue)
-  if not self._isReady then
-    warn("[ItemDatabase] Attempted to add Vanity item before database ready!")
-    return nil
-  end
-  
-  local existingItem = self:GetItemByRobloxId(robloxId)
-  if existingItem then
-    if existingItem.Rarity ~= "Vanity" then
-      existingItem.Rarity = "Vanity"
-      self:QueueSave()
-    end
-    return existingItem
-  end
-  
-  local newItem = {
-    RobloxId = robloxId,
-    Name = itemName,
-    Value = itemValue,
-    Rarity = "Vanity",
-    Stock = 0,
-    CurrentStock = 0,
-    Owners = 0,
-    TotalCopies = 0,
-    SerialOwners = {},
-    OffsaleAt = nil,
-    CreatedAt = os.time()
-  }
-  table.insert(self.Items, newItem)
-  self:QueueSave()
-  return newItem
 end
 
 function ItemDatabase:IncrementOwners(robloxId)
