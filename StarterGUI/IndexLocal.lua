@@ -179,13 +179,16 @@ function showTooltip(item, button)
   
   local mouseX = mouse.X
   local mouseY = mouse.Y
-  tooltip.Position = UDim2.new(0, mouseX + 15, 0, mouseY + 15)
+  tooltip.Position = UDim2.new(0, mouseX + 5, 0, mouseY + 5)
   
-  game:GetService("RunService").RenderStepped:Connect(function()
+  local connection
+  connection = game:GetService("RunService").RenderStepped:Connect(function()
     if tooltip and tooltip.Parent then
       local currentMouseX = mouse.X
       local currentMouseY = mouse.Y
-      tooltip.Position = UDim2.new(0, currentMouseX + 15, 0, currentMouseY + 15)
+      tooltip.Position = UDim2.new(0, currentMouseX + 5, 0, currentMouseY + 5)
+    else
+      connection:Disconnect()
     end
   end)
 end
