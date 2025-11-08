@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
+local ServerScriptService = game:GetService("ServerScriptService")
 local TixShopDatabase = require(ReplicatedStorage:WaitForChild("TixShopDatabase"))
 local DataStoreAPI = require(script.Parent:WaitForChild("DataStoreAPI"))
 
@@ -27,6 +28,10 @@ local OpenTixShopEvent = Instance.new("RemoteEvent")
 OpenTixShopEvent.Name = "OpenTixShopEvent"
 OpenTixShopEvent.Parent = RemoteEvents
 
+local ForceRefreshEvent = Instance.new("RemoteEvent")
+ForceRefreshEvent.Name = "ForceRefreshTixShopEvent"
+ForceRefreshEvent.Parent = RemoteEvents
+
 local function SelectRotationItems()
         local availableItems = TixShopDatabase.VanityItems
         if #availableItems == 0 then
@@ -35,62 +40,46 @@ local function SelectRotationItems()
         
         local numItems = math.random(MIN_ITEMS, math.min(MAX_ITEMS, #availableItems))
         
-        local totalWeight = 0
-        for _, item in ipairs(availableItems) do
-                local weight = 1 / (item.Price ^ 0.75)
-                totalWeight = totalWeight + weight
+        local itemPool = {}
+        for i, item in ipairs(availableItems) do
+                table.insert(itemPool, {index = i, item = item})
         end
         
         local selectedItems = {}
-        local selectedIndices = {}
         
         for i = 1, numItems do
-                local attempts = 0
-                local maxAttempts = 100
+                if #itemPool == 0 then break end
                 
-                repeat
-                        attempts = attempts + 1
-                        local randomValue = math.random() * totalWeight
-                        local cumulativeWeight = 0
-                        local selectedIndex = nil
+                local totalWeight = 0
+                for _, entry in ipairs(itemPool) do
+                        local weight = 1 / (entry.item.Price ^ 0.75)
+                        totalWeight = totalWeight + weight
+                end
+                
+                local randomValue = math.random() * totalWeight
+                local cumulativeWeight = 0
+                local selectedEntry = nil
+                local selectedPoolIndex = nil
+                
+                for poolIndex, entry in ipairs(itemPool) do
+                        local weight = 1 / (entry.item.Price ^ 0.75)
+                        cumulativeWeight = cumulativeWeight + weight
                         
-                        for index, item in ipairs(availableItems) do
-                                if not selectedIndices[index] then
-                                        local weight = 1 / (item.Price ^ 0.75)
-                                        cumulativeWeight = cumulativeWeight + weight
-                                        
-                                        if randomValue <= cumulativeWeight then
-                                                selectedIndex = index
-                                                break
-                                        end
-                                end
-                        end
-                        
-                        if selectedIndex and not selectedIndices[selectedIndex] then
-                                selectedIndices[selectedIndex] = true
-                                table.insert(selectedItems, {
-                                        Name = availableItems[selectedIndex].Name,
-                                        RobloxId = availableItems[selectedIndex].RobloxId,
-                                        Price = availableItems[selectedIndex].Price,
-                                        Rarity = "Vanity"
-                                })
+                        if randomValue <= cumulativeWeight then
+                                selectedEntry = entry
+                                selectedPoolIndex = poolIndex
                                 break
                         end
-                until attempts >= maxAttempts
+                end
                 
-                if attempts >= maxAttempts then
-                        for index, item in ipairs(availableItems) do
-                                if not selectedIndices[index] then
-                                        selectedIndices[index] = true
-                                        table.insert(selectedItems, {
-                                                Name = item.Name,
-                                                RobloxId = item.RobloxId,
-                                                Price = item.Price,
-                                                Rarity = "Vanity"
-                                        })
-                                        break
-                                end
-                        end
+                if selectedEntry then
+                        table.insert(selectedItems, {
+                                Name = selectedEntry.item.Name,
+                                RobloxId = selectedEntry.item.RobloxId,
+                                Price = selectedEntry.item.Price,
+                                Rarity = "Vanity"
+                        })
+                        table.remove(itemPool, selectedPoolIndex)
                 end
         end
         
@@ -201,6 +190,31 @@ local function StartRotationLoop()
                 RotateShop()
         end
 end
+
+ForceRefreshEvent.OnServerEvent:Connect(function(player)
+        local AdminConfig = ServerScriptService:FindFirstChild("AdminConfig")
+        if not AdminConfig then
+                warn("[TixShop] AdminConfig not found, denying force refresh from " .. player.Name)
+                return
+        end
+        
+        local success, admins = pcall(function()
+                return require(AdminConfig)
+        end)
+        
+        if not success or not admins then
+                warn("[TixShop] Failed to load AdminConfig, denying force refresh from " .. player.Name)
+                return
+        end
+        
+        if not table.find(admins, player.UserId) then
+                warn("[TixShop] Non-admin " .. player.Name .. " tried to force refresh shop")
+                return
+        end
+        
+        print("[TixShop] Admin " .. player.Name .. " forced shop refresh")
+        RotateShop()
+end)
 
 task.spawn(SetupProximityPrompt)
 task.spawn(StartRotationLoop)

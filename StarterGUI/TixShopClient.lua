@@ -8,6 +8,7 @@ local GetCurrentRotationFunction = RemoteEvents:WaitForChild("GetCurrentRotation
 local PurchaseTixItemEvent = RemoteEvents:WaitForChild("PurchaseTixItemEvent")
 local ShopRotationEvent = RemoteEvents:WaitForChild("ShopRotationEvent")
 local OpenTixShopEvent = RemoteEvents:WaitForChild("OpenTixShopEvent")
+local MarketplaceService = game:GetService("MarketplaceService")
 
 local TixShopFrame = script.Parent
 local Sample = script:WaitForChild("Sample")
@@ -18,6 +19,7 @@ local Pop = BuyConfirm:WaitForChild("Pop")
 local ConfirmButton = Pop:WaitForChild("Confirm")
 local CancelButton = Pop:WaitForChild("Cancel")
 local Text1 = Pop:WaitForChild("Text1")
+local CloseButton = TixShopFrame:WaitForChild("Close")
 
 local CurrentRotation = {}
 local NextRotationTime = 0
@@ -71,7 +73,16 @@ local function PopulateShop()
                 local itemPrice = itemFrame:WaitForChild("ItemPrice")
                 local purchaseButton = itemFrame:WaitForChild("Purchase")
                 
-                itemImage.Image = "rbxassetid://" .. tostring(item.RobloxId)
+                local success, thumbnailUrl = pcall(function()
+                        return MarketplaceService:GetProductInfo(item.RobloxId).IconImageAssetId
+                end)
+                
+                if success and thumbnailUrl and thumbnailUrl ~= 0 then
+                        itemImage.Image = "rbxassetid://" .. tostring(thumbnailUrl)
+                else
+                        itemImage.Image = "rbxassetid://" .. tostring(item.RobloxId)
+                end
+                
                 itemName.Text = item.Name
                 itemPrice.Text = FormatCash(item.Price)
                 
@@ -117,11 +128,23 @@ ConfirmButton.MouseButton1Click:Connect(function()
         if SelectedItem then
                 PurchaseTixItemEvent:FireServer(SelectedItem.RobloxId)
                 BuyConfirm.Visible = false
+                
+                local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
+                if NotificationEvent then
+                        NotificationEvent:FireServer("SUCCESS", "Successfully purchased " .. SelectedItem.Name .. "!")
+                end
+                
                 SelectedItem = nil
         end
 end)
 
 CancelButton.MouseButton1Click:Connect(function()
+        BuyConfirm.Visible = false
+        SelectedItem = nil
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+        TixShopFrame.Visible = false
         BuyConfirm.Visible = false
         SelectedItem = nil
 end)
