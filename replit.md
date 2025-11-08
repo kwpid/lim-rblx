@@ -27,6 +27,7 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   **Index System**: Displays all game items with details, owner lists (including serial numbers), roll percentages, and "RareText"/"LimText."
 -   **Trading System**: Player-to-player trading with requests, stacked/serial item support, dual acceptance, item transfer (preserving serial numbers and ownership), and cancellation. Features real-time value tracking and persistent trade history.
 -   **Mastery System**: Tracks player progress across themed item collections. Displays completion percentages, locked/unlocked items, and roll chances. Collections are defined in `MasteryCollections.lua`.
+-   **Marketplace System**: Player-driven economy allowing sale of high-value items (250k+ Robux value). Sellers can list items for in-game cash (1 to 1 billion range) or Robux via gamepass (30% tax). Features persistent listing storage, real-time validation, serial number preservation, buyer/seller notifications, and support for cancelling own listings. Players can purchase their own listings. Integrates with notification system and inventory management.
 
 ### UI/UX Decisions
 -   Item names are color-coded by rarity; Limited items use gold.
