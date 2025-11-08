@@ -18,7 +18,7 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   **Event System**: Dynamic, modular system with automatic and manual triggers. Only one event can be active at a time. Examples include "Random Item Drops" and "Scavenger Hunt," utilizing actual Roblox item models with rarity-colored highlights.
 -   **Barrel Event System**: Players can pull items from barrels for in-game currency. Features weighted RNG (including a rare chance for a Chroma Valkyrie), camera animations, item spawning, and transaction safety with refunds. Primarily for hat items.
 -   **Admin Tools**: A whitelisted graphical interface for item management (create, edit, give, delete) with live previews, confirmation, and manual event triggering.
--   **Data Persistence**: Uses Roblox DataStore Service for player inventories, currency, rolls, value, settings, luck multipliers, and trade history. Includes auto-save, data versioning, and a debounced/batched save system. Features retry logic with exponential backoff for data load/save operations to prevent data loss.
+-   **Data Persistence**: Uses Roblox DataStore Service for player inventories, currency, rolls, value, settings, luck multipliers, trade history, and pending notifications. Includes auto-save, data versioning, and a debounced/batched save system. Features retry logic with exponential backoff for data load/save operations to prevent data loss. Pending notifications are stored in DataStore and delivered on login.
 -   **Anti-AFK System**: Automatically rejoins inactive players after 15 minutes.
 -   **Inventory Display**: Shows owned items with thumbnails, rarity colors, serial numbers, search/filter, detailed info, and "RareText"/"LimText" badges. Equipped items are prioritized.
 -   **View Other Players' Inventories**: Allows inspection of other users' inventories via GUI.
@@ -27,7 +27,7 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   **Index System**: Displays all game items with details, owner lists (including serial numbers), roll percentages, and "RareText"/"LimText."
 -   **Trading System**: Player-to-player trading with requests, stacked/serial item support, dual acceptance, item transfer (preserving serial numbers and ownership), and cancellation. Features real-time value tracking and persistent trade history.
 -   **Mastery System**: Tracks player progress across themed item collections. Displays completion percentages, locked/unlocked items, and roll chances. Collections are defined in `MasteryCollections.lua`.
--   **Marketplace System**: Player-driven economy allowing sale of high-value items (250k+ Robux value). Sellers can list items for in-game cash (1 to 1 billion range) or Robux via gamepass (30% tax). Features persistent listing storage, real-time validation, serial number preservation, buyer/seller notifications, and support for cancelling own listings. Players can purchase their own listings. Integrates with notification system and inventory management.
+-   **Marketplace System**: Player-driven economy allowing sale of high-value items (250k+ Robux value). Sellers can list items for in-game cash (1 to 1 billion range) or Robux via gamepass (30% tax). Features persistent listing storage, real-time validation, serial number preservation, buyer/seller notifications, and support for cancelling own listings. Players can purchase their own listings. **Gamepass Purchase Flow**: When buying a Robux listing, buyers are automatically prompted to purchase the required gamepass using Roblox's native purchase dialog. After successful purchase, the item transaction completes automatically with server-side ownership validation. **Pending Notifications**: Notifications for sold items are saved to DataStore for offline sellers and delivered when they log in. Uses atomic UpdateAsync operations to prevent notification loss during concurrent sales or player reconnections. Integrates with notification system and inventory management.
 
 ### UI/UX Decisions
 -   Item names are color-coded by rarity; Limited items use gold.
@@ -47,7 +47,7 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   Asynchronous ItemDatabase loading.
 -   Debounced DataStore saves.
 -   Roblox `InsertService` for equipping items and displaying models in events.
--   Roblox `MarketplaceService` for gamepass checks.
+-   Roblox `MarketplaceService` for gamepass checks, purchase prompting, and ownership validation.
 -   Roblox `MessagingService` for cross-server notifications.
 -   Roblox `TeleportService` for auto-rejoin.
 -   `Humanoid:AddAccessory()` for equipping accessories.
