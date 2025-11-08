@@ -172,13 +172,11 @@ local function populateViewInventory(targetPlayer)
                 if button:IsA("ImageButton") then
                         button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
                 end
-
                 local uiStroke = button:FindFirstChildOfClass("UIStroke")
                 if uiStroke then
                         local rarityColor = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
                         uiStroke.Color = rarityColor
                 end
-
                 local copiesCount = 0
                 if item.Stock and item.Stock > 0 then
                         copiesCount = item.CurrentStock or 0
@@ -201,10 +199,10 @@ local function populateViewInventory(targetPlayer)
                         if item.SerialNumber then
                                 qtyLabel.Visible = false
                         elseif item.Amount then
-                                qtyLabel.Text = item.Amount .. "x"
+                                qtyLabel.Text = item.Amount
                                 qtyLabel.Visible = true
                         else
-                                qtyLabel.Text = "1x"
+                                qtyLabel.Text = "1"
                                 qtyLabel.Visible = true
                         end
                 end
@@ -391,7 +389,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         newItemButton.MouseButton1Click:Connect(function()
                                 if displayItem.isSerial then
                                         local alreadyInTrade = tradeFrame.TradingFrame.YourOfferFrame.Slots
-                                        :FindFirstChild("Offer_" .. uniqueId)
+                                            :FindFirstChild("Offer_" .. uniqueId)
                                         if alreadyInTrade then
                                                 tradeEvent:FireServer("remove item from trade",
                                                         { displayItem.RobloxId, displayItem.SerialNumber })
@@ -403,8 +401,9 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         if displayItem.Amount < displayItem.MaxAmount then
                                                 displayItem.Amount = displayItem.Amount + 1
                                                 newItemButton.QtySerial.Text = displayItem.Amount ..
-                                                "/" .. displayItem.MaxAmount
-                                                tradeEvent:FireServer("add item to trade", { displayItem.RobloxId, nil, 1 })
+                                                    "/" .. displayItem.MaxAmount
+                                                tradeEvent:FireServer("add item to trade",
+                                                        { displayItem.RobloxId, nil, 1 })
                                         end
                                 end
                         end)
@@ -414,7 +413,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         if displayItem.Amount > 0 then
                                                 displayItem.Amount = displayItem.Amount - 1
                                                 newItemButton.QtySerial.Text = displayItem.Amount ..
-                                                "/" .. displayItem.MaxAmount
+                                                    "/" .. displayItem.MaxAmount
                                                 tradeEvent:FireServer("remove item from trade",
                                                         { displayItem.RobloxId, nil, 1 })
                                         end
@@ -487,7 +486,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 end
                         end
                         tradeFrame.TradingFrame.TheirOfferFrame.TheirValue.Text = "Value: " ..
-                        formatValueShort(totalValue)
+                            formatValueShort(totalValue)
                 end
 
                 clientOffer.ChildAdded:Connect(function(slotChild)
@@ -503,7 +502,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                         local newToolButton = script.ItemButton:Clone()
                         newToolButton.Name = "Offer_" ..
-                        (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
+                            (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
 
                         newToolButton.ItemName.Text = itemName.Value
 
@@ -558,7 +557,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                                                 if displayItem.Amount > 0 then
                                                                         displayItem.Amount = displayItem.Amount - 1
                                                                         updateInventoryDisplay(searchBox and
-                                                                        searchBox.Text or "")
+                                                                                searchBox.Text or "")
                                                                 end
                                                                 break
                                                         end
@@ -608,7 +607,7 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                         local newToolButton = script.ItemButton:Clone()
                         newToolButton.Name = "TheirOffer_" ..
-                        (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
+                            (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
 
                         newToolButton.ItemName.Text = itemName.Value
 
