@@ -230,6 +230,10 @@ function refresh()
         end
       end
 
+      if button:IsA("ImageButton") then
+        button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
+      end
+
       table.insert(buttons, button)
 
       button.MouseButton1Click:Connect(function()
@@ -390,10 +394,13 @@ if createItemEvent then
   end)
 end
 
-local closeButton = popup:FindFirstChild("Close")
-if closeButton then
-  closeButton.MouseButton1Click:Connect(function()
-    hidePopup()
-    clearSelection()
-  end)
+local pop = popup:FindFirstChild("Pop")
+if pop then
+  local closeButton = pop:FindFirstChild("Close")
+  if closeButton then
+    closeButton.MouseButton1Click:Connect(function()
+      hidePopup()
+      clearSelection()
+    end)
+  end
 end
