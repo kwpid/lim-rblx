@@ -136,11 +136,6 @@ ShopRotationEvent.OnClientEvent:Connect(function(rotation, nextTime)
         NextRotationTime = nextTime or (os.time() + 3600)
         
         PopulateShop()
-        
-        local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
-        if NotificationEvent then
-                game:GetService("ReplicatedStorage").RemoteEvents.NotificationEvent:FireServer("EVENT_START", "Tix Shop has rotated! Check out the new items!")
-        end
 end)
 
 OpenTixShopEvent.OnClientEvent:Connect(function()
@@ -155,12 +150,6 @@ ConfirmButton.MouseButton1Click:Connect(function()
         if SelectedItem then
                 PurchaseTixItemEvent:FireServer(SelectedItem.RobloxId)
                 BuyConfirm.Visible = false
-                
-                local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
-                if NotificationEvent then
-                        NotificationEvent:FireServer("SUCCESS", "Successfully purchased " .. SelectedItem.Name .. "!")
-                end
-                
                 SelectedItem = nil
         end
 end)
@@ -181,12 +170,6 @@ TixShopFrame.Visible = false
 
 LoadRotation()
 task.spawn(UpdateTimer)
-
-InventoryUpdatedEvent.OnClientEvent:Connect(function()
-        if TixShopFrame.Visible then
-                PopulateShop()
-        end
-end)
 
 RefreshTixShopEvent.OnClientEvent:Connect(function()
         PopulateShop()

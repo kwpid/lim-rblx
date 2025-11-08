@@ -109,6 +109,13 @@ local function RotateShop()
         
         ShopRotationEvent:FireAllClients(CurrentRotation, NextRotationTime)
         
+        local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
+        if NotificationEvent then
+                for _, player in ipairs(Players:GetPlayers()) do
+                        NotificationEvent:FireClient(player, "EVENT_START", "Tix Shop has rotated! Check out the new items!")
+                end
+        end
+        
         print("[TixShop] Rotated shop with " .. #CurrentRotation .. " items. Next rotation at: " .. os.date("%X", NextRotationTime))
 end
 

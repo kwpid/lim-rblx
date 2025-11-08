@@ -336,6 +336,38 @@ function ItemDatabase:GetSerialOwners(robloxId)
   return sorted
 end
 
+function ItemDatabase:EnsureVanityItem(robloxId, itemName, itemPrice)
+  if type(robloxId) ~= "number" then return false end
+  if type(itemName) ~= "string" or itemName == "" then return false end
+  if type(itemPrice) ~= "number" or itemPrice < 0 then return false end
+  
+  for _, item in ipairs(self.Items) do
+    if item.RobloxId == robloxId then
+      if item.Rarity ~= "Vanity" then
+        item.Rarity = "Vanity"
+        self:QueueSave()
+      end
+      return true
+    end
+  end
+  
+  local newItem = {
+    RobloxId = robloxId,
+    Name = itemName,
+    Value = itemPrice,
+    Rarity = "Vanity",
+    Stock = 0,
+    CurrentStock = 0,
+    Owners = 0,
+    TotalCopies = 0,
+    SerialOwners = {},
+    CreatedAt = os.time()
+  }
+  table.insert(self.Items, newItem)
+  self:QueueSave()
+  return true
+end
+
 function ItemDatabase:DeleteItem(robloxId)
   local numericId = tonumber(robloxId)
   if not numericId then return false, "Invalid RobloxId: " .. tostring(robloxId), nil end
