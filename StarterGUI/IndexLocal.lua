@@ -117,7 +117,7 @@ end
 
 function showTooltip(item, button)
   hideTooltip()
-  
+
   tooltip = Instance.new("Frame")
   tooltip.Name = "Tooltip"
   tooltip.Size = UDim2.new(0, 180, 0, 60)
@@ -126,11 +126,11 @@ function showTooltip(item, button)
   tooltip.BorderColor3 = Color3.fromRGB(255, 255, 255)
   tooltip.ZIndex = 1000
   tooltip.Parent = gui
-  
+
   local uiCorner = Instance.new("UICorner")
   uiCorner.CornerRadius = UDim.new(0, 8)
   uiCorner.Parent = tooltip
-  
+
   local valueLabel = Instance.new("TextLabel")
   valueLabel.Name = "Value"
   valueLabel.Size = UDim2.new(1, -10, 0, 25)
@@ -142,7 +142,7 @@ function showTooltip(item, button)
   valueLabel.Font = Enum.Font.GothamBold
   valueLabel.TextXAlignment = Enum.TextXAlignment.Left
   valueLabel.Parent = tooltip
-  
+
   local rollLabel = Instance.new("TextLabel")
   rollLabel.Name = "RollPercent"
   rollLabel.Size = UDim2.new(1, -10, 0, 20)
@@ -153,16 +153,16 @@ function showTooltip(item, button)
   rollLabel.Font = Enum.Font.Gotham
   rollLabel.TextXAlignment = Enum.TextXAlignment.Left
   rollLabel.Parent = tooltip
-  
+
   if item.Rarity == "Limited" then
     rollLabel.Text = "Not Rollable"
   else
     local percentage = item.RollPercentage or 0
     local percentText = string.format("%.10f", percentage)
-    
+
     local decimalPart = percentText:match("%.(%d+)")
     local firstNonZeroPos = 4
-    
+
     if decimalPart then
       for i = 1, #decimalPart do
         if decimalPart:sub(i, i) ~= "0" then
@@ -171,13 +171,14 @@ function showTooltip(item, button)
         end
       end
     end
-    
+
     percentText = string.format("%." .. firstNonZeroPos .. "f%%", percentage)
     percentText = percentText:gsub("(%d)0+%%", "%1%%"):gsub("%.0+%%", "%%")
     rollLabel.Text = percentText
   end
-  
-  tooltip.Position = UDim2.new(0, button.AbsolutePosition.X - gui.AbsolutePosition.X + button.AbsoluteSize.X + 10, 0, button.AbsolutePosition.Y - gui.AbsolutePosition.Y)
+
+  tooltip.Position = UDim2.new(0, button.AbsolutePosition.X - gui.AbsolutePosition.X + button.AbsoluteSize.X + 10, 0,
+    button.AbsolutePosition.Y - gui.AbsolutePosition.Y)
 end
 
 function hideTooltip()
@@ -337,9 +338,9 @@ function updateItemDetails(item)
       if isStockItem then
         local currentCopies = item.CurrentStock or 0
         local maxCopies = item.Stock or 0
-        totalOwnersText.Text = "Total Owners: " .. currentCopies .. "/" .. maxCopies
+        totalOwnersText.Text = currentCopies .. "/" .. maxCopies
       else
-        totalOwnersText.Text = "Total Owners: " .. formatNumber(item.Owners or 0)
+        totalOwnersText.Text = formatNumber(item.Owners or 0)
       end
     end
   end
