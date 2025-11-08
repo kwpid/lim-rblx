@@ -96,4 +96,28 @@ notificationPresets.BARREL_PULL = {
   DEFAULT_COLOR = Color3.fromRGB(139, 69, 19),
 }
 
+notificationPresets.MARKET_LIST = {
+  DEFAULT_TITLE = "Item Listed!",
+  DEFAULT_BODY = "Your item is now on the marketplace",
+  DEFAULT_IMAGE = "rbxassetid://8150337440",
+  DEFAULT_SOUND = "rbxassetid://10066947742",
+  DEFAULT_COLOR = Color3.fromRGB(85, 170, 255),
+}
+
+notificationPresets.MARKET_SOLD = {
+  DEFAULT_TITLE = "Item Sold!",
+  DEFAULT_BODY = "Someone bought your item",
+  DEFAULT_IMAGE = "rbxassetid://8150337440",
+  DEFAULT_SOUND = "rbxassetid://10066947742",
+  DEFAULT_COLOR = Color3.fromRGB(111, 218, 40),
+}
+
+notificationPresets.MARKET_PURCHASE = {
+  DEFAULT_TITLE = "Purchase Complete!",
+  DEFAULT_BODY = "You bought an item from the marketplace",
+  DEFAULT_IMAGE = "rbxassetid://8150337440",
+  DEFAULT_SOUND = "rbxassetid://10066947742",
+  DEFAULT_COLOR = Color3.fromRGB(111, 218, 40),
+}
+
 return notificationPresets

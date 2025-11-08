@@ -74,6 +74,8 @@ local sellByRarityEvent = remoteEvents:FindFirstChild("SellByRarityEvent") or In
 sellByRarityEvent.Name = "SellByRarityEvent"
 sellByRarityEvent.Parent = remoteEvents
 local getEquippedItemsFunction = remoteEvents:WaitForChild("GetEquippedItemsFunction", 10)
+local createListingEvent = remoteEvents:WaitForChild("CreateListingEvent", 10)
+local validateGamepassFunction = remoteEvents:WaitForChild("ValidateGamepassFunction", 10)
 
 local rarityColors = {
   ["Common"] = Color3.fromRGB(170, 170, 170),
@@ -346,6 +348,15 @@ function refresh()
           serialOwnerText.Visible = false
         end
       end
+      
+      local marketSellBtn = popup:FindFirstChild("MarketSellBtn")
+      if marketSellBtn then
+        if item.Value >= 250000 then
+          marketSellBtn.Visible = true
+        else
+          marketSellBtn.Visible = false
+        end
+      end
     end)
     
     if selectedItemId and item.RobloxId == selectedItemId then
@@ -597,4 +608,152 @@ if sellUltraRaresBtn then
       end
     end
   end)
+end
+
+-- Marketplace sell functionality
+local marketSellBtn = popup:FindFirstChild("MarketSellBtn")
+local marketConfirm = script.Parent:FindFirstChild("MarketConfirm")
+
+if marketSellBtn and marketConfirm then
+  marketSellBtn.MouseButton1Click:Connect(function()
+    if not selectedItemData then return end
+    
+    if selectedItemData.Value < 250000 then
+      return
+    end
+    
+    marketConfirm.Visible = true
+    
+    local pop = marketConfirm:FindFirstChild("Pop")
+    if not pop then return end
+    
+    local itemInfo = pop:FindFirstChild("ItemInfo")
+    if itemInfo then
+      local itemPhoto = itemInfo:FindFirstChild("ItemPhoto")
+      local itemName = itemInfo:FindFirstChild("ItemName")
+      local itemValue = itemInfo:FindFirstChild("ItemValue")
+      local itemSerial = itemInfo:FindFirstChild("ItemSerial")
+      
+      if itemPhoto then
+        itemPhoto.Image = "rbxthumb://type=Asset&id=" .. selectedItemData.RobloxId .. "&w=150&h=150"
+      end
+      
+      if itemName then
+        itemName.Text = selectedItemData.Name
+      end
+      
+      if itemValue then
+        itemValue.Text = "R$ " .. formatNumber(selectedItemData.Value)
+      end
+      
+      if itemSerial then
+        if selectedItemData.SerialNumber then
+          itemSerial.Visible = true
+          itemSerial.Text = "#" .. selectedItemData.SerialNumber
+        else
+          itemSerial.Visible = false
+        end
+      end
+    end
+    
+    local gamepassIdBox = pop:FindFirstChild("GamepassID")
+    local cashAmountBox = pop:FindFirstChild("CashAmount")
+    local sellPriceLabel = pop:FindFirstChild("SellPrice")
+    
+    if gamepassIdBox then gamepassIdBox.Text = "" end
+    if cashAmountBox then cashAmountBox.Text = "" end
+    if sellPriceLabel then sellPriceLabel.Text = "Enter cash amount or gamepass ID" end
+  end)
+  
+  local pop = marketConfirm:FindFirstChild("Pop")
+  if pop then
+    local gamepassIdBox = pop:FindFirstChild("GamepassID")
+    local cashAmountBox = pop:FindFirstChild("CashAmount")
+    local sellPriceLabel = pop:FindFirstChild("SellPrice")
+    local confirmBtn = pop:FindFirstChild("Confirm")
+    local cancelBtn = pop:FindFirstChild("Cancel")
+    
+    local function updateSellPrice()
+      if not gamepassIdBox or not cashAmountBox or not sellPriceLabel then return end
+      
+      local gamepassId = gamepassIdBox.Text
+      local cashAmount = cashAmountBox.Text
+      
+      if gamepassId ~= "" and cashAmount ~= "" then
+        sellPriceLabel.Text = "Error: Choose either cash OR gamepass, not both"
+        sellPriceLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        return
+      end
+      
+      if gamepassId ~= "" then
+        local validGamepass, robuxPrice = validateGamepassFunction:InvokeServer(gamepassId)
+        
+        if validGamepass and robuxPrice > 0 then
+          local sellerReceives = math.floor(robuxPrice * 0.70)
+          sellPriceLabel.Text = "You will receive R$" .. formatNumber(sellerReceives) .. " upon sale (30% Tax)"
+          sellPriceLabel.TextColor3 = Color3.fromRGB(111, 218, 40)
+        else
+          sellPriceLabel.Text = "Invalid gamepass ID"
+          sellPriceLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        end
+      elseif cashAmount ~= "" then
+        local cash = tonumber(cashAmount)
+        
+        if cash and cash >= 1 and cash <= 1000000000 then
+          sellPriceLabel.Text = "You will receive $" .. formatNumber(cash) .. " upon sale"
+          sellPriceLabel.TextColor3 = Color3.fromRGB(111, 218, 40)
+        else
+          sellPriceLabel.Text = "Cash must be between $1 and $1,000,000,000"
+          sellPriceLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        end
+      else
+        sellPriceLabel.Text = "Enter cash amount or gamepass ID"
+        sellPriceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+      end
+    end
+    
+    if gamepassIdBox then
+      gamepassIdBox:GetPropertyChangedSignal("Text"):Connect(updateSellPrice)
+    end
+    
+    if cashAmountBox then
+      cashAmountBox:GetPropertyChangedSignal("Text"):Connect(updateSellPrice)
+    end
+    
+    if confirmBtn then
+      confirmBtn.MouseButton1Click:Connect(function()
+        if not selectedItemData then return end
+        
+        local gamepassId = gamepassIdBox and gamepassIdBox.Text or ""
+        local cashAmount = cashAmountBox and cashAmountBox.Text or ""
+        
+        if gamepassId ~= "" and cashAmount ~= "" then
+          return
+        end
+        
+        if gamepassId ~= "" then
+          createListingEvent:FireServer(selectedItemData, "robux", 0, gamepassId)
+        elseif cashAmount ~= "" then
+          local cash = tonumber(cashAmount)
+          if cash and cash >= 1 and cash <= 1000000000 then
+            createListingEvent:FireServer(selectedItemData, "cash", cash, nil)
+          else
+            return
+          end
+        else
+          return
+        end
+        
+        marketConfirm.Visible = false
+        task.wait(0.2)
+        pcall(refresh)
+      end)
+    end
+    
+    if cancelBtn then
+      cancelBtn.MouseButton1Click:Connect(function()
+        marketConfirm.Visible = false
+      end)
+    end
+  end
 end

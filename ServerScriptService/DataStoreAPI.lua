@@ -127,6 +127,31 @@ function DataStoreAPI:RemoveItem(player, inventoryIndex)
   return success
 end
 
+function DataStoreAPI:RemoveItemAmount(player, robloxId, amount)
+  local data = self:GetPlayerData(player)
+  if not data then return false end
+
+  for i, item in ipairs(data.Inventory) do
+    if item.RobloxId == robloxId and not item.SerialNumber then
+      if item.Amount and item.Amount > amount then
+        item.Amount = item.Amount - amount
+        ItemDatabase:DecrementTotalCopies(robloxId, amount)
+        self:UpdateInventoryValue(player)
+        return true
+      elseif (item.Amount or 1) == amount then
+        table.remove(data.Inventory, i)
+        ItemDatabase:DecrementTotalCopies(robloxId, amount)
+        self:UpdateInventoryValue(player)
+        return true
+      else
+        return false
+      end
+    end
+  end
+
+  return false
+end
+
 function DataStoreAPI:AddCash(player, amount)
   local data = self:GetPlayerData(player)
   if not data then return false end
