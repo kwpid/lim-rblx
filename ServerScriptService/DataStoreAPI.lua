@@ -312,6 +312,18 @@ function DataStoreAPI:GetAutoRoll(player)
   return data and (data.AutoRoll or false) or false
 end
 
+function DataStoreAPI:SetHideRolls(player, enabled)
+  local data = self:GetPlayerData(player)
+  if not data then return false end
+  data.HideRolls = enabled
+  return true
+end
+
+function DataStoreAPI:GetHideRolls(player)
+  local data = self:GetPlayerData(player)
+  return data and (data.HideRolls or false) or false
+end
+
 function DataStoreAPI:GetPlayerInventoryByUserId(userId)
   local playerData = _G.PlayerData[userId]
   if not playerData then return nil end
