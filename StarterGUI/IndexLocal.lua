@@ -120,21 +120,12 @@ function showTooltip(item, button)
   
   tooltip = Instance.new("Frame")
   tooltip.Name = "Tooltip"
-  tooltip.Size = UDim2.new(0, 150, 0, 60)
+  tooltip.Size = UDim2.new(0, 180, 0, 60)
   tooltip.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
   tooltip.BorderSizePixel = 2
   tooltip.BorderColor3 = Color3.fromRGB(255, 255, 255)
   tooltip.ZIndex = 1000
-  
-  local screenGui = player.PlayerGui:FindFirstChildOfClass("ScreenGui")
-  if not screenGui then
-    screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "TooltipGui"
-    screenGui.ResetOnSpawn = false
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.Parent = player.PlayerGui
-  end
-  tooltip.Parent = screenGui
+  tooltip.Parent = gui
   
   local uiCorner = Instance.new("UICorner")
   uiCorner.CornerRadius = UDim.new(0, 8)
@@ -186,15 +177,7 @@ function showTooltip(item, button)
     rollLabel.Text = percentText
   end
   
-  local connection
-  connection = game:GetService("RunService").RenderStepped:Connect(function()
-    if tooltip and tooltip.Parent then
-      local mouseLocation = UserInputService:GetMouseLocation()
-      tooltip.Position = UDim2.new(0, mouseLocation.X + 10, 0, mouseLocation.Y - 36 + 10)
-    else
-      connection:Disconnect()
-    end
-  end)
+  tooltip.Position = UDim2.new(0, button.AbsolutePosition.X - gui.AbsolutePosition.X + button.AbsoluteSize.X + 10, 0, button.AbsolutePosition.Y - gui.AbsolutePosition.Y)
 end
 
 function hideTooltip()
