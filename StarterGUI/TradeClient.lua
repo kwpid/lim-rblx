@@ -753,10 +753,6 @@ populatePlayerList()
 game.Players.PlayerAdded:Connect(populatePlayerList)
 game.Players.PlayerRemoving:Connect(populatePlayerList)
 
-sendTradesFrame.CloseButton.MouseButton1Click:Connect(function()
-        sendTradesFrame.Visible = false
-end)
-
 tradeRequestFrame.RejectButton.MouseButton1Click:Connect(function()
         tradeEvent:FireServer("reject trade request")
 end)
@@ -788,15 +784,9 @@ sendTradesFrame.OpenHistory.MouseButton1Click:Connect(function()
         end
 end)
 
-tradeHistoryFrame.CloseButton.MouseButton1Click:Connect(function()
-        tradeHistoryFrame.Visible = false
-end)
-
 local viewInvCloseBtn = viewInventoryFrame:FindFirstChild("Close")
 if viewInvCloseBtn then
         viewInvCloseBtn.MouseButton1Click:Connect(function()
-                viewInventoryFrame.Visible = false
-
                 if viewInventorySearchConnection then
                         viewInventorySearchConnection:Disconnect()
                         viewInventorySearchConnection = nil
