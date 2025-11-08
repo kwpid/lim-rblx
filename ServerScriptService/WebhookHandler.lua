@@ -8,12 +8,7 @@ local configSuccess, configError = pcall(function()
         WebhookConfig = require(script.Parent.WebhookConfig)
 end)
 
-local function getWebhookUrl(envVarName, configKey)
-        local envUrl = os.getenv(envVarName)
-        if envUrl and envUrl ~= "" then
-                return envUrl
-        end
-        
+local function getWebhookUrl(configKey)
         if configSuccess and WebhookConfig and WebhookConfig[configKey] then
                 return WebhookConfig[configKey]
         end
@@ -21,12 +16,12 @@ local function getWebhookUrl(envVarName, configKey)
         return ""
 end
 
-local ITEM_RELEASE_WEBHOOK = getWebhookUrl("ITEM_RELEASE_WEBHOOK", "ITEM_RELEASE_WEBHOOK")
-local ITEM_DROP_WEBHOOK = getWebhookUrl("ITEM_DROP_WEBHOOK", "ITEM_DROP_WEBHOOK")
-local MARKETPLACE_WEBHOOK = getWebhookUrl("MARKETPLACE_WEBHOOK", "MARKETPLACE_WEBHOOK")
+local ITEM_RELEASE_WEBHOOK = getWebhookUrl("ITEM_RELEASE_WEBHOOK")
+local ITEM_DROP_WEBHOOK = getWebhookUrl("ITEM_DROP_WEBHOOK")
+local MARKETPLACE_WEBHOOK = getWebhookUrl("MARKETPLACE_WEBHOOK")
 
 if not configSuccess then
-        warn("webhookconfig not found, using environment variables only")
+        warn("WebhookConfig module not found - webhooks will be disabled. Create ServerScriptService/WebhookConfig.lua to enable webhooks.")
 end
 
 local RARITY_COLORS = {

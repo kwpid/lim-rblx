@@ -64,18 +64,31 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   **Discord Webhooks**: For new item releases, high-value drops, out-of-stock notifications, and marketplace sales.
 
 ### Discord Webhook Configuration
-The game supports Discord webhooks for various events. Webhook URLs can be configured using **Replit Secrets** (recommended for security) or a `WebhookConfig.lua` module.
+The game supports Discord webhooks for various events. Webhook URLs are configured in the `WebhookConfig.lua` module in ServerScriptService.
 
 **Supported Webhooks:**
 -   `ITEM_RELEASE_WEBHOOK`: Notifications when new items are added to the game
 -   `ITEM_DROP_WEBHOOK`: Notifications for high-value unboxes and out-of-stock items
 -   `MARKETPLACE_WEBHOOK`: Notifications when items are sold on the marketplace (cash or Robux)
 
-**Setup via Replit Secrets (Recommended):**
-1. Go to Replit Secrets in the Tools panel
-2. Add secrets with the names above
-3. Set the values to your Discord webhook URLs
-4. The system will automatically use these
+**Setup Instructions:**
+1. Open `ServerScriptService/WebhookConfig.lua` in Roblox Studio
+2. Add your Discord webhook URLs to each field:
+   ```lua
+   local WebhookConfig = {
+       ITEM_RELEASE_WEBHOOK = "https://discord.com/api/webhooks/...",
+       ITEM_DROP_WEBHOOK = "https://discord.com/api/webhooks/...",
+       MARKETPLACE_WEBHOOK = "https://discord.com/api/webhooks/..."
+   }
+   ```
+3. Save the file
+4. If you don't want to use webhooks, leave the URLs as empty strings ""
+
+**⚠️ Security Note:**
+- **Do NOT commit `WebhookConfig.lua` with real webhook URLs to public version control** (GitHub, etc.)
+- Add `ServerScriptService/WebhookConfig.lua` to your `.gitignore` if using Git
+- If a webhook URL is exposed, regenerate it in Discord immediately
+- Roblox does not support environment variables, so WebhookConfig.lua is the standard approach for webhook management
 
 **Marketplace Webhook Features:**
 -   Shows buyer name and avatar
