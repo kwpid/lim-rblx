@@ -269,18 +269,6 @@ end)
 
 CloseButton.MouseButton1Click:Connect(function()
         MasteryFrame.Visible = false
-        local openValue = script.Parent.Parent:FindFirstChild("Open")
-        if openValue and openValue:IsA("BoolValue") then
-                openValue.Value = false
-        end
-end)
-
-local openButton = script.Parent.Parent:WaitForChild("OpenButton")
-local openValue = script.Parent.Parent:WaitForChild("Open")
-
-openButton.MouseButton1Click:Connect(function()
-        MasteryFrame.Visible = not MasteryFrame.Visible
-        openValue.Value = MasteryFrame.Visible
 end)
 
 local function loadCompletedMasteries()
