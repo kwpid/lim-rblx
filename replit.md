@@ -61,4 +61,25 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   **Roblox MarketplaceService**: Checks gamepass ownership.
 -   **Roblox MessagingService**: Cross-server notifications.
 -   **Roblox TeleportService**: Handles automatic player rejoining.
--   **Discord Webhooks**: For new item releases, high-value drops, and out-of-stock notifications.
+-   **Discord Webhooks**: For new item releases, high-value drops, out-of-stock notifications, and marketplace sales.
+
+### Discord Webhook Configuration
+The game supports Discord webhooks for various events. Webhook URLs can be configured using **Replit Secrets** (recommended for security) or a `WebhookConfig.lua` module.
+
+**Supported Webhooks:**
+-   `ITEM_RELEASE_WEBHOOK`: Notifications when new items are added to the game
+-   `ITEM_DROP_WEBHOOK`: Notifications for high-value unboxes and out-of-stock items
+-   `MARKETPLACE_WEBHOOK`: Notifications when items are sold on the marketplace (cash or Robux)
+
+**Setup via Replit Secrets (Recommended):**
+1. Go to Replit Secrets in the Tools panel
+2. Add secrets with the names above
+3. Set the values to your Discord webhook URLs
+4. The system will automatically use these
+
+**Marketplace Webhook Features:**
+-   Shows buyer name and avatar
+-   Shows seller username
+-   Displays item details (name, rarity, serial number, value)
+-   Shows sale price and type (cash or Robux)
+-   Calculates and displays seller's actual payout (after 30% Robux tax)

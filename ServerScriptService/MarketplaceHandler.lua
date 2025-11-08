@@ -8,6 +8,19 @@ local DataStoreAPI = require(script.Parent:WaitForChild("DataStoreAPI"))
 local ItemDatabase = require(script.Parent:WaitForChild("ItemDatabase"))
 local DataStoreManager = require(script.Parent:WaitForChild("DataStoreManager"))
 
+local WebhookHandler
+local function getWebhookHandler()
+        if not WebhookHandler then
+                local success, result = pcall(function()
+                        return require(script.Parent:WaitForChild("WebhookHandler"))
+                end)
+                if success then
+                        WebhookHandler = result
+                end
+        end
+        return WebhookHandler
+end
+
 local IS_STUDIO = RunService:IsStudio()
 
 local MarketplaceDataStore = DataStoreService:GetDataStore("MarketplaceListings_v1")
@@ -380,6 +393,20 @@ purchaseListingEvent.OnServerEvent:Connect(function(player, listingId)
                         Body = listing.ItemData.Name .. " sold for $" .. formatNumber(listing.Price),
                         ImageId = listing.ItemData.RobloxId
                 })
+                
+                task.spawn(function()
+                        local handler = getWebhookHandler()
+                        if handler then
+                                handler:SendMarketplaceSale(
+                                        player,
+                                        listing.SellerUsername,
+                                        listing.ItemData,
+                                        listing.Price,
+                                        "cash",
+                                        listing.Price
+                                )
+                        end
+                end)
         elseif listing.ListingType == "robux" then
                 local ownsGamepass = false
                 
@@ -413,6 +440,20 @@ purchaseListingEvent.OnServerEvent:Connect(function(player, listingId)
                         Body = listing.ItemData.Name .. " sold for R$" .. formatNumber(sellerReceives) .. " (after tax)",
                         ImageId = listing.ItemData.RobloxId
                 })
+                
+                task.spawn(function()
+                        local handler = getWebhookHandler()
+                        if handler then
+                                handler:SendMarketplaceSale(
+                                        player,
+                                        listing.SellerUsername,
+                                        listing.ItemData,
+                                        listing.Price,
+                                        "robux",
+                                        sellerReceives
+                                )
+                        end
+                end)
         end
         
         local itemToAdd = {

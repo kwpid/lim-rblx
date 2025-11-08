@@ -8,14 +8,25 @@ local configSuccess, configError = pcall(function()
         WebhookConfig = require(script.Parent.WebhookConfig)
 end)
 
-local ITEM_RELEASE_WEBHOOK = ""
-local ITEM_DROP_WEBHOOK = ""
+local function getWebhookUrl(envVarName, configKey)
+        local envUrl = os.getenv(envVarName)
+        if envUrl and envUrl ~= "" then
+                return envUrl
+        end
+        
+        if configSuccess and WebhookConfig and WebhookConfig[configKey] then
+                return WebhookConfig[configKey]
+        end
+        
+        return ""
+end
 
-if configSuccess and WebhookConfig then
-        ITEM_RELEASE_WEBHOOK = WebhookConfig.ITEM_RELEASE_WEBHOOK or ""
-        ITEM_DROP_WEBHOOK = WebhookConfig.ITEM_DROP_WEBHOOK or ""
-else
-        warn("webhookconfig not found")
+local ITEM_RELEASE_WEBHOOK = getWebhookUrl("ITEM_RELEASE_WEBHOOK", "ITEM_RELEASE_WEBHOOK")
+local ITEM_DROP_WEBHOOK = getWebhookUrl("ITEM_DROP_WEBHOOK", "ITEM_DROP_WEBHOOK")
+local MARKETPLACE_WEBHOOK = getWebhookUrl("MARKETPLACE_WEBHOOK", "MARKETPLACE_WEBHOOK")
+
+if not configSuccess then
+        warn("webhookconfig not found, using environment variables only")
 end
 
 local RARITY_COLORS = {
@@ -188,6 +199,65 @@ function WebhookHandler:SendOutOfStock(item)
 
         local success = sendWebhook(ITEM_DROP_WEBHOOK, payload)
 
+        return success
+end
+
+function WebhookHandler:SendMarketplaceSale(buyerPlayer, sellerUsername, item, price, saleType, sellerReceives)
+        if not MARKETPLACE_WEBHOOK or MARKETPLACE_WEBHOOK == "" then
+                return false
+        end
+        
+        local rarityColor = getRarityColor(item.Rarity)
+        
+        local priceText = ""
+        local sellerGets = ""
+        if saleType == "cash" then
+                priceText = "$" .. formatNumber(price)
+                sellerGets = "$" .. formatNumber(sellerReceives or price)
+        else
+                priceText = "R$" .. formatNumber(price)
+                sellerGets = "R$" .. formatNumber(sellerReceives or price) .. " (after 30% tax)"
+        end
+        
+        local description = string.format(
+                "**Buyer:**\n%s\n\n**Seller:**\n%s\n\n**Item:**\n%s\n\n**Sale Price:**\n%s\n\n**Seller Receives:**\n%s\n\n**Item Value:**\nR$ %s",
+                buyerPlayer.Name,
+                sellerUsername,
+                item.Name,
+                priceText,
+                sellerGets,
+                formatNumber(item.Value)
+        )
+        
+        if item.SerialNumber then
+                description = description .. string.format("\n\n**Serial:**\n#%d", item.SerialNumber)
+        end
+        
+        local buyerThumbnailUrl = string.format(
+                "https://www.roblox.com/headshot-thumbnail/image?userId=%d&width=150&height=150&format=png",
+                buyerPlayer.UserId
+        )
+        
+        local payload = {
+                embeds = { {
+                        title = "Marketplace Sale!",
+                        description = description,
+                        color = rarityColor,
+                        thumbnail = {
+                                url = buyerThumbnailUrl
+                        },
+                        image = {
+                                url = string.format("https://assetdelivery.roblox.com/v1/asset?id=%d", item.RobloxId)
+                        },
+                        footer = {
+                                text = "Marketplace Sale - " .. (saleType == "cash" and "Cash" or "Robux")
+                        },
+                        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                } }
+        }
+        
+        local success = sendWebhook(MARKETPLACE_WEBHOOK, payload)
+        
         return success
 end
 
