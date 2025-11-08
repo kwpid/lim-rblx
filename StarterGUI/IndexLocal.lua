@@ -1,9 +1,11 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local gui = script.Parent
 local buttons = {}
+local mouse = player:GetMouse()
 
 local ItemRarityModule = require(ReplicatedStorage:WaitForChild("ItemRarityModule"))
 
@@ -175,7 +177,17 @@ function showTooltip(item, button)
     rollLabel.Text = percentText
   end
   
-  tooltip.Position = UDim2.new(0, button.AbsolutePosition.X + button.AbsoluteSize.X + 10, 0, button.AbsolutePosition.Y)
+  local mouseX = mouse.X
+  local mouseY = mouse.Y
+  tooltip.Position = UDim2.new(0, mouseX + 15, 0, mouseY + 15)
+  
+  game:GetService("RunService").RenderStepped:Connect(function()
+    if tooltip and tooltip.Parent then
+      local currentMouseX = mouse.X
+      local currentMouseY = mouse.Y
+      tooltip.Position = UDim2.new(0, currentMouseX + 15, 0, currentMouseY + 15)
+    end
+  end)
 end
 
 function hideTooltip()
