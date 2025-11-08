@@ -42,7 +42,7 @@ local tradeFrame = gui:WaitForChild("TradeFrame")
 local tradeHistoryFrame = gui:WaitForChild("TradeHistoryFrame")
 local viewInventoryFrame = gui:WaitForChild("ViewInventoryFrame")
 
-sendTradesFrame.Visible = true
+sendTradesFrame.Visible = false
 tradeRequestFrame.Visible = false
 tradeFrame.Visible = false
 tradeHistoryFrame.Visible = false
@@ -384,17 +384,21 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                         newItemButton.MouseButton1Click:Connect(function()
                                 if displayItem.isSerial then
-                                        local alreadyInTrade = tradeFrame.TradingFrame.YourOfferFrame.Slots:FindFirstChild("Offer_" .. uniqueId)
+                                        local alreadyInTrade = tradeFrame.TradingFrame.YourOfferFrame.Slots
+                                        :FindFirstChild("Offer_" .. uniqueId)
                                         if alreadyInTrade then
-                                                tradeEvent:FireServer("remove item from trade", {displayItem.RobloxId, displayItem.SerialNumber})
+                                                tradeEvent:FireServer("remove item from trade",
+                                                        { displayItem.RobloxId, displayItem.SerialNumber })
                                         else
-                                                tradeEvent:FireServer("add item to trade", {displayItem.RobloxId, displayItem.SerialNumber})
+                                                tradeEvent:FireServer("add item to trade",
+                                                        { displayItem.RobloxId, displayItem.SerialNumber })
                                         end
                                 else
                                         if displayItem.Amount < displayItem.MaxAmount then
                                                 displayItem.Amount = displayItem.Amount + 1
-                                                newItemButton.QtySerial.Text = displayItem.Amount .. "/" .. displayItem.MaxAmount
-                                                tradeEvent:FireServer("add item to trade", {displayItem.RobloxId, nil, 1})
+                                                newItemButton.QtySerial.Text = displayItem.Amount ..
+                                                "/" .. displayItem.MaxAmount
+                                                tradeEvent:FireServer("add item to trade", { displayItem.RobloxId, nil, 1 })
                                         end
                                 end
                         end)
@@ -403,8 +407,10 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                 if not displayItem.isSerial then
                                         if displayItem.Amount > 0 then
                                                 displayItem.Amount = displayItem.Amount - 1
-                                                newItemButton.QtySerial.Text = displayItem.Amount .. "/" .. displayItem.MaxAmount
-                                                tradeEvent:FireServer("remove item from trade", {displayItem.RobloxId, nil, 1})
+                                                newItemButton.QtySerial.Text = displayItem.Amount ..
+                                                "/" .. displayItem.MaxAmount
+                                                tradeEvent:FireServer("remove item from trade",
+                                                        { displayItem.RobloxId, nil, 1 })
                                         end
                                 end
                         end)
@@ -474,7 +480,8 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                         totalValue = totalValue + (value.Value * multiplier)
                                 end
                         end
-                        tradeFrame.TradingFrame.TheirOfferFrame.TheirValue.Text = "Value: " .. formatValueShort(totalValue)
+                        tradeFrame.TradingFrame.TheirOfferFrame.TheirValue.Text = "Value: " ..
+                        formatValueShort(totalValue)
                 end
 
                 clientOffer.ChildAdded:Connect(function(slotChild)
@@ -489,7 +496,8 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         if not robloxId or not itemName then return end
 
                         local newToolButton = script.ItemButton:Clone()
-                        newToolButton.Name = "Offer_" .. (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
+                        newToolButton.Name = "Offer_" ..
+                        (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
 
                         newToolButton.ItemName.Text = itemName.Value
 
@@ -510,9 +518,10 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
 
                         newToolButton.MouseButton1Click:Connect(function()
                                 if serialNumber then
-                                        tradeEvent:FireServer("remove item from trade", {robloxId.Value, serialNumber.Value})
+                                        tradeEvent:FireServer("remove item from trade",
+                                                { robloxId.Value, serialNumber.Value })
                                 else
-                                        tradeEvent:FireServer("remove item from trade", {robloxId.Value, nil, 1})
+                                        tradeEvent:FireServer("remove item from trade", { robloxId.Value, nil, 1 })
                                 end
                         end)
 
@@ -542,7 +551,8 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                                         if displayItem.RobloxId == robloxId.Value and not displayItem.isSerial then
                                                                 if displayItem.Amount > 0 then
                                                                         displayItem.Amount = displayItem.Amount - 1
-                                                                        updateInventoryDisplay(searchBox and searchBox.Text or "")
+                                                                        updateInventoryDisplay(searchBox and
+                                                                        searchBox.Text or "")
                                                                 end
                                                                 break
                                                         end
@@ -560,7 +570,8 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                                                 for _, displayItem in ipairs(allItemsData) do
                                                         if displayItem.RobloxId == robloxId.Value and not displayItem.isSerial then
                                                                 local amtToRemove = amount and amount.Value or 1
-                                                                displayItem.Amount = math.max(0, displayItem.Amount - amtToRemove)
+                                                                displayItem.Amount = math.max(0,
+                                                                        displayItem.Amount - amtToRemove)
                                                                 updateInventoryDisplay(searchBox and searchBox.Text or "")
                                                                 break
                                                         end
@@ -590,7 +601,8 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
                         if not robloxId or not itemName then return end
 
                         local newToolButton = script.ItemButton:Clone()
-                        newToolButton.Name = "TheirOffer_" .. (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
+                        newToolButton.Name = "TheirOffer_" ..
+                        (serialNumber and (robloxId.Value .. "_" .. serialNumber.Value) or robloxId.Value)
 
                         newToolButton.ItemName.Text = itemName.Value
 
@@ -666,7 +678,8 @@ local function populatePlayerList()
                         local playerFrame = script:WaitForChild("PlayerFrame"):Clone()
                         playerFrame.PlayerDisplayName.Text = plr.DisplayName
                         playerFrame.PlayerUserName.Text = "@" .. plr.Name
-                        playerFrame.PlayerImage.Image = game.Players:GetUserThumbnailAsync(plr.UserId, Enum.ThumbnailType.HeadShot,
+                        playerFrame.PlayerImage.Image = game.Players:GetUserThumbnailAsync(plr.UserId,
+                                Enum.ThumbnailType.HeadShot,
                                 Enum.ThumbnailSize.Size100x100)
 
                         playerFrame.SendButton.MouseButton1Click:Connect(function()
@@ -767,7 +780,8 @@ tradeEvent.OnClientEvent:Connect(function(instruction, data)
                         historyFrame.GaveValue.Text = "Gave: " .. formatValueShort(historyEntry.GaveValue)
 
                         local success, pfp = pcall(function()
-                                return game.Players:GetUserThumbnailAsync(historyEntry.OtherPlayerId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+                                return game.Players:GetUserThumbnailAsync(historyEntry.OtherPlayerId,
+                                        Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
                         end)
                         if success then
                                 historyFrame.PlayerImage1.Image = pfp
@@ -803,17 +817,14 @@ tradeEvent.OnClientEvent:Connect(function(instruction, data)
 
                         historyFrame.Parent = scrollFrame
                 end
-
         elseif instruction == "countdown update" then
                 if tradeFrame.Visible then
                         tradeFrame.TradingFrame.PlayerAccepted.Text = "Trade completing in " .. tostring(data) .. "..."
                 end
-
         elseif instruction == "countdown cancelled" then
                 if tradeFrame.Visible then
                         tradeFrame.TradingFrame.PlayerAccepted.Text = ""
                 end
-
         elseif instruction == "trade completed" then
                 tradeFrame.Visible = false
                 sendTradesFrame.Visible = true
