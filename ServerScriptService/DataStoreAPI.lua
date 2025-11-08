@@ -234,7 +234,11 @@ function DataStoreAPI:GetInventory(player)
         itemCopy.OriginalOwner = "null"
       end
     else
-      warn("failed to get database item for " .. (item.Name or "item"))
+      if not dbItemSuccess then
+        warn("error looking up database item for " .. (item.Name or "item") .. " (ID: " .. tostring(item.RobloxId) .. "): " .. tostring(dbItem))
+      elseif not dbItem then
+        warn("database item not found for " .. (item.Name or "item") .. " (ID: " .. tostring(item.RobloxId) .. ") - this may indicate the item needs to be registered")
+      end
       itemCopy.Owners = 0
       itemCopy.TotalCopies = 0
       itemCopy.Stock = 0

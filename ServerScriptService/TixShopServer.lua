@@ -256,8 +256,17 @@ local function RegisterVanityItems()
                 end
         end
         print("[TixShop] Registered " .. count .. " Vanity items in database")
+        return true
 end
 
-task.spawn(RegisterVanityItems)
-task.spawn(SetupProximityPrompt)
-task.spawn(StartRotationLoop)
+local function InitializeTixShop()
+        local regSuccess = RegisterVanityItems()
+        if regSuccess then
+                task.spawn(SetupProximityPrompt)
+                task.spawn(StartRotationLoop)
+        else
+                warn("[TixShop] Failed to register Vanity items, shop will not start")
+        end
+end
+
+task.spawn(InitializeTixShop)

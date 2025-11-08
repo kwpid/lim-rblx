@@ -397,6 +397,13 @@ task.spawn(function()
   ItemDatabase.IsReady = true
 end)
 
+function ItemDatabase:WaitForReady()
+  while not self.IsReady do
+    task.wait(0.1)
+  end
+  return true
+end
+
 function ItemDatabase:ResetOwnershipData()
   for _, item in ipairs(self.Items) do
     item.CurrentStock = 0
