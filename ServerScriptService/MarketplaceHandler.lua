@@ -167,6 +167,60 @@ local function sendOrSaveNotification(userId, notification)
         return result
 end
 
+local function addPendingCash(userId, cashAmount)
+        local player = Players:GetPlayerByUserId(userId)
+        
+        if player then
+                local playerData = getPlayerData(player)
+                if playerData then
+                        playerData.Cash = playerData.Cash + cashAmount
+                        
+                        if player:FindFirstChild("leaderstats") then
+                                local cash = player.leaderstats:FindFirstChild("Cash")
+                                if cash then
+                                        cash.Value = playerData.Cash
+                                end
+                        end
+                        
+                        print("Added $" .. cashAmount .. " to online player " .. userId)
+                        return true
+                end
+        end
+        
+        local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
+        local HttpService = game:GetService("HttpService")
+        
+        local success, result = pcall(function()
+                PlayerDataStore:UpdateAsync("Player_" .. userId, function(currentJsonData)
+                        local playerData
+                        
+                        if not currentJsonData then
+                                playerData = DataStoreManager:GetDefaultData()
+                        else
+                                playerData = HttpService:JSONDecode(currentJsonData)
+                        end
+                        
+                        if not playerData.PendingCash then
+                                playerData.PendingCash = 0
+                        end
+                        
+                        playerData.PendingCash = playerData.PendingCash + cashAmount
+                        
+                        return HttpService:JSONEncode(playerData)
+                end)
+                
+                print("Saved $" .. cashAmount .. " as pending cash for offline user " .. userId)
+                return true
+        end)
+        
+        if not success then
+                warn("Failed to save pending cash for user " .. userId .. ": " .. tostring(result))
+                return false
+        end
+        
+        return result
+end
+
 local function findItemInInventory(player, robloxId, serialNumber)
         local data = getPlayerData(player)
         if not data then return nil, nil end
@@ -372,20 +426,7 @@ purchaseListingEvent.OnServerEvent:Connect(function(player, listingId)
                         end
                 end
                 
-                local seller = game.Players:GetPlayerByUserId(listing.SellerUserId)
-                if seller then
-                        local sellerData = getPlayerData(seller)
-                        if sellerData then
-                                sellerData.Cash = sellerData.Cash + listing.Price
-                                
-                                if seller:FindFirstChild("leaderstats") then
-                                        local sellerCash = seller.leaderstats:FindFirstChild("Cash")
-                                        if sellerCash then
-                                                sellerCash.Value = sellerData.Cash
-                                        end
-                                end
-                        end
-                end
+                addPendingCash(listing.SellerUserId, listing.Price)
                 
                 sendOrSaveNotification(listing.SellerUserId, {
                         Type = "MARKET_SOLD",

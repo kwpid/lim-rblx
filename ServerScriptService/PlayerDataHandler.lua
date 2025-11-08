@@ -171,6 +171,37 @@ local function setupPlayer(player)
     }
     notificationEvent:FireClient(player, msg)
     
+    if data.PendingCash and data.PendingCash > 0 then
+      task.wait(0.5)
+      data.Cash = (data.Cash or 0) + data.PendingCash
+      
+      if player:FindFirstChild("leaderstats") then
+        local cashValue = player.leaderstats:FindFirstChild("Cash")
+        if cashValue then
+          cashValue.Value = data.Cash
+        end
+      end
+      
+      local function formatNumber(number)
+        local formatted = tostring(number)
+        while true do
+          formatted, k = formatted:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
+          if k == 0 then break end
+        end
+        return formatted
+      end
+      
+      notificationEvent:FireClient(player, {
+        Type = "VICTORY",
+        Title = "Marketplace Sales!",
+        Body = "You received $" .. formatNumber(data.PendingCash) .. " from marketplace sales while offline"
+      })
+      
+      data.PendingCash = 0
+      DataStoreManager:SaveData(player, data)
+      task.wait(0.3)
+    end
+    
     if data.PendingNotifications and #data.PendingNotifications > 0 then
       task.wait(0.5)
       for _, notification in ipairs(data.PendingNotifications) do
