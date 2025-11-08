@@ -73,15 +73,7 @@ local function PopulateShop()
                 local itemPrice = itemFrame:WaitForChild("ItemPrice")
                 local purchaseButton = itemFrame:WaitForChild("Purchase")
                 
-                local success, thumbnailUrl = pcall(function()
-                        return MarketplaceService:GetProductInfo(item.RobloxId).IconImageAssetId
-                end)
-                
-                if success and thumbnailUrl and thumbnailUrl ~= 0 then
-                        itemImage.Image = "rbxassetid://" .. tostring(thumbnailUrl)
-                else
-                        itemImage.Image = "rbxassetid://" .. tostring(item.RobloxId)
-                end
+                itemImage.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=" .. tostring(item.RobloxId) .. "&width=150&height=150"
                 
                 itemName.Text = item.Name
                 itemPrice.Text = FormatCash(item.Price)

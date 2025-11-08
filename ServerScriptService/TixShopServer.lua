@@ -147,7 +147,7 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemRobloxId)
         
         playerData.Cash = playerData.Cash - itemData.Price
         
-        DataStoreAPI.AddItem(player, {
+        DataStoreAPI:AddItem(player, {
                 RobloxId = itemData.RobloxId,
                 Name = itemData.Name,
                 Value = itemData.Price,
@@ -198,16 +198,16 @@ ForceRefreshEvent.OnServerEvent:Connect(function(player)
                 return
         end
         
-        local success, admins = pcall(function()
+        local success, adminModule = pcall(function()
                 return require(AdminConfig)
         end)
         
-        if not success or not admins then
+        if not success or not adminModule then
                 warn("[TixShop] Failed to load AdminConfig, denying force refresh from " .. player.Name)
                 return
         end
         
-        if not table.find(admins, player.UserId) then
+        if not adminModule:IsAdmin(player) then
                 warn("[TixShop] Non-admin " .. player.Name .. " tried to force refresh shop")
                 return
         end
