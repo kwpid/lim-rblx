@@ -2,10 +2,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MarketplaceService = game:GetService("MarketplaceService")
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local DataStoreAPI = require(script.Parent:WaitForChild("DataStoreAPI"))
 local ItemDatabase = require(script.Parent:WaitForChild("ItemDatabase"))
 local DataStoreManager = require(script.Parent:WaitForChild("DataStoreManager"))
+
+local IS_STUDIO = RunService:IsStudio()
 
 local MarketplaceDataStore = DataStoreService:GetDataStore("MarketplaceListings_v1")
 
@@ -379,21 +382,28 @@ purchaseListingEvent.OnServerEvent:Connect(function(player, listingId)
                 })
         elseif listing.ListingType == "robux" then
                 local ownsGamepass = false
-                local success, result = pcall(function()
-                        return MarketplaceService:UserOwnsGamePassAsync(player.UserId, tonumber(listing.GamepassId))
-                end)
                 
-                if success and result then
+                if IS_STUDIO then
+                        print("⚠️ STUDIO MODE: Bypassing gamepass validation for testing purposes")
+                        print("⚠️ In production, gamepass ownership will be properly validated")
                         ownsGamepass = true
-                end
-                
-                if not ownsGamepass then
-                        notificationEvent:FireClient(player, {
-                                Type = "ERROR",
-                                Title = "Purchase Failed",
-                                Body = "You must own gamepass ID " .. listing.GamepassId .. " to complete this purchase"
-                        })
-                        return
+                else
+                        local success, result = pcall(function()
+                                return MarketplaceService:UserOwnsGamePassAsync(player.UserId, tonumber(listing.GamepassId))
+                        end)
+                        
+                        if success and result then
+                                ownsGamepass = true
+                        end
+                        
+                        if not ownsGamepass then
+                                notificationEvent:FireClient(player, {
+                                        Type = "ERROR",
+                                        Title = "Purchase Failed",
+                                        Body = "You must own gamepass ID " .. listing.GamepassId .. " to complete this purchase"
+                                })
+                                return
+                        end
                 end
                 
                 local sellerReceives = math.floor(listing.Price * (1 - ROBUX_TAX_RATE))

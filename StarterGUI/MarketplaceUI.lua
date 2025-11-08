@@ -1,12 +1,14 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MarketplaceService = game:GetService("MarketplaceService")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local gui = script.Parent
 local buttons = {}
 local awaitingGamepassPurchase = false
 local pendingListingId = nil
+local IS_STUDIO = RunService:IsStudio()
 
 local handler = gui:WaitForChild("Handler", 5)
 if not handler then
@@ -267,25 +269,34 @@ if popFrame then
                                                 return
                                         end
                                         
-                                        local ownsGamepass = false
-                                        local success, result = pcall(function()
-                                                return MarketplaceService:UserOwnsGamePassAsync(player.UserId, gamepassId)
-                                        end)
-                                        
-                                        if success and result then
-                                                ownsGamepass = true
-                                        end
-                                        
-                                        if not ownsGamepass then
-                                                awaitingGamepassPurchase = true
-                                                pendingListingId = selectedListing.ListingId
-                                                MarketplaceService:PromptGamePassPurchase(player, gamepassId)
-                                        else
+                                        if IS_STUDIO then
+                                                print("⚠️ STUDIO MODE: Skipping gamepass prompt for testing")
                                                 purchaseListingEvent:FireServer(selectedListing.ListingId)
                                                 buyInfo.Visible = false
                                                 selectedListing = nil
                                                 task.wait(0.5)
                                                 pcall(refresh)
+                                        else
+                                                local ownsGamepass = false
+                                                local success, result = pcall(function()
+                                                        return MarketplaceService:UserOwnsGamePassAsync(player.UserId, gamepassId)
+                                                end)
+                                                
+                                                if success and result then
+                                                        ownsGamepass = true
+                                                end
+                                                
+                                                if not ownsGamepass then
+                                                        awaitingGamepassPurchase = true
+                                                        pendingListingId = selectedListing.ListingId
+                                                        MarketplaceService:PromptGamePassPurchase(player, gamepassId)
+                                                else
+                                                        purchaseListingEvent:FireServer(selectedListing.ListingId)
+                                                        buyInfo.Visible = false
+                                                        selectedListing = nil
+                                                        task.wait(0.5)
+                                                        pcall(refresh)
+                                                end
                                         end
                                 else
                                         purchaseListingEvent:FireServer(selectedListing.ListingId)
