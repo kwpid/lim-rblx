@@ -333,7 +333,14 @@ function updateItemDetails(item)
   if itemInfo2 then
     local totalOwnersText = itemInfo2:FindFirstChild("TotalOwners")
     if totalOwnersText then
-      totalOwnersText.Text = "Total Owners: " .. formatNumber(item.Owners or 0)
+      local isStockItem = item.Stock and item.Stock > 0
+      if isStockItem then
+        local currentCopies = item.CurrentStock or 0
+        local maxCopies = item.Stock or 0
+        totalOwnersText.Text = "Total Owners: " .. currentCopies .. "/" .. maxCopies
+      else
+        totalOwnersText.Text = "Total Owners: " .. formatNumber(item.Owners or 0)
+      end
     end
   end
 
