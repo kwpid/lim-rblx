@@ -7,6 +7,8 @@ local MasteryCollections = require(ReplicatedStorage:WaitForChild("MasteryCollec
 
 local GetInventoryFunction = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("GetInventoryFunction")
 local GetAllItemsFunction = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("GetAllItemsFunction")
+local CheckMasteryCompletedFunction = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("CheckMasteryCompletedFunction")
+local AwardMasteryBadgeEvent = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("AwardMasteryBadgeEvent")
 
 local MasteryFrame = script.Parent
 local Handler = MasteryFrame:WaitForChild("Handler")
@@ -23,6 +25,7 @@ local playerInventory = {}
 local itemDatabase = {}
 local currentCollection = nil
 local isLoadingCollection = false
+local completedMasteries = {}
 
 local function formatNumber(num)
         local formatted = tostring(num)
@@ -80,9 +83,32 @@ local function getItemFromDatabase(robloxId)
         return nil
 end
 
+local function isMasteryCompleted(collectionName)
+        return completedMasteries[collectionName] == true
+end
+
+local function checkMasteryCompletion(collectionName)
+        local success, completed = pcall(function()
+                return CheckMasteryCompletedFunction:InvokeServer(collectionName)
+        end)
+        
+        if success and completed then
+                completedMasteries[collectionName] = true
+                return true
+        end
+        
+        return false
+end
+
 local function calculateCollectionProgress(collection)
         if #collection.Items == 0 then
-                return 0, 0
+                return 0, 0, false
+        end
+        
+        local isCompleted = isMasteryCompleted(collection.Name)
+        
+        if isCompleted then
+                return #collection.Items, 100, true
         end
         
         local owned = 0
@@ -93,7 +119,14 @@ local function calculateCollectionProgress(collection)
         end
         
         local percentage = math.floor((owned / #collection.Items) * 100)
-        return owned, percentage
+        
+        if percentage == 100 and not isCompleted then
+                AwardMasteryBadgeEvent:FireServer(collection.Name)
+                completedMasteries[collection.Name] = true
+                isCompleted = true
+        end
+        
+        return owned, percentage, isCompleted
 end
 
 local function clearHandler(handler)
@@ -189,7 +222,7 @@ local function populateCollections()
                 local imageLabel = collectionButton:WaitForChild("ImageLabel")
                 imageLabel.Image = collection.ImageId
                 
-                local owned, percentage = calculateCollectionProgress(collection)
+                local owned, percentage, isCompleted = calculateCollectionProgress(collection)
                 
                 local bar = collectionButton:WaitForChild("Bar")
                 local filled = bar:WaitForChild("Filled")
@@ -201,6 +234,11 @@ local function populateCollections()
                         filled.Size = UDim2.new(0, 0, 1, 0)
                 else
                         filled.Size = UDim2.new(percentage / 100, 0, 1, 0)
+                end
+                
+                local completedFrame = collectionButton:FindFirstChild("CompletedFrame")
+                if completedFrame then
+                        completedFrame.Visible = isCompleted
                 end
                 
                 collectionButton.MouseButton1Click:Connect(function()
@@ -237,9 +275,20 @@ openButton.MouseButton1Click:Connect(function()
         openValue.Value = MasteryFrame.Visible
 end)
 
+local function loadCompletedMasteries()
+        for _, collection in ipairs(MasteryCollections.Collections) do
+                if collection.BadgeId ~= 0 then
+                        task.spawn(function()
+                                checkMasteryCompletion(collection.Name)
+                        end)
+                end
+        end
+end
+
 local function initialize()
         getItemDatabase()
         getPlayerInventory()
+        loadCompletedMasteries()
         
         wait(0.5)
         
