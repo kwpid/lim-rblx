@@ -8,6 +8,8 @@ local GetCurrentRotationFunction = RemoteEvents:WaitForChild("GetCurrentRotation
 local PurchaseTixItemEvent = RemoteEvents:WaitForChild("PurchaseTixItemEvent")
 local ShopRotationEvent = RemoteEvents:WaitForChild("ShopRotationEvent")
 local OpenTixShopEvent = RemoteEvents:WaitForChild("OpenTixShopEvent")
+local GetInventoryFunction = RemoteEvents:WaitForChild("GetInventoryFunction")
+local InventoryUpdatedEvent = RemoteEvents:WaitForChild("InventoryUpdatedEvent")
 local MarketplaceService = game:GetService("MarketplaceService")
 
 local TixShopFrame = script.Parent
@@ -63,6 +65,20 @@ end
 local function PopulateShop()
         ClearItems()
         
+        local inventory = {}
+        local success, result = pcall(function()
+                return GetInventoryFunction:InvokeServer()
+        end)
+        
+        if success and result then
+                inventory = result
+        end
+        
+        local ownedItems = {}
+        for _, invItem in ipairs(inventory) do
+                ownedItems[invItem.RobloxId] = true
+        end
+        
         for _, item in ipairs(CurrentRotation) do
                 local itemFrame = Sample:Clone()
                 itemFrame.Name = tostring(item.RobloxId)
@@ -72,17 +88,29 @@ local function PopulateShop()
                 local itemName = itemFrame:WaitForChild("ItemName")
                 local itemPrice = itemFrame:WaitForChild("ItemPrice")
                 local purchaseButton = itemFrame:WaitForChild("Purchase")
+                local ownedFrame = itemFrame:FindFirstChild("OwnedFrame")
                 
                 itemImage.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=" .. tostring(item.RobloxId) .. "&width=150&height=150"
                 
                 itemName.Text = item.Name
                 itemPrice.Text = FormatCash(item.Price)
                 
-                purchaseButton.MouseButton1Click:Connect(function()
-                        SelectedItem = item
-                        Text1.Text = "Are you sure you want to buy " .. item.Name .. " for " .. FormatCash(item.Price) .. "?"
-                        BuyConfirm.Visible = true
-                end)
+                local isOwned = ownedItems[item.RobloxId] == true
+                
+                if ownedFrame then
+                        ownedFrame.Visible = isOwned
+                end
+                
+                if isOwned then
+                        purchaseButton.Visible = false
+                else
+                        purchaseButton.Visible = true
+                        purchaseButton.MouseButton1Click:Connect(function()
+                                SelectedItem = item
+                                Text1.Text = "Are you sure you want to buy " .. item.Name .. " for " .. FormatCash(item.Price) .. "?"
+                                BuyConfirm.Visible = true
+                        end)
+                end
                 
                 itemFrame.Parent = Handler
         end
@@ -146,3 +174,9 @@ TixShopFrame.Visible = false
 
 LoadRotation()
 task.spawn(UpdateTimer)
+
+InventoryUpdatedEvent.OnClientEvent:Connect(function()
+        if TixShopFrame.Visible then
+                PopulateShop()
+        end
+end)

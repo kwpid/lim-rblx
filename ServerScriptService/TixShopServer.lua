@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local TixShopDatabase = require(ReplicatedStorage:WaitForChild("TixShopDatabase"))
 local DataStoreAPI = require(script.Parent:WaitForChild("DataStoreAPI"))
+local ItemDatabase = require(script.Parent:WaitForChild("ItemDatabase"))
 
 local ROTATION_INTERVAL = 3600
 local MIN_ITEMS = 3
@@ -216,5 +217,13 @@ ForceRefreshEvent.OnServerEvent:Connect(function(player)
         RotateShop()
 end)
 
+local function RegisterVanityItems()
+        for _, vanityItem in ipairs(TixShopDatabase.VanityItems) do
+                ItemDatabase:EnsureVanityItem(vanityItem.RobloxId, vanityItem.Name, vanityItem.Price)
+        end
+        print("[TixShop] Registered " .. #TixShopDatabase.VanityItems .. " Vanity items in database")
+end
+
+task.spawn(RegisterVanityItems)
 task.spawn(SetupProximityPrompt)
 task.spawn(StartRotationLoop)

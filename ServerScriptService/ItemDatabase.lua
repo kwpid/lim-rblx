@@ -221,6 +221,34 @@ function ItemDatabase:GetItemByRobloxId(robloxId)
   return nil
 end
 
+function ItemDatabase:EnsureVanityItem(robloxId, itemName, itemValue)
+  local existingItem = self:GetItemByRobloxId(robloxId)
+  if existingItem then
+    if existingItem.Rarity ~= "Vanity" then
+      existingItem.Rarity = "Vanity"
+      self:QueueSave()
+    end
+    return existingItem
+  end
+  
+  local newItem = {
+    RobloxId = robloxId,
+    Name = itemName,
+    Value = itemValue,
+    Rarity = "Vanity",
+    Stock = 0,
+    CurrentStock = 0,
+    Owners = 0,
+    TotalCopies = 0,
+    SerialOwners = {},
+    OffsaleAt = nil,
+    CreatedAt = os.time()
+  }
+  table.insert(self.Items, newItem)
+  self:QueueSave()
+  return newItem
+end
+
 function ItemDatabase:IncrementOwners(robloxId)
   local item = self:GetItemByRobloxId(robloxId)
   if item then
