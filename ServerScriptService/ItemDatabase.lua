@@ -175,7 +175,7 @@ end
 function ItemDatabase:GetRollableItems()
   local rollableItems = {}
   for _, item in ipairs(self.Items) do
-    if item.Rarity ~= "Limited" then
+    if item.Rarity ~= "Limited" and item.Rarity ~= "Vanity" then
       local stock = item.Stock or 0
       local currentStock = item.CurrentStock or 0
       if stock == 0 or currentStock < stock then

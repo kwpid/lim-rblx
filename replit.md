@@ -12,8 +12,9 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 ## System Architecture
 
 ### Core Game Systems
--   **Item System**: Supports regular and "Limited" rarity items. Regular items have stack limits (100 for common, no limit for Epic+), while Limited items are event-exclusive with stock or timer-based availability.
--   **Crate Opening**: Features weighted random selection, visual animations, serial number display, "Fast Roll," "AutoRoll," and "HideRolls" options. High-value unboxes trigger server-wide notifications. Limited items are not rollable via crates.
+-   **Item System**: Supports regular, "Limited", and "Vanity" rarity items. Regular items have stack limits (100 for common, no limit for Epic+), while Limited items are event-exclusive with stock or timer-based availability. Vanity items are exclusive to the Tix Shop and cannot be rolled, traded, or sold.
+-   **Crate Opening**: Features weighted random selection, visual animations, serial number display, "Fast Roll," "AutoRoll," and "HideRolls" options. High-value unboxes trigger server-wide notifications. Limited and Vanity items are not rollable via crates.
+-   **Tix Shop System**: Hourly rotating shop featuring exclusive Vanity items purchasable with in-game cash. Shop displays 3-6 items per rotation with weighted selection (higher value = rarer appearance). Features proximity prompt interaction, countdown timer, purchase confirmation UI, and server-wide rotation notifications. Vanity items cannot be traded or sold, only equipped and kept in inventory.
 -   **Luck System**: A three-tier system providing multiplicative luck multipliers for different rarity groups (Regular, Mythic, Insane) to boost Epic+ item probabilities.
 -   **Event System**: Dynamic, modular system with automatic and manual triggers. Only one event can be active at a time. Examples include "Random Item Drops" and "Scavenger Hunt," utilizing actual Roblox item models with rarity-colored highlights.
 -   **Barrel Event System**: Players can pull items from barrels for in-game currency. Features weighted RNG (including a rare chance for a Chroma Valkyrie), camera animations, item spawning, and transaction safety with refunds. Primarily for hat items.
@@ -23,15 +24,16 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   **Inventory Display**: Shows owned items with thumbnails, rarity colors, serial numbers, search/filter, detailed info, and "RareText"/"LimText" badges. Equipped items are prioritized.
 -   **View Other Players' Inventories**: Allows inspection of other users' inventories via GUI.
 -   **Equipping Items**: Players can equip/unequip accessories, hats, and tools that persist and are visible to others.
--   **Selling Items**: Regular items can be sold for 80% of their value; stock items cannot.
--   **Index System**: Displays all game items with details, owner lists (including serial numbers), roll percentages, and "RareText"/"LimText."
--   **Trading System**: Player-to-player trading with requests, stacked/serial item support, dual acceptance, item transfer (preserving serial numbers and ownership), and cancellation. Features real-time value tracking and persistent trade history.
+-   **Selling Items**: Regular items can be sold for 80% of their value; stock items and Vanity items cannot be sold.
+-   **Index System**: Displays all game items with details, owner lists (including serial numbers), roll percentages, and "RareText"/"LimText." Vanity items are excluded from the Index display.
+-   **Trading System**: Player-to-player trading with requests, stacked/serial item support, dual acceptance, item transfer (preserving serial numbers and ownership), and cancellation. Features real-time value tracking and persistent trade history. Vanity items are excluded from trading.
 -   **Mastery System**: Tracks player progress across themed item collections. Displays completion percentages, locked/unlocked items, and roll chances. Collections are defined in `MasteryCollections.lua`.
 -   **Marketplace System**: Player-driven economy allowing sale of high-value items (250k+ Robux value). Sellers can list items for in-game cash (1 to 1 billion range) or Robux via gamepass (30% tax). Features persistent listing storage, real-time validation, serial number preservation, buyer/seller notifications, and support for cancelling own listings. Players can purchase their own listings. **Gamepass Purchase Flow**: When buying a Robux listing, buyers are automatically prompted to purchase the required gamepass using Roblox's native purchase dialog. After successful purchase, the item transaction completes automatically with server-side ownership validation. **Studio Testing Mode**: Gamepass validation is automatically bypassed in Studio for testing with test players (Player1, Player2, etc.), while production games enforce full ownership validation. **Pending Notifications**: Notifications for sold items are saved to DataStore for offline sellers and delivered when they log in. Uses atomic UpdateAsync operations to prevent notification loss during concurrent sales or player reconnections. Integrates with notification system and inventory management.
 
 ### UI/UX Decisions
--   Item names are color-coded by rarity; Limited items use gold.
+-   Item names are color-coded by rarity; Limited items use gold, Vanity items use hot pink (RGB 255, 105, 180).
 -   Graphical admin panel.
+-   Tix Shop UI with item display, countdown timer, and purchase confirmation dialog.
 -   Notification system for trade requests.
 -   Hover effects for viewing other players' inventories.
 -   Unified MainUI for Inventory and Index.

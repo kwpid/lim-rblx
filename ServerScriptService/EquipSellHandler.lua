@@ -197,6 +197,12 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
     end
   end
   if not item then return end
+  
+  if item.Rarity == "Vanity" then
+    notificationEvent:FireClient(player, { Type = "ERROR", Title = "Cannot Sell", Body = "Vanity items cannot be sold!" })
+    return
+  end
+  
   local sellValue = math.floor(item.Value * 0.8)
   local isStockItem = item.SerialNumber ~= nil
   if isStockItem then
@@ -252,6 +258,12 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
   for i, invItem in ipairs(data.Inventory) do
     if invItem.RobloxId == robloxId then
       firstItem = firstItem or invItem
+      
+      if invItem.Rarity == "Vanity" then
+        notificationEvent:FireClient(player, { Type = "ERROR", Title = "Cannot Sell", Body = "Vanity items cannot be sold!" })
+        return
+      end
+      
       local isStockItem = invItem.SerialNumber ~= nil
       local amount = invItem.Amount or 1
       local sellValue = math.floor(invItem.Value * 0.8 * amount)

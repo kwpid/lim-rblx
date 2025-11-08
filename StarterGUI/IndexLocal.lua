@@ -148,6 +148,10 @@ function refresh()
   end)
 
   for i, item in ipairs(itemsWithPercentages) do
+    if item.Rarity == "Vanity" then
+      continue
+    end
+    
     local button = sample:Clone()
     button.Name = item.Name or "Item_" .. i
     button.LayoutOrder = i

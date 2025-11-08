@@ -259,6 +259,17 @@ tradeEvent.OnServerEvent:Connect(function(plr, instruction, data)
 
                 local _, inventoryItem = findItemInInventory(plr, robloxId, serialNumber)
                 if not inventoryItem then return end
+                
+                if inventoryItem.Rarity == "Vanity" then
+                        if createNotificationEvent then
+                                createNotificationEvent:FireClient(plr, {
+                                        Type = "ERROR",
+                                        Title = "Cannot Trade",
+                                        Body = "Vanity items cannot be traded!"
+                                })
+                        end
+                        return
+                end
 
                 if serialNumber then
                         local alreadyInTrade = false
