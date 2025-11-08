@@ -1,9 +1,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MarketplaceService = game:GetService("MarketplaceService")
 local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
 
 local DataStoreAPI = require(script.Parent:WaitForChild("DataStoreAPI"))
 local ItemDatabase = require(script.Parent:WaitForChild("ItemDatabase"))
+local DataStoreManager = require(script.Parent:WaitForChild("DataStoreManager"))
 
 local MarketplaceDataStore = DataStoreService:GetDataStore("MarketplaceListings_v1")
 
@@ -83,6 +85,70 @@ end
 
 local function getPlayerData(player)
         return _G.PlayerData[player.UserId]
+end
+
+local function sendOrSaveNotification(userId, notification)
+        local player = Players:GetPlayerByUserId(userId)
+        
+        if player then
+                local maxRetries = 10
+                local retryDelay = 0.1
+                
+                for attempt = 1, maxRetries do
+                        local playerData = getPlayerData(player)
+                        if playerData then
+                                notificationEvent:FireClient(player, notification)
+                                return true
+                        end
+                        
+                        if attempt < maxRetries then
+                                task.wait(retryDelay)
+                        end
+                end
+                
+                warn("Player " .. userId .. " is online but data not loaded after retries, saving to pending")
+        end
+        
+        local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
+        local HttpService = game:GetService("HttpService")
+        
+        local success, result = pcall(function()
+                PlayerDataStore:UpdateAsync("Player_" .. userId, function(currentJsonData)
+                        local playerData
+                        
+                        if not currentJsonData then
+                                playerData = DataStoreManager:GetDefaultData()
+                        else
+                                playerData = HttpService:JSONDecode(currentJsonData)
+                        end
+                        
+                        if not playerData.PendingNotifications then
+                                playerData.PendingNotifications = {}
+                        end
+                        
+                        table.insert(playerData.PendingNotifications, notification)
+                        
+                        return HttpService:JSONEncode(playerData)
+                end)
+                
+                local onlinePlayer = Players:GetPlayerByUserId(userId)
+                if onlinePlayer and _G.PlayerData[userId] then
+                        if not _G.PlayerData[userId].PendingNotifications then
+                                _G.PlayerData[userId].PendingNotifications = {}
+                        end
+                        table.insert(_G.PlayerData[userId].PendingNotifications, notification)
+                end
+                
+                print("Saved pending notification for offline user " .. userId)
+                return true
+        end)
+        
+        if not success then
+                warn("Failed to save pending notification for user " .. userId .. ": " .. tostring(result))
+                return false
+        end
+        
+        return result
 end
 
 local function findItemInInventory(player, robloxId, serialNumber)
@@ -302,15 +368,15 @@ purchaseListingEvent.OnServerEvent:Connect(function(player, listingId)
                                                 sellerCash.Value = sellerData.Cash
                                         end
                                 end
-                                
-                                notificationEvent:FireClient(seller, {
-                                        Type = "MARKET_SOLD",
-                                        Title = "Item Sold!",
-                                        Body = listing.ItemData.Name .. " sold for $" .. formatNumber(listing.Price),
-                                        ImageId = listing.ItemData.RobloxId
-                                })
                         end
                 end
+                
+                sendOrSaveNotification(listing.SellerUserId, {
+                        Type = "MARKET_SOLD",
+                        Title = "Item Sold!",
+                        Body = listing.ItemData.Name .. " sold for $" .. formatNumber(listing.Price),
+                        ImageId = listing.ItemData.RobloxId
+                })
         elseif listing.ListingType == "robux" then
                 local ownsGamepass = false
                 local success, result = pcall(function()
@@ -319,35 +385,24 @@ purchaseListingEvent.OnServerEvent:Connect(function(player, listingId)
                 
                 if success and result then
                         ownsGamepass = true
-                else
-                        notificationEvent:FireClient(player, {
-                                Type = "ERROR",
-                                Title = "Gamepass Required",
-                                Body = "You must purchase gamepass ID: " .. listing.GamepassId
-                        })
-                        return
                 end
                 
                 if not ownsGamepass then
                         notificationEvent:FireClient(player, {
                                 Type = "ERROR",
-                                Title = "Gamepass Required",
-                                Body = "You must purchase gamepass ID: " .. listing.GamepassId
+                                Title = "Purchase Failed",
+                                Body = "You must own gamepass ID " .. listing.GamepassId .. " to complete this purchase"
                         })
                         return
                 end
                 
-                local seller = game.Players:GetPlayerByUserId(listing.SellerUserId)
-                if seller then
-                        local sellerReceives = math.floor(listing.Price * (1 - ROBUX_TAX_RATE))
-                        
-                        notificationEvent:FireClient(seller, {
-                                Type = "MARKET_SOLD",
-                                Title = "Item Sold!",
-                                Body = listing.ItemData.Name .. " sold for R$" .. formatNumber(sellerReceives) .. " (after tax)",
-                                ImageId = listing.ItemData.RobloxId
-                        })
-                end
+                local sellerReceives = math.floor(listing.Price * (1 - ROBUX_TAX_RATE))
+                sendOrSaveNotification(listing.SellerUserId, {
+                        Type = "MARKET_SOLD",
+                        Title = "Item Sold!",
+                        Body = listing.ItemData.Name .. " sold for R$" .. formatNumber(sellerReceives) .. " (after tax)",
+                        ImageId = listing.ItemData.RobloxId
+                })
         end
         
         local itemToAdd = {

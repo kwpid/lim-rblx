@@ -1,9 +1,12 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local MarketplaceService = game:GetService("MarketplaceService")
 
 local player = Players.LocalPlayer
 local gui = script.Parent
 local buttons = {}
+local awaitingGamepassPurchase = false
+local pendingListingId = nil
 
 local handler = gui:WaitForChild("Handler", 5)
 if not handler then
@@ -225,6 +228,24 @@ function refresh()
         return true
 end
 
+MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(buyerPlayer, gamePassId, wasPurchased)
+        if buyerPlayer ~= player then return end
+        if not awaitingGamepassPurchase or not pendingListingId then return end
+        
+        awaitingGamepassPurchase = false
+        
+        if wasPurchased then
+                purchaseListingEvent:FireServer(pendingListingId)
+                buyInfo.Visible = false
+                selectedListing = nil
+                pendingListingId = nil
+                task.wait(0.5)
+                pcall(refresh)
+        else
+                pendingListingId = nil
+        end
+end)
+
 local popFrame = buyInfo:FindFirstChild("Pop")
 if popFrame then
         local confirmBtn = popFrame:FindFirstChild("Confirm")
@@ -234,14 +255,46 @@ if popFrame then
 
                         if selectedListing.IsOwnListing then
                                 cancelListingEvent:FireServer(selectedListing.ListingId)
+                                buyInfo.Visible = false
+                                selectedListing = nil
+                                task.wait(0.5)
+                                pcall(refresh)
                         else
-                                purchaseListingEvent:FireServer(selectedListing.ListingId)
+                                if selectedListing.ListingType == "robux" then
+                                        local gamepassId = tonumber(selectedListing.GamepassId)
+                                        if not gamepassId then
+                                                warn("Invalid gamepass ID")
+                                                return
+                                        end
+                                        
+                                        local ownsGamepass = false
+                                        local success, result = pcall(function()
+                                                return MarketplaceService:UserOwnsGamePassAsync(player.UserId, gamepassId)
+                                        end)
+                                        
+                                        if success and result then
+                                                ownsGamepass = true
+                                        end
+                                        
+                                        if not ownsGamepass then
+                                                awaitingGamepassPurchase = true
+                                                pendingListingId = selectedListing.ListingId
+                                                MarketplaceService:PromptGamePassPurchase(player, gamepassId)
+                                        else
+                                                purchaseListingEvent:FireServer(selectedListing.ListingId)
+                                                buyInfo.Visible = false
+                                                selectedListing = nil
+                                                task.wait(0.5)
+                                                pcall(refresh)
+                                        end
+                                else
+                                        purchaseListingEvent:FireServer(selectedListing.ListingId)
+                                        buyInfo.Visible = false
+                                        selectedListing = nil
+                                        task.wait(0.5)
+                                        pcall(refresh)
+                                end
                         end
-
-                        buyInfo.Visible = false
-                        selectedListing = nil
-                        task.wait(0.5)
-                        pcall(refresh)
                 end)
         end
 
@@ -250,6 +303,8 @@ if popFrame then
                 cancelBtn.MouseButton1Click:Connect(function()
                         buyInfo.Visible = false
                         selectedListing = nil
+                        awaitingGamepassPurchase = false
+                        pendingListingId = nil
                 end)
         end
 else

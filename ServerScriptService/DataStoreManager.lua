@@ -15,6 +15,7 @@ local DEFAULT_DATA = {
   EquippedItems = {},
   AutoRoll = false,
   TradeHistory = {},
+  PendingNotifications = {},
   DataVersion = DATA_VERSION
 }
 
@@ -74,6 +75,7 @@ function DataStoreManager:LoadData(player)
       if not data.EquippedItems then data.EquippedItems = {} end
       if data.AutoRoll == nil then data.AutoRoll = false end
       if not data.TradeHistory then data.TradeHistory = {} end
+      if not data.PendingNotifications then data.PendingNotifications = {} end
       data.DataVersion = DATA_VERSION
 
       return data
@@ -104,6 +106,7 @@ function DataStoreManager:GetDefaultData()
     EquippedItems = {},
     AutoRoll = false,
     TradeHistory = {},
+    PendingNotifications = {},
     DataVersion = DATA_VERSION
   }
 end

@@ -170,6 +170,17 @@ local function setupPlayer(player)
       Body = "Your data loaded successfully"
     }
     notificationEvent:FireClient(player, msg)
+    
+    if data.PendingNotifications and #data.PendingNotifications > 0 then
+      task.wait(0.5)
+      for _, notification in ipairs(data.PendingNotifications) do
+        notificationEvent:FireClient(player, notification)
+        task.wait(0.3)
+      end
+      
+      data.PendingNotifications = {}
+      DataStoreManager:SaveData(player, data)
+    end
   end)
 end
 
