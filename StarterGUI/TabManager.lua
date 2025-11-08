@@ -1,31 +1,40 @@
 -- TabManager.lua
--- Unified tab system for Inventory, Index, Mastery, and Marketplace
--- Ensures only one tab is open at a time
--- Note: Trading UI is handled separately and is not part of this tab system
+-- Unified tab system for all UI frames (Inventory, Index, Mastery, Marketplace, Trading)
+-- Ensures only one tab is open at a time while preserving critical overlays (trade requests)
 
 local Players = game:GetService("Players")
 
 local player = Players.LocalPlayer
 local gui = script.Parent
 
--- Wait for all frames (Trading excluded - it manages itself)
+-- Wait for all frames
 local inventoryFrame = gui:WaitForChild("Inventory", 5)
 local indexFrame = gui:WaitForChild("Index", 5)
 local masteryFrame = gui:WaitForChild("Mastery", 5)
 local marketplaceFrame = gui:WaitForChild("Marketplace", 5)
+local tradingFrame = gui:WaitForChild("Trading", 5)
 
 -- Wait for all open buttons
 local inventoryOpenButton = gui:WaitForChild("InventoryOpen", 5)
 local indexOpenButton = gui:WaitForChild("IndexOpen", 5)
 local masteryOpenButton = gui:WaitForChild("MasteryOpen", 5)
 local marketplaceOpenButton = gui:WaitForChild("MarketplaceOpen", 5)
+local tradingOpenButton = gui:WaitForChild("TradingOpen", 5)
+
+-- Get trading sub-frames for special handling
+local sendTradesFrame = tradingFrame and tradingFrame:WaitForChild("SendTradesFrame", 5)
+local tradeRequestFrame = tradingFrame and tradingFrame:WaitForChild("TradeRequestFrame", 5)
+local tradeFrame = tradingFrame and tradingFrame:WaitForChild("TradeFrame", 5)
+local tradeHistoryFrame = tradingFrame and tradingFrame:WaitForChild("TradeHistoryFrame", 5)
+local viewInventoryFrame = tradingFrame and tradingFrame:WaitForChild("ViewInventoryFrame", 5)
 
 -- Table of all frames for easy iteration
 local allFrames = {
 	Inventory = inventoryFrame,
 	Index = indexFrame,
 	Mastery = masteryFrame,
-	Marketplace = marketplaceFrame
+	Marketplace = marketplaceFrame,
+	Trading = tradingFrame
 }
 
 -- Track currently open frame
@@ -35,7 +44,23 @@ local currentOpenFrame = nil
 local function closeAllFrames()
 	for frameName, frame in pairs(allFrames) do
 		if frame then
-			frame.Visible = false
+			if frameName == "Trading" then
+				-- For Trading, only hide the main content (SendTradesFrame)
+				-- Keep the parent Trading frame visible to allow overlays (TradeRequestFrame, TradeFrame) to work
+				if sendTradesFrame then
+					sendTradesFrame.Visible = false
+				end
+				if tradeHistoryFrame then
+					tradeHistoryFrame.Visible = false
+				end
+				if viewInventoryFrame then
+					viewInventoryFrame.Visible = false
+				end
+				-- Note: TradeRequestFrame and TradeFrame control their own visibility based on trading state
+			else
+				-- For other frames, hide the entire frame
+				frame.Visible = false
+			end
 		end
 	end
 	currentOpenFrame = nil
@@ -51,13 +76,46 @@ local function openFrame(frameName)
 	-- Close all frames first
 	closeAllFrames()
 	
-	-- Open the requested frame
-	allFrames[frameName].Visible = true
+	if frameName == "Trading" then
+		-- For Trading, keep the parent frame visible and show SendTradesFrame
+		tradingFrame.Visible = true
+		if sendTradesFrame then
+			sendTradesFrame.Visible = true
+		end
+	else
+		-- For other frames, just make them visible
+		allFrames[frameName].Visible = true
+	end
+	
 	currentOpenFrame = frameName
 end
 
--- Initialize: Close all frames on start
-closeAllFrames()
+-- Initialize: Close all frames on start but keep Trading frame visible for overlays
+for frameName, frame in pairs(allFrames) do
+	if frame then
+		if frameName == "Trading" then
+			-- Keep Trading frame visible but hide its content
+			tradingFrame.Visible = true
+			if sendTradesFrame then
+				sendTradesFrame.Visible = false
+			end
+			if tradeFrame then
+				tradeFrame.Visible = false
+			end
+			if tradeRequestFrame then
+				tradeRequestFrame.Visible = false
+			end
+			if tradeHistoryFrame then
+				tradeHistoryFrame.Visible = false
+			end
+			if viewInventoryFrame then
+				viewInventoryFrame.Visible = false
+			end
+		else
+			frame.Visible = false
+		end
+	end
+end
 
 -- Connect buttons to their respective frames
 if inventoryOpenButton then
@@ -81,6 +139,12 @@ end
 if marketplaceOpenButton then
 	marketplaceOpenButton.MouseButton1Click:Connect(function()
 		openFrame("Marketplace")
+	end)
+end
+
+if tradingOpenButton then
+	tradingOpenButton.MouseButton1Click:Connect(function()
+		openFrame("Trading")
 	end)
 end
 
@@ -109,4 +173,12 @@ if marketplaceCloseButton then
 	marketplaceCloseButton.MouseButton1Click:Connect(closeAllFrames)
 end
 
-print("TabManager initialized - 4 tabs ready (Inventory, Index, Mastery, Marketplace)")
+-- Trading close button (on SendTradesFrame)
+if sendTradesFrame then
+	local tradingCloseButton = sendTradesFrame:FindFirstChild("Close")
+	if tradingCloseButton then
+		tradingCloseButton.MouseButton1Click:Connect(closeAllFrames)
+	end
+end
+
+print("TabManager initialized - All tabs ready with trade overlay support")
