@@ -21,17 +21,6 @@ local function equipItemToCharacter(player, robloxId, bodyPartType)
 
   local success, result = pcall(function()
     if bodyPartType and BODY_PART_ENUM_MAP[bodyPartType] then
-      -- Remove any existing CharacterMesh for this body part
-      for _, obj in pairs(character:GetChildren()) do
-        if obj:IsA("CharacterMesh") and obj.BodyPart == BODY_PART_ENUM_MAP[bodyPartType] then
-          local storedId = obj:FindFirstChild("OriginalRobloxId")
-          if storedId and storedId.Value == robloxId then
-            return
-          end
-          obj:Destroy()
-        end
-      end
-      
       -- Get current HumanoidDescription
       local desc = humanoid:GetAppliedDescription()
       
@@ -50,15 +39,6 @@ local function equipItemToCharacter(player, robloxId, bodyPartType)
       
       -- Apply the updated description
       humanoid:ApplyDescription(desc)
-      
-      -- Store the RobloxId so we know this item is equipped
-      local bodyPart = character:FindFirstChild(bodyPartType)
-      if bodyPart then
-        local idValue = bodyPart:FindFirstChild("OriginalRobloxId") or Instance.new("IntValue")
-        idValue.Name = "OriginalRobloxId"
-        idValue.Value = robloxId
-        idValue.Parent = bodyPart
-      end
     else
       local productInfo
       pcall(function()
@@ -113,12 +93,11 @@ local function equipItemToCharacter(player, robloxId, bodyPartType)
   return success, result
 end
 
-local function unequipItemFromCharacter(player, robloxId)
+local function unequipItemFromCharacter(player, robloxId, bodyPartType)
   local character = player.Character
   if not character then return 0 end
   local itemsRemoved = 0
   local humanoid = character:FindFirstChildOfClass("Humanoid")
-  local needsDescriptionRefresh = false
   
   local head = character:FindFirstChild("Head")
   if head then
@@ -132,41 +111,30 @@ local function unequipItemFromCharacter(player, robloxId)
     end
   end
   
-  -- Check for body parts with OriginalRobloxId
-  for _, bodyPartName in pairs({"LeftArm", "RightArm", "LeftLeg", "RightLeg", "Torso"}) do
-    local bodyPart = character:FindFirstChild(bodyPartName)
-    if bodyPart then
-      local storedId = bodyPart:FindFirstChild("OriginalRobloxId")
-      if storedId and storedId.Value == robloxId then
-        -- Reset to player's original body part by getting description from their userId
-        if humanoid then
-          local success, originalDesc = pcall(function()
-            return Players:GetHumanoidDescriptionFromUserId(player.UserId)
-          end)
-          
-          if success and originalDesc then
-            local currentDesc = humanoid:GetAppliedDescription()
-            
-            -- Only reset the specific body part to the player's original
-            if bodyPartName == "LeftArm" then
-              currentDesc.LeftArm = originalDesc.LeftArm
-            elseif bodyPartName == "RightArm" then
-              currentDesc.RightArm = originalDesc.RightArm
-            elseif bodyPartName == "LeftLeg" then
-              currentDesc.LeftLeg = originalDesc.LeftLeg
-            elseif bodyPartName == "RightLeg" then
-              currentDesc.RightLeg = originalDesc.RightLeg
-            elseif bodyPartName == "Torso" then
-              currentDesc.Torso = originalDesc.Torso
-            end
-            
-            humanoid:ApplyDescription(currentDesc)
-          end
-        end
-        storedId:Destroy()
-        itemsRemoved = itemsRemoved + 1
-        needsDescriptionRefresh = true
+  -- Handle body part unequipping
+  if bodyPartType and BODY_PART_ENUM_MAP[bodyPartType] and humanoid then
+    local success, originalDesc = pcall(function()
+      return Players:GetHumanoidDescriptionFromUserId(player.UserId)
+    end)
+    
+    if success and originalDesc then
+      local currentDesc = humanoid:GetAppliedDescription()
+      
+      -- Reset the specific body part to the player's original
+      if bodyPartType == "LeftArm" then
+        currentDesc.LeftArm = originalDesc.LeftArm
+      elseif bodyPartType == "RightArm" then
+        currentDesc.RightArm = originalDesc.RightArm
+      elseif bodyPartType == "LeftLeg" then
+        currentDesc.LeftLeg = originalDesc.LeftLeg
+      elseif bodyPartType == "RightLeg" then
+        currentDesc.RightLeg = originalDesc.RightLeg
+      elseif bodyPartType == "Torso" then
+        currentDesc.Torso = originalDesc.Torso
       end
+      
+      humanoid:ApplyDescription(currentDesc)
+      itemsRemoved = itemsRemoved + 1
     end
   end
   
@@ -256,7 +224,7 @@ equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
   if not data then return end
   data.EquippedItems = data.EquippedItems or {}
   if shouldUnequip then
-    unequipItemFromCharacter(player, robloxId)
+    unequipItemFromCharacter(player, robloxId, bodyPartType)
     for i = #data.EquippedItems, 1, -1 do
       if data.EquippedItems[i] == robloxId then
         table.remove(data.EquippedItems, i)
@@ -341,7 +309,7 @@ sellItemEvent.OnServerEvent:Connect(function(player, robloxId, serialNumber)
     end
   end
   if not stillOwnsItem then
-    unequipItemFromCharacter(player, robloxId)
+    unequipItemFromCharacter(player, robloxId, item.BodyPartType)
     if data.EquippedItems then
       for i = #data.EquippedItems, 1, -1 do
         if data.EquippedItems[i] == robloxId then
@@ -396,7 +364,7 @@ sellAllItemEvent.OnServerEvent:Connect(function(player, robloxId)
   end
   if totalCopiesRemoved > 0 then ItemDatabase:DecrementTotalCopies(firstItem.RobloxId, totalCopiesRemoved) end
   ItemDatabase:DecrementOwners(firstItem.RobloxId)
-  unequipItemFromCharacter(player, robloxId)
+  unequipItemFromCharacter(player, robloxId, firstItem.BodyPartType)
   if data.EquippedItems then
     for i = #data.EquippedItems, 1, -1 do
       if data.EquippedItems[i] == robloxId then
@@ -461,7 +429,7 @@ sellByRarityEvent.OnServerEvent:Connect(function(player, rarity)
     end
     
     -- Unequip items
-    unequipItemFromCharacter(player, entry.item.RobloxId)
+    unequipItemFromCharacter(player, entry.item.RobloxId, entry.item.BodyPartType)
     if data.EquippedItems then
       for i = #data.EquippedItems, 1, -1 do
         if data.EquippedItems[i] == entry.item.RobloxId then
