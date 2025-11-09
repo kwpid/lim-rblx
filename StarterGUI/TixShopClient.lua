@@ -70,23 +70,9 @@ local function PopulateShop()
         
         ClearItems()
         
-        local inventory = {}
-        local success, result = pcall(function()
-                return GetInventoryFunction:InvokeServer()
-        end)
-        
-        if success and result then
-                inventory = result
-        end
-        
-        local ownedItems = {}
-        for _, invItem in ipairs(inventory) do
-                ownedItems[invItem.RobloxId] = true
-        end
-        
         for _, item in ipairs(CurrentRotation) do
                 local itemFrame = Sample:Clone()
-                itemFrame.Name = tostring(item.RobloxId)
+                itemFrame.Name = tostring(item.RobloxId or item.BundleId)
                 itemFrame.Visible = true
                 
                 local itemImage = itemFrame:WaitForChild("ItemImage")
@@ -95,12 +81,14 @@ local function PopulateShop()
                 local purchaseButton = itemFrame:WaitForChild("Purchase")
                 local ownedFrame = itemFrame:FindFirstChild("OwnedFrame")
                 
-                itemImage.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=" .. tostring(item.RobloxId) .. "&width=150&height=150"
+                if item.RobloxId then
+                        itemImage.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=" .. tostring(item.RobloxId) .. "&width=150&height=150"
+                end
                 
                 itemName.Text = item.Name
                 itemPrice.Text = FormatCash(item.Price)
                 
-                local isOwned = ownedItems[item.RobloxId] == true
+                local isOwned = item.IsOwned == true
                 
                 if ownedFrame then
                         ownedFrame.Visible = isOwned
@@ -112,7 +100,8 @@ local function PopulateShop()
                         purchaseButton.Visible = true
                         purchaseButton.MouseButton1Click:Connect(function()
                                 SelectedItem = item
-                                Text1.Text = "Are you sure you want to buy " .. item.Name .. " for " .. FormatCash(item.Price) .. "?"
+                                local itemType = item.BundleId and "bundle" or "item"
+                                Text1.Text = "Are you sure you want to buy " .. item.Name .. " " .. itemType .. " for " .. FormatCash(item.Price) .. "?"
                                 BuyConfirm.Visible = true
                         end)
                 end
@@ -148,7 +137,8 @@ end)
 
 ConfirmButton.MouseButton1Click:Connect(function()
         if SelectedItem then
-                PurchaseTixItemEvent:FireServer(SelectedItem.RobloxId)
+                local identifier = SelectedItem.BundleId or SelectedItem.RobloxId
+                PurchaseTixItemEvent:FireServer(identifier)
                 BuyConfirm.Visible = false
                 SelectedItem = nil
         end

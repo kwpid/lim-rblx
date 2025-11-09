@@ -33,6 +33,7 @@ function DataStoreAPI:AddItem(player, itemData, preserveSerialOwner)
       Value = itemData.Value,
       Rarity = itemData.Rarity,
       SerialNumber = itemData.SerialNumber,
+      BodyPartType = itemData.BodyPartType,
       ObtainedAt = os.time()
     })
     isNewOwner = true
@@ -63,6 +64,7 @@ function DataStoreAPI:AddItem(player, itemData, preserveSerialOwner)
         Value = itemData.Value,
         Rarity = itemData.Rarity,
         Amount = amountToAdd,
+        BodyPartType = itemData.BodyPartType,
         ObtainedAt = os.time()
       })
       isNewOwner = true
@@ -268,7 +270,9 @@ function DataStoreAPI:CalculateInventoryValue(player)
 
   local totalValue = 0
   for _, item in ipairs(data.Inventory) do
-    totalValue = totalValue + ((item.Value or 0) * (item.Amount or 1))
+    if item.Rarity ~= "Vanity" then
+      totalValue = totalValue + ((item.Value or 0) * (item.Amount or 1))
+    end
   end
   return totalValue
 end

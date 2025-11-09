@@ -4,59 +4,124 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
 local ItemDatabase = require(script.Parent.ItemDatabase)
 
-local function equipItemToCharacter(player, robloxId)
+local BODY_PART_ENUM_MAP = {
+  LeftArm = Enum.BodyPart.LeftArm,
+  RightArm = Enum.BodyPart.RightArm,
+  LeftLeg = Enum.BodyPart.LeftLeg,
+  RightLeg = Enum.BodyPart.RightLeg,
+  Torso = Enum.BodyPart.Torso,
+  Head = Enum.BodyPart.Head
+}
+
+local function equipItemToCharacter(player, robloxId, bodyPartType)
   local character = player.Character
   if not character then return false end
   local humanoid = character:FindFirstChildOfClass("Humanoid")
   if not humanoid then return false end
 
   local success, result = pcall(function()
-    local productInfo
-    pcall(function()
-      productInfo = game:GetService("MarketplaceService"):GetProductInfo(robloxId)
-    end)
-    local isHeadless = productInfo and productInfo.Name and productInfo.Name:lower():find("headless")
-
-    if isHeadless then
-      local head = character:FindFirstChild("Head")
-      if head then
-        head.Transparency = 1
-        local face = head:FindFirstChildOfClass("Decal")
-        if face then face.Transparency = 1 end
-        local idValue = head:FindFirstChild("HeadlessRobloxId") or Instance.new("IntValue")
-        idValue.Name = "HeadlessRobloxId"
-        idValue.Value = robloxId
-        idValue.Parent = head
+    if bodyPartType and BODY_PART_ENUM_MAP[bodyPartType] then
+      for _, obj in pairs(character:GetChildren()) do
+        if obj:IsA("CharacterMesh") and obj.BodyPart == BODY_PART_ENUM_MAP[bodyPartType] then
+          local storedId = obj:FindFirstChild("OriginalRobloxId")
+          if storedId and storedId.Value == robloxId then
+            return
+          end
+          obj:Destroy()
+        end
       end
-    else
+      
       local model = InsertService:LoadAsset(robloxId)
       if model then
-        local item = model:FindFirstChildOfClass("Accessory") or model:FindFirstChildOfClass("Tool") or
-        model:FindFirstChildOfClass("Hat")
-        if not item then
-          for _, child in ipairs(model:GetChildren()) do
-            if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
-              item = child
+        local meshId = robloxId
+        local textureId = 0
+        
+        local bodyPartObj = model:FindFirstChild(bodyPartType) or model:FindFirstChildWhichIsA("MeshPart")
+        if bodyPartObj and bodyPartObj:IsA("MeshPart") then
+          if bodyPartObj.MeshId and bodyPartObj.MeshId ~= "" then
+            meshId = tonumber(bodyPartObj.MeshId:match("%d+")) or robloxId
+          end
+          if bodyPartObj.TextureID and bodyPartObj.TextureID ~= "" then
+            textureId = tonumber(bodyPartObj.TextureID:match("%d+")) or 0
+          end
+        else
+          for _, child in ipairs(model:GetDescendants()) do
+            if child:IsA("SpecialMesh") or child:IsA("FileMesh") then
+              if child.MeshId and child.MeshId ~= "" then
+                meshId = tonumber(child.MeshId:match("%d+")) or robloxId
+              end
+              if child.TextureId and child.TextureId ~= "" then
+                textureId = tonumber(child.TextureId:match("%d+")) or 0
+              end
               break
             end
           end
         end
-        if item then
-          local itemClone = item:Clone()
-          local idValue = Instance.new("IntValue")
-          idValue.Name = "OriginalRobloxId"
+        
+        model:Destroy()
+        
+        local characterMesh = Instance.new("CharacterMesh")
+        characterMesh.BodyPart = BODY_PART_ENUM_MAP[bodyPartType]
+        characterMesh.MeshId = meshId
+        characterMesh.BaseTextureId = textureId
+        local idValue = Instance.new("IntValue")
+        idValue.Name = "OriginalRobloxId"
+        idValue.Value = robloxId
+        idValue.Parent = characterMesh
+        characterMesh.Parent = character
+        
+        task.wait(0.1)
+        local desc = humanoid:GetAppliedDescription()
+        humanoid:ApplyDescription(desc)
+      end
+    else
+      local productInfo
+      pcall(function()
+        productInfo = game:GetService("MarketplaceService"):GetProductInfo(robloxId)
+      end)
+      local isHeadless = productInfo and productInfo.Name and productInfo.Name:lower():find("headless")
+
+      if isHeadless then
+        local head = character:FindFirstChild("Head")
+        if head then
+          head.Transparency = 1
+          local face = head:FindFirstChildOfClass("Decal")
+          if face then face.Transparency = 1 end
+          local idValue = head:FindFirstChild("HeadlessRobloxId") or Instance.new("IntValue")
+          idValue.Name = "HeadlessRobloxId"
           idValue.Value = robloxId
-          idValue.Parent = itemClone
-          if itemClone:IsA("Tool") then
-            itemClone.Parent = player.Backpack
-          else
-            itemClone.Parent = character
-            if itemClone:IsA("Accessory") then
-              humanoid:AddAccessory(itemClone)
+          idValue.Parent = head
+        end
+      else
+        local model = InsertService:LoadAsset(robloxId)
+        if model then
+          local item = model:FindFirstChildOfClass("Accessory") or model:FindFirstChildOfClass("Tool") or
+          model:FindFirstChildOfClass("Hat")
+          if not item then
+            for _, child in ipairs(model:GetChildren()) do
+              if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
+                item = child
+                break
+              end
             end
           end
+          if item then
+            local itemClone = item:Clone()
+            local idValue = Instance.new("IntValue")
+            idValue.Name = "OriginalRobloxId"
+            idValue.Value = robloxId
+            idValue.Parent = itemClone
+            if itemClone:IsA("Tool") then
+              itemClone.Parent = player.Backpack
+            else
+              itemClone.Parent = character
+              if itemClone:IsA("Accessory") then
+                humanoid:AddAccessory(itemClone)
+              end
+            end
+          end
+          model:Destroy()
         end
-        model:Destroy()
       end
     end
   end)
@@ -67,6 +132,9 @@ local function unequipItemFromCharacter(player, robloxId)
   local character = player.Character
   if not character then return 0 end
   local itemsRemoved = 0
+  local humanoid = character:FindFirstChildOfClass("Humanoid")
+  local needsRefresh = false
+  
   local head = character:FindFirstChild("Head")
   if head then
     local headlessId = head:FindFirstChild("HeadlessRobloxId")
@@ -78,8 +146,16 @@ local function unequipItemFromCharacter(player, robloxId)
       itemsRemoved = itemsRemoved + 1
     end
   end
+  
   for _, child in ipairs(character:GetChildren()) do
-    if child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
+    if child:IsA("CharacterMesh") then
+      local storedId = child:FindFirstChild("OriginalRobloxId")
+      if storedId and storedId.Value == robloxId then
+        child:Destroy()
+        itemsRemoved = itemsRemoved + 1
+        needsRefresh = true
+      end
+    elseif child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
       local storedId = child:FindFirstChild("OriginalRobloxId")
       if storedId and storedId.Value == robloxId then
         child:Destroy()
@@ -87,6 +163,7 @@ local function unequipItemFromCharacter(player, robloxId)
       end
     end
   end
+  
   local backpack = player:FindFirstChild("Backpack")
   if backpack then
     for _, child in ipairs(backpack:GetChildren()) do
@@ -99,6 +176,13 @@ local function unequipItemFromCharacter(player, robloxId)
       end
     end
   end
+  
+  if needsRefresh and humanoid then
+    task.wait(0.1)
+    local desc = humanoid:GetAppliedDescription()
+    humanoid:ApplyDescription(desc)
+  end
+  
   return itemsRemoved
 end
 
@@ -142,10 +226,11 @@ end
 equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
   if typeof(robloxId) ~= "number" then return end
   local inventory = DataStoreAPI:GetInventory(player)
-  local ownsItem, itemName = false, "Item"
+  local ownsItem, itemName, bodyPartType = false, "Item", nil
   for _, item in ipairs(inventory) do
     if item.RobloxId == robloxId then
       ownsItem, itemName = true, item.Name
+      bodyPartType = item.BodyPartType
       break
     end
   end
@@ -165,7 +250,7 @@ equipItemEvent.OnServerEvent:Connect(function(player, robloxId, shouldUnequip)
     local inventoryUpdatedEvent = remoteEventsFolder:FindFirstChild("InventoryUpdatedEvent")
     if inventoryUpdatedEvent then inventoryUpdatedEvent:FireClient(player) end
   else
-    local success = equipItemToCharacter(player, robloxId)
+    local success = equipItemToCharacter(player, robloxId, bodyPartType)
     if success then
       local alreadyEquipped = false
       for _, equippedId in ipairs(data.EquippedItems) do
@@ -396,13 +481,14 @@ local function autoEquipItems(player)
   local data = DataStoreAPI:GetPlayerData(player)
   if not data or not data.EquippedItems then return end
   local inventory = DataStoreAPI:GetInventory(player)
-  local ownedRobloxIds, itemsToRemove = {}, {}
+  local ownedItems, itemsToRemove = {}, {}
   for _, item in ipairs(inventory) do
-    ownedRobloxIds[item.RobloxId] = true
+    ownedItems[item.RobloxId] = item
   end
   for i, robloxId in ipairs(data.EquippedItems) do
-    if ownedRobloxIds[robloxId] then
-      equipItemToCharacter(player, robloxId)
+    if ownedItems[robloxId] then
+      local bodyPartType = ownedItems[robloxId].BodyPartType
+      equipItemToCharacter(player, robloxId, bodyPartType)
     else
       table.insert(itemsToRemove, i)
     end
