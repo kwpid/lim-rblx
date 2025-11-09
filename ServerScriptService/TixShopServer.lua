@@ -2,7 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local HttpService = game:GetService("HttpService")
-local AvatarEditorService = game:GetService("AvatarEditorService")
+local AssetService = game:GetService("AssetService")
 local TixShopDatabase = require(ReplicatedStorage:WaitForChild("TixShopDatabase"))
 local DataStoreAPI = require(script.Parent:WaitForChild("DataStoreAPI"))
 local ItemDatabase = require(script.Parent:WaitForChild("ItemDatabase"))
@@ -67,7 +67,7 @@ local function fetchBundleContents(bundleId)
         end
         
         local success, bundleDetails = pcall(function()
-                return AvatarEditorService:GetBundleDetails(bundleId)
+                return AssetService:GetBundleDetailsAsync(bundleId)
         end)
         
         if not success or not bundleDetails then
@@ -79,18 +79,26 @@ local function fetchBundleContents(bundleId)
         local thumbnailId = nil
         
         for _, item in ipairs(bundleDetails.Items) do
-                local assetType = item.AssetType
-                local bodyPartType = R6_ASSET_TYPE_MAP[assetType.Value]
-                
-                if bodyPartType then
-                        table.insert(bodyParts, {
-                                RobloxId = item.Id,
-                                Name = item.Name or (bodyPartType .. " Part"),
-                                BodyPartType = bodyPartType
-                        })
+                if item.Type == "Asset" and item.Id then
+                        local assetInfo = nil
+                        pcall(function()
+                                assetInfo = game:GetService("MarketplaceService"):GetProductInfo(item.Id, Enum.InfoType.Asset)
+                        end)
                         
-                        if not thumbnailId then
-                                thumbnailId = item.Id
+                        if assetInfo and assetInfo.AssetTypeId then
+                                local bodyPartType = R6_ASSET_TYPE_MAP[assetInfo.AssetTypeId]
+                                
+                                if bodyPartType then
+                                        table.insert(bodyParts, {
+                                                RobloxId = item.Id,
+                                                Name = item.Name or (bodyPartType .. " Part"),
+                                                BodyPartType = bodyPartType
+                                        })
+                                        
+                                        if not thumbnailId then
+                                                thumbnailId = item.Id
+                                        end
+                                end
                         end
                 end
         end
