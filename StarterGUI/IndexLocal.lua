@@ -159,6 +159,30 @@ function showTooltip(item, button)
   else
     local percentage = item.RollPercentage or 0
     local percentText = string.format("%.10f", percentage)
+    
+    local decimalPart = percentText:match("%.(%d+)")
+    local decimalPlaces = 4
+    
+    if decimalPart then
+      local allZerosInFirst4 = true
+      for i = 1, math.min(4, #decimalPart) do
+        if decimalPart:sub(i, i) ~= "0" then
+          allZerosInFirst4 = false
+          break
+        end
+      end
+      
+      if allZerosInFirst4 then
+        for i = 1, #decimalPart do
+          if decimalPart:sub(i, i) ~= "0" then
+            decimalPlaces = i
+            break
+          end
+        end
+      end
+    end
+    
+    percentText = string.format("%." .. decimalPlaces .. "f", percentage)
     percentText = percentText:gsub("0+$", "")
     percentText = percentText:gsub("%.$", "")
     rollLabel.Text = percentText .. "%"
