@@ -104,7 +104,7 @@ end
 function ItemRarityModule:CalculateAllRollPercentages(items)
   local totalInverseValue = 0
   for _, item in ipairs(items) do
-    if item.Rarity ~= "Limited" and item.Rarity ~= "Vanity" then
+    if item.Rarity ~= "Limited" and item.Rarity ~= "Vanity" and item.Value > 0 then
       totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
     end
   end
@@ -112,7 +112,7 @@ function ItemRarityModule:CalculateAllRollPercentages(items)
   local itemsWithPercentages = {}
   for _, item in ipairs(items) do
     local itemCopy = table.clone(item)
-    if item.Rarity == "Limited" or item.Rarity == "Vanity" then
+    if item.Rarity == "Limited" or item.Rarity == "Vanity" or item.Value <= 0 then
       itemCopy.RollPercentage = 0
     else
       itemCopy.RollPercentage = self:GetRollPercentage(item.Value, totalInverseValue)

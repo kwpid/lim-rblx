@@ -101,7 +101,7 @@ end
 function ItemDatabase:AddItem(robloxId, itemName, itemValue, stock, isLimited, offsaleTimer)
   if type(robloxId) ~= "number" then return false, "RobloxId must be a number" end
   if type(itemName) ~= "string" or itemName == "" then return false, "Item name cannot be empty" end
-  if type(itemValue) ~= "number" or itemValue < 0 then return false, "Item value must be a positive number" end
+  if type(itemValue) ~= "number" or itemValue <= 0 then return false, "Item value must be a positive number (greater than 0)" end
   stock = stock or 0
   if type(stock) ~= "number" or stock < 0 or stock > 100 then return false, "Stock must be between 0 and 100" end
   isLimited = isLimited or false
