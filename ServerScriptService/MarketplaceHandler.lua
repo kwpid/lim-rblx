@@ -370,7 +370,7 @@ local function findItemInInventory(player, robloxId, serialNumber)
         return nil, nil
 end
 
-createListingEvent.OnServerEvent:Connect(function(player, itemData, listingType, price, gamepassId)
+createListingEvent.OnServerEvent:Connect(function(player, itemData, listingType, price)
         if not itemData or not listingType or not price then
                 notificationEvent:FireClient(player, {
                         Type = "ERROR",
@@ -389,48 +389,20 @@ createListingEvent.OnServerEvent:Connect(function(player, itemData, listingType,
                 return
         end
 
-        if listingType == "cash" then
-                if price < 1 or price > 1000000000 then
-                        notificationEvent:FireClient(player, {
-                                Type = "ERROR",
-                                Title = "Invalid Price",
-                                Body = "Cash price must be between $1 and $1,000,000,000"
-                        })
-                        return
-                end
-        elseif listingType == "robux" then
-                if not gamepassId or gamepassId == "" then
-                        notificationEvent:FireClient(player, {
-                                Type = "ERROR",
-                                Title = "Invalid Gamepass",
-                                Body = "Please enter a valid gamepass ID"
-                        })
-                        return
-                end
-
-                local validGamepass = false
-                local productInfo = nil
-                local success, result = pcall(function()
-                        return MarketplaceService:GetProductInfo(tonumber(gamepassId), Enum.InfoType.GamePass)
-                end)
-
-                if success and result then
-                        validGamepass = true
-                        productInfo = result
-                        price = productInfo.PriceInRobux or 0
-                else
-                        notificationEvent:FireClient(player, {
-                                Type = "ERROR",
-                                Title = "Invalid Gamepass",
-                                Body = "Could not verify gamepass ID"
-                        })
-                        return
-                end
-        else
+        if listingType ~= "cash" then
                 notificationEvent:FireClient(player, {
                         Type = "ERROR",
                         Title = "Invalid Listing Type",
-                        Body = "Please choose cash or robux"
+                        Body = "Only cash listings are allowed"
+                })
+                return
+        end
+
+        if price < 1 or price > 1000000000 then
+                notificationEvent:FireClient(player, {
+                        Type = "ERROR",
+                        Title = "Invalid Price",
+                        Body = "Cash price must be between $1 and $1,000,000,000"
                 })
                 return
         end
@@ -483,23 +455,16 @@ createListingEvent.OnServerEvent:Connect(function(player, itemData, listingType,
                         Stock = itemData.Stock,
                         CurrentStock = itemData.CurrentStock
                 },
-                ListingType = listingType,
+                ListingType = "cash",
                 Price = price,
-                GamepassId = gamepassId,
                 CreatedAt = os.time()
         }
 
         table.insert(activeListings, listing)
         saveListings()
 
-        local priceText = ""
-        if listingType == "cash" then
-                local sellerReceives = math.floor(price * (1 - CASH_TAX_RATE))
-                priceText = "$" .. formatNumber(sellerReceives) .. " (after tax)"
-        else
-                local sellerReceives = math.floor(price * (1 - ROBUX_TAX_RATE))
-                priceText = "R$" .. formatNumber(sellerReceives) .. " (after tax)"
-        end
+        local sellerReceives = math.floor(price * (1 - CASH_TAX_RATE))
+        local priceText = "$" .. formatNumber(sellerReceives) .. " (after tax)"
 
         notificationEvent:FireClient(player, {
                 Type = "MARKET_LIST",
@@ -545,99 +510,50 @@ purchaseListingEvent.OnServerEvent:Connect(function(player, listingId)
                 return
         end
 
-        if listing.ListingType == "cash" then
-                if data.Cash < listing.Price then
-                        notificationEvent:FireClient(player, {
-                                Type = "ERROR",
-                                Title = "Insufficient Cash",
-                                Body = "You need $" .. formatNumber(listing.Price) .. " to purchase this item"
-                        })
-                        return
-                end
-
-                data.Cash = data.Cash - listing.Price
-
-                if player:FindFirstChild("leaderstats") then
-                        local cash = player.leaderstats:FindFirstChild("Cash")
-                        if cash then
-                                cash.Value = data.Cash
-                        end
-                end
-
-                local sellerReceives = math.floor(listing.Price * (1 - CASH_TAX_RATE))
-                local adminReceives = listing.Price - sellerReceives
-
-                addPendingCash(listing.SellerUserId, sellerReceives)
-                addPendingCash(ADMIN_USER_ID, adminReceives)
-
-                sendOrSaveNotification(listing.SellerUserId, {
-                        Type = "MARKET_SOLD",
-                        Title = "Item Sold!",
-                        Body = listing.ItemData.Name .. " sold for $" .. formatNumber(sellerReceives) .. " (after tax)",
-                        ImageId = listing.ItemData.RobloxId
+        if data.Cash < listing.Price then
+                notificationEvent:FireClient(player, {
+                        Type = "ERROR",
+                        Title = "Insufficient Cash",
+                        Body = "You need $" .. formatNumber(listing.Price) .. " to purchase this item"
                 })
-
-                task.spawn(function()
-                        local handler = getWebhookHandler()
-                        if handler then
-                                handler:SendMarketplaceSale(
-                                        player,
-                                        listing.SellerUsername,
-                                        listing.ItemData,
-                                        listing.Price,
-                                        "cash",
-                                        sellerReceives
-                                )
-                        end
-                end)
-        elseif listing.ListingType == "robux" then
-                local ownsGamepass = false
-
-                if IS_STUDIO then
-                        print("⚠️ STUDIO MODE: Bypassing gamepass validation for testing purposes")
-                        print("⚠️ In production, gamepass ownership will be properly validated")
-                        ownsGamepass = true
-                else
-                        local success, result = pcall(function()
-                                return MarketplaceService:UserOwnsGamePassAsync(player.UserId, tonumber(listing.GamepassId))
-                        end)
-
-                        if success and result then
-                                ownsGamepass = true
-                        end
-
-                        if not ownsGamepass then
-                                notificationEvent:FireClient(player, {
-                                        Type = "ERROR",
-                                        Title = "Purchase Failed",
-                                        Body = "You must own gamepass ID " .. listing.GamepassId .. " to complete this purchase"
-                                })
-                                return
-                        end
-                end
-
-                local sellerReceives = math.floor(listing.Price * (1 - ROBUX_TAX_RATE))
-                sendOrSaveNotification(listing.SellerUserId, {
-                        Type = "MARKET_SOLD",
-                        Title = "Item Sold!",
-                        Body = listing.ItemData.Name .. " sold for R$" .. formatNumber(sellerReceives) .. " (after tax)",
-                        ImageId = listing.ItemData.RobloxId
-                })
-
-                task.spawn(function()
-                        local handler = getWebhookHandler()
-                        if handler then
-                                handler:SendMarketplaceSale(
-                                        player,
-                                        listing.SellerUsername,
-                                        listing.ItemData,
-                                        listing.Price,
-                                        "robux",
-                                        sellerReceives
-                                )
-                        end
-                end)
+                return
         end
+
+        data.Cash = data.Cash - listing.Price
+
+        if player:FindFirstChild("leaderstats") then
+                local cash = player.leaderstats:FindFirstChild("Cash")
+                if cash then
+                        cash.Value = data.Cash
+                end
+        end
+
+        local sellerReceives = math.floor(listing.Price * (1 - CASH_TAX_RATE))
+        local adminReceives = listing.Price - sellerReceives
+
+        addPendingCash(listing.SellerUserId, sellerReceives)
+        addPendingCash(ADMIN_USER_ID, adminReceives)
+
+        sendOrSaveNotification(listing.SellerUserId, {
+                Type = "MARKET_SOLD",
+                Title = "Item Sold!",
+                Body = listing.ItemData.Name .. " sold for $" .. formatNumber(sellerReceives) .. " (after tax)",
+                ImageId = listing.ItemData.RobloxId
+        })
+
+        task.spawn(function()
+                local handler = getWebhookHandler()
+                if handler then
+                        handler:SendMarketplaceSale(
+                                player,
+                                listing.SellerUsername,
+                                listing.ItemData,
+                                listing.Price,
+                                "cash",
+                                sellerReceives
+                        )
+                end
+        end)
 
         local itemToAdd = {
                 RobloxId = listing.ItemData.RobloxId,
@@ -653,12 +569,7 @@ purchaseListingEvent.OnServerEvent:Connect(function(player, listingId)
         table.remove(activeListings, listingIndex)
         saveListings()
 
-        local priceText = ""
-        if listing.ListingType == "cash" then
-                priceText = "$" .. formatNumber(listing.Price)
-        else
-                priceText = "R$" .. formatNumber(listing.Price)
-        end
+        local priceText = "$" .. formatNumber(listing.Price)
 
         notificationEvent:FireClient(player, {
                 Type = "MARKET_PURCHASE",
@@ -761,5 +672,6 @@ validateGamepassFunction.OnServerInvoke = function(player, gamepassId)
 end
 
 loadListings()
+migrateRobuxListings()
 
 print("MarketplaceHandler loaded successfully")
