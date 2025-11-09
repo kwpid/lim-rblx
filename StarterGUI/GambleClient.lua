@@ -77,7 +77,7 @@ local theirWins = 0
 
 local function populatePlayerList()
         local playerList = sendRequestFrame:FindFirstChild("PlayerList")
-        local playerFrameSample = sendRequestFrame:FindFirstChild("PlayerFrame")
+        local playerFrameSample = script.PlayerFrame
 
         if not playerList or not playerFrameSample then
                 warn("PlayerList or PlayerFrame sample not found")
@@ -100,29 +100,16 @@ local function populatePlayerList()
                         playerFrame.LayoutOrder = i
                         playerFrame.Parent = playerList
 
-                        local playerImage = playerFrame:FindFirstChild("PlayerImage")
-                        if playerImage then
-                                playerImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=48&height=48&format=png"
-                        end
-
-                        local displayNameLabel = playerFrame:FindFirstChild("PlayerDisplayName")
-                        if displayNameLabel then
-                                displayNameLabel.Text = player.DisplayName
-                        end
-
-                        local usernameLabel = playerFrame:FindFirstChild("PlayerUsername")
-                        if usernameLabel then
-                                usernameLabel.Text = "@" .. player.Name
+                        local nameLabel = playerFrame:FindFirstChild("PlayerName")
+                        if nameLabel then
+                                nameLabel.Text = player.Name
                         end
 
                         local sendButton = playerFrame:FindFirstChild("SendButton")
                         if sendButton then
                                 sendButton.MouseButton1Click:Connect(function()
-                                        gambleEvent:FireServer("send gamble request", player)
-                                        sendRequestFrame.Visible = false
+                                        gambleEvent:FireServer("send gamble request", { player })
                                 end)
-                        else
-                                warn("SendButton not found in PlayerFrame for " .. player.Name)
                         end
 
                         table.insert(playerListButtons, playerFrame)
@@ -144,6 +131,9 @@ gambleRequestsFolder.ChildAdded:Connect(function(child)
                         rejectButton.Visible = true
                 end
 
+                gambleFrame.Visible = true
+                sendRequestFrame.Visible = false
+                gameMain.Visible = false
                 requestFrame.Visible = true
         elseif child.Name == client.Name then
                 requestFrame:FindFirstChild("RequestText").Text = "You sent a request to " .. child.Value
@@ -158,6 +148,9 @@ gambleRequestsFolder.ChildAdded:Connect(function(child)
                         rejectButton.Visible = true
                 end
 
+                gambleFrame.Visible = true
+                sendRequestFrame.Visible = false
+                gameMain.Visible = false
                 requestFrame.Visible = true
         end
 end)
@@ -186,9 +179,9 @@ local function updateSelectedItemsDisplay()
         if not currentGamble then return end
 
         local playerFolder = currentGamble.Player1.Value == client.Name and currentGamble.Player1 or
-        currentGamble.Player2
+            currentGamble.Player2
         local opponentFolder = currentGamble.Player1.Value == client.Name and currentGamble.Player2 or
-        currentGamble.Player1
+            currentGamble.Player1
 
         local selectItems = gameMain:FindFirstChild("SelectItems")
         if not selectItems then return end
@@ -251,7 +244,7 @@ local function updateSelectedItemsDisplay()
                                 gambleEvent:FireServer("remove item from gamble", {
                                         RobloxId = robloxId,
                                         SerialNumber = itemFolder:FindFirstChild("SerialNumber") and
-                                        itemFolder.SerialNumber.Value or nil
+                                            itemFolder.SerialNumber.Value or nil
                                 })
                         end)
 
@@ -506,7 +499,7 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
 
                                         if oppWinsLabel then
                                                 local oppName = currentGamble.Player1.Value == client.Name and
-                                                currentGamble.Player2.Value or currentGamble.Player1.Value
+                                                    currentGamble.Player2.Value or currentGamble.Player1.Value
                                                 oppWinsLabel.Text = "@" .. oppName .. " Wins: 0"
                                         end
 
@@ -626,7 +619,7 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
 
                                 if yourItem then
                                         yourItem.Image = "rbxthumb://type=Asset&id=" ..
-                                        data.YourItem.RobloxId .. "&w=150&h=150"
+                                            data.YourItem.RobloxId .. "&w=150&h=150"
                                 end
                                 if yourItemValue then
                                         yourItemValue.Text = "R$" .. formatNumber(data.YourItem.Value)
@@ -637,7 +630,7 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
 
                                 if theirItem then
                                         theirItem.Image = "rbxthumb://type=Asset&id=" ..
-                                        data.TheirItem.RobloxId .. "&w=150&h=150"
+                                            data.TheirItem.RobloxId .. "&w=150&h=150"
                                 end
                                 if theirItemValue then
                                         theirItemValue.Text = "R$" .. formatNumber(data.TheirItem.Value)
@@ -658,7 +651,7 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
 
                                 if oppWinsLabel then
                                         local oppName = currentGamble.Player1.Value == client.Name and
-                                        currentGamble.Player2.Value or currentGamble.Player1.Value
+                                            currentGamble.Player2.Value or currentGamble.Player1.Value
                                         oppWinsLabel.Text = "@" .. oppName .. " Wins: " .. theirWins
                                 end
 
