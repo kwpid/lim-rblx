@@ -70,9 +70,34 @@ local function equipItemToCharacter(player, robloxId, bodyPartType)
         idValue.Parent = characterMesh
         characterMesh.Parent = character
         
-        task.wait(0.1)
-        local desc = humanoid:GetAppliedDescription()
-        humanoid:ApplyDescription(desc)
+        -- For R6 body parts (arms, legs, torso), character needs to be refreshed
+        -- Head is excluded as it's handled differently
+        local needsCharacterRefresh = (bodyPartType == "LeftArm" or bodyPartType == "RightArm" or 
+                                       bodyPartType == "LeftLeg" or bodyPartType == "RightLeg" or 
+                                       bodyPartType == "Torso")
+        
+        if needsCharacterRefresh then
+          -- Save current position
+          local rootPart = character:FindFirstChild("HumanoidRootPart")
+          local currentPosition = rootPart and rootPart.CFrame or CFrame.new(0, 5, 0)
+          
+          -- Reload character
+          player:LoadCharacter()
+          
+          -- Wait for new character and restore position
+          task.wait(0.5)
+          local newCharacter = player.Character
+          if newCharacter then
+            local newRootPart = newCharacter:WaitForChild("HumanoidRootPart", 3)
+            if newRootPart then
+              newRootPart.CFrame = currentPosition
+            end
+          end
+        else
+          task.wait(0.1)
+          local desc = humanoid:GetAppliedDescription()
+          humanoid:ApplyDescription(desc)
+        end
       end
     else
       local productInfo
