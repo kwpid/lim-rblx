@@ -28,7 +28,7 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   **Index System**: Displays all game items with details, owner lists (including serial numbers), roll percentages, and "RareText"/"LimText." Vanity items are excluded from the Index display.
 -   **Trading System**: Player-to-player trading with requests, stacked/serial item support, dual acceptance, item transfer (preserving serial numbers and ownership), and cancellation. Features real-time value tracking and persistent trade history. Vanity items are excluded from trading.
 -   **Mastery System**: Tracks player progress across themed item collections with **persistent badge-based completion**. When a player completes a mastery (owns all items in a collection), they receive a Roblox badge. Badge ownership is the source of truth for completion - masteries stay completed forever even if items are lost/traded. Collections show CompletedFrame overlay and remain at 100% once badge is earned. Progress caps at 99% when all items owned but badge not confirmed (BadgeId=0 or award failure). Uses BadgeService for verification and awards. Collections are defined in `MasteryCollections.lua` with BadgeId fields.
--   **Marketplace System**: Player-driven economy allowing sale of high-value items (250k+ Robux value). Sellers can list items for in-game cash (1 to 1 billion range) or Robux via gamepass (30% tax). Features persistent listing storage, real-time validation, serial number preservation, buyer/seller notifications, and support for cancelling own listings. Players can purchase their own listings. **Gamepass Purchase Flow**: When buying a Robux listing, buyers are automatically prompted to purchase the required gamepass using Roblox's native purchase dialog. After successful purchase, the item transaction completes automatically with server-side ownership validation. **Studio Testing Mode**: Gamepass validation is automatically bypassed in Studio for testing with test players (Player1, Player2, etc.), while production games enforce full ownership validation. **Pending Cash & Notifications**: When items sell for cash, the money is saved to the seller's DataStore whether they're online or offline. When sellers log in, they receive all pending cash and a notification showing the total earned while offline. Robux sales work via gamepass ownership (handled by Roblox). Uses atomic UpdateAsync operations to prevent cash/notification loss during concurrent sales or player reconnections. Integrates with notification system and inventory management.
+-   **Marketplace System**: Player-driven economy allowing sale of high-value items (250k+ Robux value) for in-game cash only (1 to 1 billion range with 30% tax). Features persistent listing storage, real-time validation, serial number preservation, buyer/seller notifications, and support for cancelling own listings. Players can purchase their own listings. **Pending Cash & Notifications**: When items sell, the money is saved to the seller's DataStore whether they're online or offline. When sellers log in, they receive all pending cash and a notification showing the total earned while offline. Uses atomic UpdateAsync operations to prevent cash/notification loss during concurrent sales or player reconnections. Integrates with notification system and inventory management. **Migration System**: Includes idempotent migration logic (RobuxListingsMigrated flag) to safely refund any legacy Robux listings by returning items to seller inventories with offline notification support and retry logic for failed returns.
 -   **Lock System**: Item protection system allowing players to lock individual items (including specific serial numbers) to prevent accidental selling. Features persistent lock state in DataStore (LockedItems array), Lock button in inventory popup with emoji indicators (🔒 locked, 🔓 unlocked), visual "Locked" indicator on inventory items, and complete sell protection across all selling mechanisms (regular sell, sell all, sell by rarity, and marketplace listings). Locked items are sorted at the top of inventory (right after equipped items) for easy identification. Inventory UI automatically refreshes when items are locked/unlocked via InventoryUpdatedEvent. Server-side validation ensures security.
 
 ### UI/UX Decisions
@@ -50,7 +50,6 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   Asynchronous ItemDatabase loading.
 -   Debounced DataStore saves.
 -   Roblox `InsertService` for equipping items, displaying models in events, and loading R6 body part meshes/textures for CharacterMesh objects.
--   Roblox `MarketplaceService` for gamepass checks, purchase prompting, and ownership validation.
 -   Roblox `BadgeService` for mastery badge awards and ownership verification.
 -   Roblox `MessagingService` for cross-server notifications.
 -   Roblox `TeleportService` for auto-rejoin.
@@ -60,7 +59,6 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   **Roblox DataStore Service**: Persistent data storage.
 -   **Roblox API Services**: Requires "Studio Access to API Services" enabled.
 -   **Roblox InsertService**: Loads and attaches accessories/tools, displays event items, and extracts mesh/texture data from R6 body part assets.
--   **Roblox MarketplaceService**: Checks gamepass ownership.
 -   **Roblox MessagingService**: Cross-server notifications.
 -   **Roblox TeleportService**: Handles automatic player rejoining.
 -   **Discord Webhooks**: For new item releases, high-value drops, out-of-stock notifications, and marketplace sales.
@@ -71,7 +69,7 @@ The game supports Discord webhooks for various events. Webhook URLs are configur
 **Supported Webhooks:**
 -   `ITEM_RELEASE_WEBHOOK`: Notifications when new items are added to the game
 -   `ITEM_DROP_WEBHOOK`: Notifications for high-value unboxes and out-of-stock items
--   `MARKETPLACE_WEBHOOK`: Notifications when items are sold on the marketplace (cash or Robux)
+-   `MARKETPLACE_WEBHOOK`: Notifications when items are sold on the marketplace for cash
 
 **Setup Instructions:**
 1. Open `ServerScriptService/WebhookConfig.lua` in Roblox Studio
@@ -96,5 +94,5 @@ The game supports Discord webhooks for various events. Webhook URLs are configur
 -   Shows buyer name and avatar
 -   Shows seller username
 -   Displays item details (name, rarity, serial number, value)
--   Shows sale price and type (cash or Robux)
--   Calculates and displays seller's actual payout (after 30% Robux tax)
+-   Shows sale price (cash only)
+-   Calculates and displays seller's actual payout (after 30% tax)
