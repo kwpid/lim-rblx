@@ -138,21 +138,30 @@ local function unequipItemFromCharacter(player, robloxId)
     if bodyPart then
       local storedId = bodyPart:FindFirstChild("OriginalRobloxId")
       if storedId and storedId.Value == robloxId then
-        -- Reset to default by removing from HumanoidDescription
+        -- Reset to player's original body part by getting description from their userId
         if humanoid then
-          local desc = humanoid:GetAppliedDescription()
-          if bodyPartName == "LeftArm" then
-            desc.LeftArm = 0
-          elseif bodyPartName == "RightArm" then
-            desc.RightArm = 0
-          elseif bodyPartName == "LeftLeg" then
-            desc.LeftLeg = 0
-          elseif bodyPartName == "RightLeg" then
-            desc.RightLeg = 0
-          elseif bodyPartName == "Torso" then
-            desc.Torso = 0
+          local success, originalDesc = pcall(function()
+            return Players:GetHumanoidDescriptionFromUserId(player.UserId)
+          end)
+          
+          if success and originalDesc then
+            local currentDesc = humanoid:GetAppliedDescription()
+            
+            -- Only reset the specific body part to the player's original
+            if bodyPartName == "LeftArm" then
+              currentDesc.LeftArm = originalDesc.LeftArm
+            elseif bodyPartName == "RightArm" then
+              currentDesc.RightArm = originalDesc.RightArm
+            elseif bodyPartName == "LeftLeg" then
+              currentDesc.LeftLeg = originalDesc.LeftLeg
+            elseif bodyPartName == "RightLeg" then
+              currentDesc.RightLeg = originalDesc.RightLeg
+            elseif bodyPartName == "Torso" then
+              currentDesc.Torso = originalDesc.Torso
+            end
+            
+            humanoid:ApplyDescription(currentDesc)
           end
-          humanoid:ApplyDescription(desc)
         end
         storedId:Destroy()
         itemsRemoved = itemsRemoved + 1
