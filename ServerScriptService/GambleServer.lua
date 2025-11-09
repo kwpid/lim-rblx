@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 
 local DataStoreAPI = require(script.Parent.DataStoreAPI)
 local ItemDatabase = require(script.Parent.ItemDatabase)
+local GambleConfig = require(ReplicatedStorage.GambleConfig)
 
 local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
 if not remoteEvents then
@@ -300,6 +301,30 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                 if not isValid then
                         return
                 end
+                
+                if not serialNumber then
+                        local selectedCount = 0
+                        local playerFolder = gamble.Player1.Value.Value == plr.Name and gamble.Player1 or gamble.Player2
+                        local itemsFolder = playerFolder.Items
+                        
+                        for _, itemFolder in ipairs(itemsFolder:GetChildren()) do
+                                if itemFolder.RobloxId.Value == robloxId and not itemFolder:FindFirstChild("SerialNumber") then
+                                        selectedCount = selectedCount + 1
+                                end
+                        end
+                        
+                        local ownedAmount = itemData.Amount or 1
+                        if selectedCount >= ownedAmount then
+                                if createNotificationEvent then
+                                        createNotificationEvent:FireClient(plr, {
+                                                Type = "ERROR",
+                                                Title = "Cannot Add More",
+                                                Body = "You've already added all copies of this item!"
+                                        })
+                                end
+                                return
+                        end
+                end
 
                 if itemData.Rarity == "Vanity" then
                         if createNotificationEvent then
@@ -311,17 +336,49 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         end
                         return
                 end
+                
+                if itemData.Rarity == "Common" then
+                        if createNotificationEvent then
+                                createNotificationEvent:FireClient(plr, {
+                                        Type = "ERROR",
+                                        Title = "Cannot Gamble",
+                                        Body = "Common items cannot be gambled!"
+                                })
+                        end
+                        return
+                end
+                
+                if itemData.Rarity == "Uncommon" and not GambleConfig.AllowUncommons then
+                        if createNotificationEvent then
+                                createNotificationEvent:FireClient(plr, {
+                                        Type = "ERROR",
+                                        Title = "Cannot Gamble",
+                                        Body = "Uncommon items cannot be gambled!"
+                                })
+                        end
+                        return
+                end
 
                 local playerFolder = gamble.Player1.Value.Value == plr.Name and gamble.Player1 or gamble.Player2
                 local itemsFolder = playerFolder.Items
 
-                local existingItem = itemsFolder:FindFirstChild(tostring(robloxId) .. "_" .. tostring(serialNumber or ""))
-                if existingItem then
-                        return
+                local itemName
+                if serialNumber then
+                        local existingItem = itemsFolder:FindFirstChild(tostring(robloxId) .. "_" .. tostring(serialNumber))
+                        if existingItem then
+                                return
+                        end
+                        itemName = tostring(robloxId) .. "_" .. tostring(serialNumber)
+                else
+                        local copyCounter = 1
+                        while itemsFolder:FindFirstChild(tostring(robloxId) .. "_" .. copyCounter) do
+                                copyCounter = copyCounter + 1
+                        end
+                        itemName = tostring(robloxId) .. "_" .. copyCounter
                 end
 
                 local itemValue = Instance.new("Folder")
-                itemValue.Name = tostring(robloxId) .. "_" .. tostring(serialNumber or "")
+                itemValue.Name = itemName
 
                 local robloxIdVal = Instance.new("IntValue")
                 robloxIdVal.Name = "RobloxId"
@@ -369,7 +426,18 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                 local playerFolder = gamble.Player1.Value.Value == plr.Name and gamble.Player1 or gamble.Player2
                 local itemsFolder = playerFolder.Items
 
-                local itemToRemove = itemsFolder:FindFirstChild(tostring(robloxId) .. "_" .. tostring(serialNumber or ""))
+                local itemToRemove
+                if serialNumber then
+                        itemToRemove = itemsFolder:FindFirstChild(tostring(robloxId) .. "_" .. tostring(serialNumber))
+                else
+                        for _, itemFolder in ipairs(itemsFolder:GetChildren()) do
+                                if itemFolder.RobloxId.Value == robloxId and not itemFolder:FindFirstChild("SerialNumber") then
+                                        itemToRemove = itemFolder
+                                        break
+                                end
+                        end
+                end
+                
                 if itemToRemove then
                         itemToRemove:Destroy()
                 end
@@ -518,8 +586,8 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         return
                 end
 
-                local player1 = Players:FindFirstChild(gamble.Player1.Value)
-                local player2 = Players:FindFirstChild(gamble.Player2.Value)
+                local player1 = Players:FindFirstChild(gamble.Player1.Value.Value)
+                local player2 = Players:FindFirstChild(gamble.Player2.Value.Value)
 
                 if player1 and player2 then
                         local player1WinsCounter = gamble:FindFirstChild("Player1Wins")
@@ -571,8 +639,8 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         return
                 end
 
-                local player1 = Players:FindFirstChild(gamble.Player1.Value)
-                local player2 = Players:FindFirstChild(gamble.Player2.Value)
+                local player1 = Players:FindFirstChild(gamble.Player1.Value.Value)
+                local player2 = Players:FindFirstChild(gamble.Player2.Value.Value)
 
                 if not player1 or not player2 then
                         gamble:Destroy()

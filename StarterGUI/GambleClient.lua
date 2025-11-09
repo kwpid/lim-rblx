@@ -1,6 +1,7 @@
 local client = game.Players.LocalPlayer
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GambleConfig = require(ReplicatedStorage:WaitForChild("GambleConfig"))
 
 local gambleRequestsFolder = ReplicatedStorage:WaitForChild("GAMBLE REQUESTS", 30)
 if not gambleRequestsFolder then
@@ -416,56 +417,98 @@ local function populateInventoryHandler()
         local playerFolder = currentGamble and (currentGamble.Player1.Value.Value == client.Name and currentGamble.Player1 or currentGamble.Player2)
         local selectedItemsFolder = playerFolder and playerFolder.Items
 
+        local layoutOrder = 0
         for i, item in ipairs(inventory) do
-                if item.Rarity ~= "Vanity" and not item.IsLocked then
-                        local itemKey = tostring(item.RobloxId) .. "_" .. tostring(item.SerialNumber or "")
-                        local alreadySelected = selectedItemsFolder and selectedItemsFolder:FindFirstChild(itemKey)
+                local isAllowedRarity = item.Rarity ~= "Vanity" and item.Rarity ~= "Common" 
+                        and (item.Rarity ~= "Uncommon" or GambleConfig.AllowUncommons)
+                
+                if isAllowedRarity and not item.IsLocked then
+                        if item.SerialNumber then
+                                local itemKey = tostring(item.RobloxId) .. "_" .. tostring(item.SerialNumber)
+                                local alreadySelected = selectedItemsFolder and selectedItemsFolder:FindFirstChild(itemKey)
 
-                        if not alreadySelected then
-                                local button = sample:Clone()
-                                button.Name = item.Name or "Item_" .. i
-                                button.LayoutOrder = i
-                                button.Visible = true
-                                button.Parent = handler
+                                if not alreadySelected then
+                                        layoutOrder = layoutOrder + 1
+                                        local button = sample:Clone()
+                                        button.Name = item.Name or "Item_" .. i
+                                        button.LayoutOrder = layoutOrder
+                                        button.Visible = true
+                                        button.Parent = handler
 
-                                button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
+                                        button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
 
-                                local uiStroke = button:FindFirstChildOfClass("UIStroke")
-                                if uiStroke then
-                                        uiStroke.Color = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-                                end
+                                        local uiStroke = button:FindFirstChildOfClass("UIStroke")
+                                        if uiStroke then
+                                                uiStroke.Color = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+                                        end
 
-                                local serialLabel = button:FindFirstChild("Serial")
-                                if serialLabel then
-                                        if item.SerialNumber then
+                                        local serialLabel = button:FindFirstChild("Serial")
+                                        if serialLabel then
                                                 serialLabel.Text = "#" .. item.SerialNumber
                                                 serialLabel.Visible = true
-                                        else
+                                        end
+
+                                        local qtyLabel = button:FindFirstChild("Qty")
+                                        if qtyLabel then
+                                                qtyLabel.Visible = false
+                                        end
+
+                                        button.MouseButton1Click:Connect(function()
+                                                gambleEvent:FireServer("add item to gamble", {
+                                                        RobloxId = item.RobloxId,
+                                                        SerialNumber = item.SerialNumber
+                                                })
+                                        end)
+
+                                        table.insert(handlerItemsButtons, button)
+                                end
+                        else
+                                local selectedCount = 0
+                                if selectedItemsFolder then
+                                        for _, selectedItem in ipairs(selectedItemsFolder:GetChildren()) do
+                                                if selectedItem.RobloxId.Value == item.RobloxId and not selectedItem:FindFirstChild("SerialNumber") then
+                                                        selectedCount = selectedCount + 1
+                                                end
+                                        end
+                                end
+                                
+                                local amount = item.Amount or 1
+                                local remainingToShow = amount - selectedCount
+                                
+                                for copyNum = 1, remainingToShow do
+                                        layoutOrder = layoutOrder + 1
+                                        local button = sample:Clone()
+                                        button.Name = (item.Name or "Item") .. "_" .. copyNum
+                                        button.LayoutOrder = layoutOrder
+                                        button.Visible = true
+                                        button.Parent = handler
+
+                                        button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
+
+                                        local uiStroke = button:FindFirstChildOfClass("UIStroke")
+                                        if uiStroke then
+                                                uiStroke.Color = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+                                        end
+
+                                        local serialLabel = button:FindFirstChild("Serial")
+                                        if serialLabel then
                                                 serialLabel.Visible = false
                                         end
-                                end
 
-                                local qtyLabel = button:FindFirstChild("Qty")
-                                if qtyLabel then
-                                        if item.SerialNumber then
+                                        local qtyLabel = button:FindFirstChild("Qty")
+                                        if qtyLabel then
                                                 qtyLabel.Visible = false
-                                        elseif item.Amount then
-                                                qtyLabel.Text = item.Amount
-                                                qtyLabel.Visible = true
-                                        else
-                                                qtyLabel.Text = "1"
-                                                qtyLabel.Visible = true
                                         end
+
+                                        button.MouseButton1Click:Connect(function()
+                                                gambleEvent:FireServer("add item to gamble", {
+                                                        RobloxId = item.RobloxId,
+                                                        SerialNumber = nil
+                                                })
+                                        end)
+
+                                        table.insert(handlerItemsButtons, button)
                                 end
-
-                                button.MouseButton1Click:Connect(function()
-                                        gambleEvent:FireServer("add item to gamble", {
-                                                RobloxId = item.RobloxId,
-                                                SerialNumber = item.SerialNumber
-                                        })
-                                end)
-
-                                table.insert(handlerItemsButtons, button)
                         end
                 end
         end
