@@ -13,9 +13,6 @@ local BODY_PART_ENUM_MAP = {
   Head = Enum.BodyPart.Head
 }
 
--- Track when players are reloading for body part equips to prevent loops
-local playerReloadingForEquip = {}
-
 local function equipItemToCharacter(player, robloxId, bodyPartType)
   local character = player.Character
   if not character then return false end
@@ -24,6 +21,7 @@ local function equipItemToCharacter(player, robloxId, bodyPartType)
 
   local success, result = pcall(function()
     if bodyPartType and BODY_PART_ENUM_MAP[bodyPartType] then
+      -- Remove any existing CharacterMesh for this body part
       for _, obj in pairs(character:GetChildren()) do
         if obj:IsA("CharacterMesh") and obj.BodyPart == BODY_PART_ENUM_MAP[bodyPartType] then
           local storedId = obj:FindFirstChild("OriginalRobloxId")
@@ -34,81 +32,32 @@ local function equipItemToCharacter(player, robloxId, bodyPartType)
         end
       end
       
-      local model = InsertService:LoadAsset(robloxId)
-      if model then
-        local meshId = robloxId
-        local textureId = 0
-        
-        local bodyPartObj = model:FindFirstChild(bodyPartType) or model:FindFirstChildWhichIsA("MeshPart")
-        if bodyPartObj and bodyPartObj:IsA("MeshPart") then
-          if bodyPartObj.MeshId and bodyPartObj.MeshId ~= "" then
-            meshId = tonumber(bodyPartObj.MeshId:match("%d+")) or robloxId
-          end
-          if bodyPartObj.TextureID and bodyPartObj.TextureID ~= "" then
-            textureId = tonumber(bodyPartObj.TextureID:match("%d+")) or 0
-          end
-        else
-          for _, child in ipairs(model:GetDescendants()) do
-            if child:IsA("SpecialMesh") or child:IsA("FileMesh") then
-              if child.MeshId and child.MeshId ~= "" then
-                meshId = tonumber(child.MeshId:match("%d+")) or robloxId
-              end
-              if child.TextureId and child.TextureId ~= "" then
-                textureId = tonumber(child.TextureId:match("%d+")) or 0
-              end
-              break
-            end
-          end
-        end
-        
-        model:Destroy()
-        
-        local characterMesh = Instance.new("CharacterMesh")
-        characterMesh.BodyPart = BODY_PART_ENUM_MAP[bodyPartType]
-        characterMesh.MeshId = meshId
-        characterMesh.BaseTextureId = textureId
-        local idValue = Instance.new("IntValue")
+      -- Get current HumanoidDescription
+      local desc = humanoid:GetAppliedDescription()
+      
+      -- Set the appropriate body part asset ID
+      if bodyPartType == "LeftArm" then
+        desc.LeftArm = robloxId
+      elseif bodyPartType == "RightArm" then
+        desc.RightArm = robloxId
+      elseif bodyPartType == "LeftLeg" then
+        desc.LeftLeg = robloxId
+      elseif bodyPartType == "RightLeg" then
+        desc.RightLeg = robloxId
+      elseif bodyPartType == "Torso" then
+        desc.Torso = robloxId
+      end
+      
+      -- Apply the updated description
+      humanoid:ApplyDescription(desc)
+      
+      -- Store the RobloxId so we know this item is equipped
+      local bodyPart = character:FindFirstChild(bodyPartType)
+      if bodyPart then
+        local idValue = bodyPart:FindFirstChild("OriginalRobloxId") or Instance.new("IntValue")
         idValue.Name = "OriginalRobloxId"
         idValue.Value = robloxId
-        idValue.Parent = characterMesh
-        characterMesh.Parent = character
-        
-        -- For R6 body parts (arms, legs, torso), character needs to be refreshed
-        -- Head is excluded as it's handled differently
-        local needsCharacterRefresh = (bodyPartType == "LeftArm" or bodyPartType == "RightArm" or 
-                                       bodyPartType == "LeftLeg" or bodyPartType == "RightLeg" or 
-                                       bodyPartType == "Torso")
-        
-        if needsCharacterRefresh then
-          -- Set flag to prevent autoEquipItems from re-equipping during reload
-          playerReloadingForEquip[player.UserId] = true
-          
-          -- Save current position
-          local rootPart = character:FindFirstChild("HumanoidRootPart")
-          local currentPosition = rootPart and rootPart.CFrame or CFrame.new(0, 5, 0)
-          
-          -- Reload character
-          player:LoadCharacter()
-          
-          -- Wait for new character and restore position
-          task.wait(0.5)
-          local newCharacter = player.Character
-          if newCharacter then
-            local newRootPart = newCharacter:WaitForChild("HumanoidRootPart", 3)
-            if newRootPart then
-              newRootPart.CFrame = currentPosition
-            end
-          end
-          
-          -- Clear the flag after a short delay
-          task.delay(1, function()
-            playerReloadingForEquip[player.UserId] = nil
-          end)
-        else
-          task.wait(0.1)
-          local desc = humanoid:GetAppliedDescription()
-          humanoid:ApplyDescription(desc)
-        end
+        idValue.Parent = bodyPart
       end
     else
       local productInfo
@@ -169,7 +118,7 @@ local function unequipItemFromCharacter(player, robloxId)
   if not character then return 0 end
   local itemsRemoved = 0
   local humanoid = character:FindFirstChildOfClass("Humanoid")
-  local needsRefresh = false
+  local needsDescriptionRefresh = false
   
   local head = character:FindFirstChild("Head")
   if head then
@@ -183,13 +132,42 @@ local function unequipItemFromCharacter(player, robloxId)
     end
   end
   
+  -- Check for body parts with OriginalRobloxId
+  for _, bodyPartName in pairs({"LeftArm", "RightArm", "LeftLeg", "RightLeg", "Torso"}) do
+    local bodyPart = character:FindFirstChild(bodyPartName)
+    if bodyPart then
+      local storedId = bodyPart:FindFirstChild("OriginalRobloxId")
+      if storedId and storedId.Value == robloxId then
+        -- Reset to default by removing from HumanoidDescription
+        if humanoid then
+          local desc = humanoid:GetAppliedDescription()
+          if bodyPartName == "LeftArm" then
+            desc.LeftArm = 0
+          elseif bodyPartName == "RightArm" then
+            desc.RightArm = 0
+          elseif bodyPartName == "LeftLeg" then
+            desc.LeftLeg = 0
+          elseif bodyPartName == "RightLeg" then
+            desc.RightLeg = 0
+          elseif bodyPartName == "Torso" then
+            desc.Torso = 0
+          end
+          humanoid:ApplyDescription(desc)
+        end
+        storedId:Destroy()
+        itemsRemoved = itemsRemoved + 1
+        needsDescriptionRefresh = true
+      end
+    end
+  end
+  
+  -- Remove CharacterMeshes (legacy support)
   for _, child in ipairs(character:GetChildren()) do
     if child:IsA("CharacterMesh") then
       local storedId = child:FindFirstChild("OriginalRobloxId")
       if storedId and storedId.Value == robloxId then
         child:Destroy()
         itemsRemoved = itemsRemoved + 1
-        needsRefresh = true
       end
     elseif child:IsA("Accessory") or child:IsA("Tool") or child:IsA("Hat") then
       local storedId = child:FindFirstChild("OriginalRobloxId")
@@ -211,12 +189,6 @@ local function unequipItemFromCharacter(player, robloxId)
         end
       end
     end
-  end
-  
-  if needsRefresh and humanoid then
-    task.wait(0.1)
-    local desc = humanoid:GetAppliedDescription()
-    humanoid:ApplyDescription(desc)
   end
   
   return itemsRemoved
@@ -509,11 +481,6 @@ sellByRarityEvent.OnServerEvent:Connect(function(player, rarity)
 end)
 
 local function autoEquipItems(player)
-  -- Skip if player is currently reloading for a body part equip
-  if playerReloadingForEquip[player.UserId] then
-    return
-  end
-  
   task.wait(1)
   local character = player.Character
   if not character then return end
