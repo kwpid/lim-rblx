@@ -1,8 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
-local HttpService = game:GetService("HttpService")
-local AssetService = game:GetService("AssetService")
 local TixShopDatabase = require(ReplicatedStorage:WaitForChild("TixShopDatabase"))
 local DataStoreAPI = require(script.Parent:WaitForChild("DataStoreAPI"))
 local ItemDatabase = require(script.Parent:WaitForChild("ItemDatabase"))
@@ -13,7 +11,6 @@ local MAX_ITEMS = 6
 
 local CurrentRotation = {}
 local NextRotationTime = 0
-local BundleContentsCache = {}
 
 local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local GetCurrentRotationFunction = Instance.new("RemoteFunction")
@@ -50,70 +47,6 @@ local function FormatCash(amount)
         else
                 return "$" .. tostring(amount)
         end
-end
-
-local R6_ASSET_TYPE_MAP = {
-        [17] = "Head",
-        [27] = "Torso",
-        [28] = "LeftArm",
-        [29] = "RightArm",
-        [30] = "LeftLeg",
-        [31] = "RightLeg"
-}
-
-local function fetchBundleContents(bundleId)
-        if BundleContentsCache[bundleId] then
-                return BundleContentsCache[bundleId].parts, BundleContentsCache[bundleId].thumbnail
-        end
-        
-        local success, bundleDetails = pcall(function()
-                return AssetService:GetBundleDetailsAsync(bundleId)
-        end)
-        
-        if not success or not bundleDetails then
-                warn("[TixShop] Failed to fetch bundle " .. bundleId .. ": " .. tostring(bundleDetails))
-                return nil, nil
-        end
-        
-        local bodyParts = {}
-        local thumbnailId = nil
-        
-        for _, item in ipairs(bundleDetails.Items) do
-                if item.Type == "Asset" and item.Id then
-                        local assetInfo = nil
-                        pcall(function()
-                                assetInfo = game:GetService("MarketplaceService"):GetProductInfo(item.Id, Enum.InfoType.Asset)
-                        end)
-                        
-                        if assetInfo and assetInfo.AssetTypeId then
-                                local bodyPartType = R6_ASSET_TYPE_MAP[assetInfo.AssetTypeId]
-                                
-                                if bodyPartType then
-                                        table.insert(bodyParts, {
-                                                RobloxId = item.Id,
-                                                Name = item.Name or (bodyPartType .. " Part"),
-                                                BodyPartType = bodyPartType
-                                        })
-                                        
-                                        if not thumbnailId then
-                                                thumbnailId = item.Id
-                                        end
-                                end
-                        end
-                end
-        end
-        
-        if #bodyParts == 0 then
-                warn("[TixShop] No R6 body parts found in bundle " .. bundleId)
-                return nil, nil
-        end
-        
-        BundleContentsCache[bundleId] = {
-                parts = bodyParts,
-                thumbnail = thumbnailId
-        }
-        
-        return bodyParts, thumbnailId
 end
 
 local function SelectRotationItems()
@@ -163,13 +96,11 @@ local function SelectRotationItems()
                                 Rarity = "Vanity"
                         }
                         
-                        if selectedEntry.item.BundleId then
-                                shopItem.BundleId = selectedEntry.item.BundleId
-                                
-                                local bundleParts, thumbnailId = fetchBundleContents(selectedEntry.item.BundleId)
-                                if thumbnailId then
-                                        shopItem.RobloxId = thumbnailId
-                                end
+                        if selectedEntry.item.IsBundle then
+                                shopItem.IsBundle = true
+                                shopItem.ImageId = selectedEntry.item.ImageId
+                                shopItem.BundleItems = selectedEntry.item.BundleItems
+                                shopItem.RobloxId = selectedEntry.item.ImageId
                         else
                                 shopItem.RobloxId = selectedEntry.item.RobloxId
                         end
@@ -183,7 +114,6 @@ local function SelectRotationItems()
 end
 
 local function RotateShop()
-        BundleContentsCache = {}
         CurrentRotation = SelectRotationItems()
         NextRotationTime = os.time() + ROTATION_INTERVAL
         
@@ -209,27 +139,22 @@ GetCurrentRotationFunction.OnServerInvoke = function(player)
         for _, item in ipairs(CurrentRotation) do
                 local itemCopy = table.clone(item)
                 
-                if item.BundleId then
-                        local bundleParts, _ = fetchBundleContents(item.BundleId)
-                        if bundleParts and #bundleParts > 0 then
-                                local allOwned = true
-                                for _, part in ipairs(bundleParts) do
-                                        local owns = false
-                                        for _, invItem in ipairs(playerData.Inventory) do
-                                                if invItem.RobloxId == part.RobloxId then
-                                                        owns = true
-                                                        break
-                                                end
-                                        end
-                                        if not owns then
-                                                allOwned = false
+                if item.IsBundle and item.BundleItems then
+                        local allOwned = true
+                        for _, itemId in ipairs(item.BundleItems) do
+                                local owns = false
+                                for _, invItem in ipairs(playerData.Inventory) do
+                                        if invItem.RobloxId == itemId then
+                                                owns = true
                                                 break
                                         end
                                 end
-                                itemCopy.IsOwned = allOwned
-                        else
-                                itemCopy.IsOwned = false
+                                if not owns then
+                                        allOwned = false
+                                        break
+                                end
                         end
+                        itemCopy.IsOwned = allOwned
                 else
                         local owns = false
                         for _, invItem in ipairs(playerData.Inventory) do
@@ -253,7 +178,7 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
         local itemData = nil
         for _, item in ipairs(CurrentRotation) do
                 local matchesItem = (item.RobloxId and item.RobloxId == itemIdentifier) or 
-                                   (item.BundleId and item.BundleId == itemIdentifier)
+                                   (item.ImageId and item.ImageId == itemIdentifier)
                 if matchesItem then
                         itemData = item
                         break
@@ -279,21 +204,20 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                 return
         end
         
-        if itemData.BundleId then
-                local bundleParts, thumbnailId = fetchBundleContents(itemData.BundleId)
-                if not bundleParts or #bundleParts == 0 then
+        if itemData.IsBundle and itemData.BundleItems then
+                if not itemData.BundleItems or #itemData.BundleItems == 0 then
                         local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
                         if NotificationEvent then
-                                NotificationEvent:FireClient(player, "ERROR", "Failed to load bundle contents. Please try again later.")
+                                NotificationEvent:FireClient(player, "ERROR", "Bundle has no items configured!")
                         end
                         return
                 end
                 
                 local alreadyOwnsAll = true
-                for _, part in ipairs(bundleParts) do
+                for _, itemId in ipairs(itemData.BundleItems) do
                         local owns = false
                         for _, invItem in ipairs(playerData.Inventory) do
-                                if invItem.RobloxId == part.RobloxId then
+                                if invItem.RobloxId == itemId then
                                         owns = true
                                         break
                                 end
@@ -307,36 +231,37 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                 if alreadyOwnsAll then
                         local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
                         if NotificationEvent then
-                                NotificationEvent:FireClient(player, "ERROR", "You already own all parts of this bundle!")
+                                NotificationEvent:FireClient(player, "ERROR", "You already own all items in this bundle!")
                         end
                         return
                 end
                 
                 playerData.Cash = playerData.Cash - itemData.Price
                 
-                for _, part in ipairs(bundleParts) do
-                        local alreadyOwnsPart = false
+                for _, itemId in ipairs(itemData.BundleItems) do
+                        local alreadyOwnsItem = false
                         for _, invItem in ipairs(playerData.Inventory) do
-                                if invItem.RobloxId == part.RobloxId then
-                                        alreadyOwnsPart = true
+                                if invItem.RobloxId == itemId then
+                                        alreadyOwnsItem = true
                                         break
                                 end
                         end
                         
-                        if not alreadyOwnsPart then
+                        if not alreadyOwnsItem then
+                                local itemName = itemData.Name .. " Item #" .. itemId
+                                
                                 DataStoreAPI:AddItem(player, {
-                                        RobloxId = part.RobloxId,
-                                        Name = part.Name,
+                                        RobloxId = itemId,
+                                        Name = itemName,
                                         Value = 0,
-                                        Rarity = "Vanity",
-                                        BodyPartType = part.BodyPartType
+                                        Rarity = "Vanity"
                                 })
                         end
                 end
                 
                 local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
                 if NotificationEvent then
-                        NotificationEvent:FireClient(player, "VICTORY", "Purchased " .. itemData.Name .. " bundle (" .. #bundleParts .. " parts) for " .. FormatCash(itemData.Price) .. "!")
+                        NotificationEvent:FireClient(player, "VICTORY", "Purchased " .. itemData.Name .. " bundle (" .. #itemData.BundleItems .. " items) for " .. FormatCash(itemData.Price) .. "!")
                 end
                 
                 print("[TixShop] Player " .. player.Name .. " purchased bundle " .. itemData.Name .. " for $" .. itemData.Price)

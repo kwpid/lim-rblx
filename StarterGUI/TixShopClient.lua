@@ -72,7 +72,7 @@ local function PopulateShop()
         
         for _, item in ipairs(CurrentRotation) do
                 local itemFrame = Sample:Clone()
-                itemFrame.Name = tostring(item.RobloxId or item.BundleId)
+                itemFrame.Name = tostring(item.RobloxId or item.ImageId)
                 itemFrame.Visible = true
                 
                 local itemImage = itemFrame:WaitForChild("ItemImage")
@@ -100,7 +100,7 @@ local function PopulateShop()
                         purchaseButton.Visible = true
                         purchaseButton.MouseButton1Click:Connect(function()
                                 SelectedItem = item
-                                local itemType = item.BundleId and "bundle" or "item"
+                                local itemType = item.IsBundle and "bundle" or "item"
                                 Text1.Text = "Are you sure you want to buy " .. item.Name .. " " .. itemType .. " for " .. FormatCash(item.Price) .. "?"
                                 BuyConfirm.Visible = true
                         end)
@@ -137,7 +137,7 @@ end)
 
 ConfirmButton.MouseButton1Click:Connect(function()
         if SelectedItem then
-                local identifier = SelectedItem.BundleId or SelectedItem.RobloxId
+                local identifier = SelectedItem.ImageId or SelectedItem.RobloxId
                 PurchaseTixItemEvent:FireServer(identifier)
                 BuyConfirm.Visible = false
                 SelectedItem = nil
