@@ -446,10 +446,14 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                 local player2Confirmed = gamble.Player2:FindFirstChild("CONFIRMED")
 
                 if player1Confirmed and player2Confirmed then
+                        print("Both players confirmed! Checking values...")
                         local player1Value = calculateStakeValue(gamble.Player1.Items)
                         local player2Value = calculateStakeValue(gamble.Player2.Items)
                         
+                        print("Player1 value:", player1Value, "Player2 value:", player2Value)
+                        
                         if not validateStakeTolerance(player1Value, player2Value) then
+                                print("Value mismatch! Resetting confirmations")
                                 resetConfirmationStates(gamble)
                                 if createNotificationEvent then
                                         createNotificationEvent:FireClient(plr, {
@@ -461,12 +465,15 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 return
                         end
                         
+                        print("Values validated! Starting game...")
                         task.wait(0.5)
                         
                         local gameStarted = Instance.new("BoolValue")
                         gameStarted.Name = "GAME_STARTED"
                         gameStarted.Value = true
                         gameStarted.Parent = gamble
+                        
+                        print("GAME_STARTED created!")
                         
                         local player1Wins = Instance.new("IntValue")
                         player1Wins.Name = "Player1Wins"
@@ -477,6 +484,8 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         player2Wins.Name = "Player2Wins"
                         player2Wins.Value = 0
                         player2Wins.Parent = gamble
+                else
+                        print("Waiting for both players to confirm...")
                 end
         elseif instruction == "cancel gamble" then
                 local gamble = findGambleForPlayer(plr)

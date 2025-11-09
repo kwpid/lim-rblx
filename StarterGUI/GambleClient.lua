@@ -372,9 +372,9 @@ local function updateSelectedItemsDisplay()
         
         if mainTxt then
                 if player1Confirmed and player2Confirmed then
-                        mainTxt.Text = "Both players confirmed!"
+                        mainTxt.Text = "Both players confirmed! Starting game..."
                 elseif myConfirmed and not oppConfirmed then
-                        mainTxt.Text = "Waiting for " .. oppName .. "..."
+                        mainTxt.Text = "You confirmed. Waiting for " .. oppName .. "..."
                 elseif oppConfirmed and not myConfirmed then
                         mainTxt.Text = oppName .. " confirmed"
                 else
@@ -589,15 +589,20 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
 
                 child.ChildAdded:Connect(function(obj)
                         if obj.Name == "GAME_STARTED" then
+                                print("GAME_STARTED detected! Transitioning to game...")
                                 task.wait(1)
 
                                 local selectItems = gameMain:FindFirstChild("SelectItems")
                                 if selectItems then
+                                        print("Hiding SelectItems")
                                         selectItems.Visible = false
+                                else
+                                        warn("SelectItems not found!")
                                 end
 
                                 local gameFrame = gameMain:FindFirstChild("Game")
                                 if gameFrame then
+                                        print("Showing Game frame")
                                         gameFrame.Visible = true
 
                                         local yourWinsLabel = gameFrame:FindFirstChild("YourWins")
@@ -618,8 +623,11 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
                                         yourWins = 0
                                         theirWins = 0
 
+                                        print("Requesting round 1...")
                                         task.wait(1)
                                         gambleEvent:FireServer("request round", { RoundNumber = currentRound })
+                                else
+                                        warn("Game frame not found!")
                                 end
                         end
                 end)
