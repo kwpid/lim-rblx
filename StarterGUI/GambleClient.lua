@@ -432,6 +432,7 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
                 yourWins = 0
                 theirWins = 0
 
+                gambleFrame.Visible = true
                 requestFrame.Visible = false
                 sendRequestFrame.Visible = false
 
