@@ -141,7 +141,8 @@ GetCurrentRotationFunction.OnServerInvoke = function(player)
                 
                 if item.IsBundle and item.BundleItems then
                         local allOwned = true
-                        for _, itemId in ipairs(item.BundleItems) do
+                        for _, bundleItem in ipairs(item.BundleItems) do
+                                local itemId = type(bundleItem) == "table" and bundleItem.RobloxId or bundleItem
                                 local owns = false
                                 for _, invItem in ipairs(playerData.Inventory) do
                                         if invItem.RobloxId == itemId then
@@ -214,7 +215,8 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                 end
                 
                 local alreadyOwnsAll = true
-                for _, itemId in ipairs(itemData.BundleItems) do
+                for _, bundleItem in ipairs(itemData.BundleItems) do
+                        local itemId = type(bundleItem) == "table" and bundleItem.RobloxId or bundleItem
                         local owns = false
                         for _, invItem in ipairs(playerData.Inventory) do
                                 if invItem.RobloxId == itemId then
@@ -238,7 +240,10 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                 
                 playerData.Cash = playerData.Cash - itemData.Price
                 
-                for _, itemId in ipairs(itemData.BundleItems) do
+                for _, bundleItem in ipairs(itemData.BundleItems) do
+                        local itemId = type(bundleItem) == "table" and bundleItem.RobloxId or bundleItem
+                        local bodyPartType = type(bundleItem) == "table" and bundleItem.BodyPartType or nil
+                        
                         local alreadyOwnsItem = false
                         for _, invItem in ipairs(playerData.Inventory) do
                                 if invItem.RobloxId == itemId then
@@ -248,14 +253,21 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                         end
                         
                         if not alreadyOwnsItem then
-                                local itemName = itemData.Name .. " Item #" .. itemId
+                                local partName = bodyPartType or ("Item #" .. itemId)
+                                local itemName = itemData.Name .. " " .. partName
                                 
-                                DataStoreAPI:AddItem(player, {
+                                local newItem = {
                                         RobloxId = itemId,
                                         Name = itemName,
                                         Value = 0,
                                         Rarity = "Vanity"
-                                })
+                                }
+                                
+                                if bodyPartType then
+                                        newItem.BodyPartType = bodyPartType
+                                end
+                                
+                                DataStoreAPI:AddItem(player, newItem)
                         end
                 end
                 

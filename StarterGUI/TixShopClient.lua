@@ -162,5 +162,5 @@ LoadRotation()
 task.spawn(UpdateTimer)
 
 RefreshTixShopEvent.OnClientEvent:Connect(function()
-        PopulateShop()
+        LoadRotation()
 end)

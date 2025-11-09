@@ -95,7 +95,14 @@ TixShopDatabase.VanityItems = {
                 Name = "Korblox",
                 IsBundle = true,
                 ImageId = 139607718,
-                BundleItems = {139607718, 139607770, 139607625, 139607673, 139607828, 139607570},
+                BundleItems = {
+                        {RobloxId = 139607718, BodyPartType = "LeftLeg"},
+                        {RobloxId = 139607770, BodyPartType = "RightLeg"},
+                        {RobloxId = 139607625, BodyPartType = "LeftArm"},
+                        {RobloxId = 139607673, BodyPartType = "RightArm"},
+                        {RobloxId = 139607828, BodyPartType = "Torso"},
+                        {RobloxId = 139607570, BodyPartType = "Head"}
+                },
                 Price = 5000000
         },
 }
