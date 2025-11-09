@@ -19,6 +19,13 @@ if not gambleEvent then
         gambleEvent.Parent = remoteEvents
 end
 
+local getRollableItemsFunction = remoteEvents:FindFirstChild("GetRollableItems")
+if not getRollableItemsFunction then
+        getRollableItemsFunction = Instance.new("RemoteFunction")
+        getRollableItemsFunction.Name = "GetRollableItems"
+        getRollableItemsFunction.Parent = remoteEvents
+end
+
 local gambleRequestsFolder = ReplicatedStorage:FindFirstChild("GAMBLE REQUESTS")
 if not gambleRequestsFolder then
         gambleRequestsFolder = Instance.new("Folder")
@@ -150,23 +157,37 @@ function validateStakeTolerance(value1, value2)
         return (minValue / maxValue) >= 0.75
 end
 
-function getRandomItemFromDatabase()
+function getRollableItems()
         local allItems = ItemDatabase:GetAllItems()
         local rollableItems = {}
         
         for _, item in ipairs(allItems) do
                 if item.Rarity ~= "Limited" and item.Rarity ~= "Vanity" then
                         if not item.Stock or item.Stock == 0 or (item.CurrentStock and item.CurrentStock < item.Stock) then
-                                table.insert(rollableItems, item)
+                                table.insert(rollableItems, {
+                                        RobloxId = item.RobloxId,
+                                        Name = item.Name,
+                                        Value = item.Value
+                                })
                         end
                 end
         end
+        
+        return rollableItems
+end
+
+function getRandomItemFromDatabase()
+        local rollableItems = getRollableItems()
         
         if #rollableItems == 0 then
                 return nil
         end
         
         return rollableItems[math.random(1, #rollableItems)]
+end
+
+getRollableItemsFunction.OnServerInvoke = function(player)
+        return getRollableItems()
 end
 
 gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
@@ -615,7 +636,9 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                         Name = player2Item.Name,
                                         Value = player2Item.Value
                                 },
-                                YouWon = player1Item.Value > player2Item.Value
+                                YouWon = player1Item.Value > player2Item.Value,
+                                YourWins = player1WinsCounter and player1WinsCounter.Value or 0,
+                                TheirWins = player2WinsCounter and player2WinsCounter.Value or 0
                         })
 
                         gambleEvent:FireClient(player2, "round result", {
@@ -630,7 +653,9 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                         Name = player1Item.Name,
                                         Value = player1Item.Value
                                 },
-                                YouWon = player2Item.Value > player1Item.Value
+                                YouWon = player2Item.Value > player1Item.Value,
+                                YourWins = player2WinsCounter and player2WinsCounter.Value or 0,
+                                TheirWins = player1WinsCounter and player1WinsCounter.Value or 0
                         })
                 end
         elseif instruction == "finish game" then
