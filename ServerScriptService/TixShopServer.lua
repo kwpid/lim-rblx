@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local HttpService = game:GetService("HttpService")
+local AvatarEditorService = game:GetService("AvatarEditorService")
 local TixShopDatabase = require(ReplicatedStorage:WaitForChild("TixShopDatabase"))
 local DataStoreAPI = require(script.Parent:WaitForChild("DataStoreAPI"))
 local ItemDatabase = require(script.Parent:WaitForChild("ItemDatabase"))
@@ -65,46 +66,38 @@ local function fetchBundleContents(bundleId)
                 return BundleContentsCache[bundleId].parts, BundleContentsCache[bundleId].thumbnail
         end
         
-        local url = "https://catalog.roblox.com/v1/bundles/" .. tostring(bundleId) .. "/details"
-        
-        local success, response = pcall(function()
-                return HttpService:GetAsync(url)
+        local success, bundleDetails = pcall(function()
+                return AvatarEditorService:GetBundleDetails(bundleId)
         end)
         
-        if not success then
-                warn("[TixShop] Failed to fetch bundle " .. bundleId .. ": " .. tostring(response))
-                return nil, nil
-        end
-        
-        local success2, bundleData = pcall(function()
-                return HttpService:JSONDecode(response)
-        end)
-        
-        if not success2 or not bundleData or not bundleData.items then
-                warn("[TixShop] Failed to parse bundle data for " .. bundleId)
+        if not success or not bundleDetails then
+                warn("[TixShop] Failed to fetch bundle " .. bundleId .. ": " .. tostring(bundleDetails))
                 return nil, nil
         end
         
         local bodyParts = {}
         local thumbnailId = nil
         
-        for _, item in ipairs(bundleData.items) do
-                if item.type == "Asset" and item.id and item.assetType then
-                        local assetTypeId = item.assetType.id or item.assetType
-                        local bodyPartType = R6_ASSET_TYPE_MAP[assetTypeId]
+        for _, item in ipairs(bundleDetails.Items) do
+                local assetType = item.AssetType
+                local bodyPartType = R6_ASSET_TYPE_MAP[assetType.Value]
+                
+                if bodyPartType then
+                        table.insert(bodyParts, {
+                                RobloxId = item.Id,
+                                Name = item.Name or (bodyPartType .. " Part"),
+                                BodyPartType = bodyPartType
+                        })
                         
-                        if bodyPartType then
-                                table.insert(bodyParts, {
-                                        RobloxId = item.id,
-                                        Name = item.name or (bodyPartType .. " Part"),
-                                        BodyPartType = bodyPartType
-                                })
-                                
-                                if not thumbnailId then
-                                        thumbnailId = item.id
-                                end
+                        if not thumbnailId then
+                                thumbnailId = item.Id
                         end
                 end
+        end
+        
+        if #bodyParts == 0 then
+                warn("[TixShop] No R6 body parts found in bundle " .. bundleId)
+                return nil, nil
         end
         
         BundleContentsCache[bundleId] = {
