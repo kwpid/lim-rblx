@@ -368,7 +368,7 @@ local function updateSelectedItemsDisplay()
         
         if confirmButton then
                 if myConfirmed then
-                        confirmButton.Text = "Confirmed"
+                        confirmButton.Text = "Confirmed ✓"
                 else
                         confirmButton.Text = "Confirm"
                 end
@@ -378,9 +378,9 @@ local function updateSelectedItemsDisplay()
                 if player1Confirmed and player2Confirmed then
                         mainTxt.Text = "Both players confirmed! Starting game..."
                 elseif myConfirmed and not oppConfirmed then
-                        mainTxt.Text = "You confirmed. Waiting for " .. oppName .. "..."
+                        mainTxt.Text = "Waiting for " .. oppName .. " to confirm..."
                 elseif oppConfirmed and not myConfirmed then
-                        mainTxt.Text = oppName .. " confirmed"
+                        mainTxt.Text = oppName .. " is ready! Confirm your items"
                 else
                         mainTxt.Text = "Select Items To Bet"
                 end
@@ -679,9 +679,14 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
                                                 warn("Failed to load rollable items, animation will use placeholders")
                                         end
 
-                                        print("Requesting round 1...")
-                                        task.wait(1)
-                                        gambleEvent:FireServer("request round", { RoundNumber = currentRound })
+                                        local isPlayer1 = currentGamble.Player1.Value.Value == client.Name
+                                        if isPlayer1 then
+                                                print("Player 1 requesting round 1...")
+                                                task.wait(1)
+                                                gambleEvent:FireServer("request round", { RoundNumber = currentRound })
+                                        else
+                                                print("Player 2 waiting for round 1...")
+                                        end
                                 else
                                         warn("Game frame not found!")
                                 end
@@ -732,9 +737,9 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                 end
 
                 task.spawn(function()
-                        local totalDuration = 5
+                        local totalDuration = 2.5
                         local minInterval = 0.05
-                        local maxInterval = 0.4
+                        local maxInterval = 0.3
                         
                         local elapsed = 0
                         local spinCount = 0
@@ -815,14 +820,17 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                                 end
                         end
 
-                        task.wait(2.5)
+                        task.wait(1.5)
 
-                        if currentRound < 7 then
-                                currentRound = currentRound + 1
-                                gambleEvent:FireServer("request round", { RoundNumber = currentRound })
-                        else
-                                task.wait(1.5)
-                                gambleEvent:FireServer("finish game")
+                        local isPlayer1 = currentGamble and currentGamble.Player1.Value.Value == client.Name
+                        if isPlayer1 then
+                                if currentRound < 7 then
+                                        currentRound = currentRound + 1
+                                        gambleEvent:FireServer("request round", { RoundNumber = currentRound })
+                                else
+                                        task.wait(1)
+                                        gambleEvent:FireServer("finish game")
+                                end
                         end
                 end)
         end
