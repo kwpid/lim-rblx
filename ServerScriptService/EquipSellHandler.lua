@@ -13,6 +13,9 @@ local BODY_PART_ENUM_MAP = {
   Head = Enum.BodyPart.Head
 }
 
+-- Track when players are reloading for body part equips to prevent loops
+local playerReloadingForEquip = {}
+
 local function equipItemToCharacter(player, robloxId, bodyPartType)
   local character = player.Character
   if not character then return false end
@@ -77,6 +80,9 @@ local function equipItemToCharacter(player, robloxId, bodyPartType)
                                        bodyPartType == "Torso")
         
         if needsCharacterRefresh then
+          -- Set flag to prevent autoEquipItems from re-equipping during reload
+          playerReloadingForEquip[player.UserId] = true
+          
           -- Save current position
           local rootPart = character:FindFirstChild("HumanoidRootPart")
           local currentPosition = rootPart and rootPart.CFrame or CFrame.new(0, 5, 0)
@@ -93,6 +99,11 @@ local function equipItemToCharacter(player, robloxId, bodyPartType)
               newRootPart.CFrame = currentPosition
             end
           end
+          
+          -- Clear the flag after a short delay
+          task.delay(1, function()
+            playerReloadingForEquip[player.UserId] = nil
+          end)
         else
           task.wait(0.1)
           local desc = humanoid:GetAppliedDescription()
@@ -498,6 +509,11 @@ sellByRarityEvent.OnServerEvent:Connect(function(player, rarity)
 end)
 
 local function autoEquipItems(player)
+  -- Skip if player is currently reloading for a body part equip
+  if playerReloadingForEquip[player.UserId] then
+    return
+  end
+  
   task.wait(1)
   local character = player.Character
   if not character then return end
