@@ -149,12 +149,24 @@ local function migrateRobuxListings()
                 return
         end
         
+        local migratedListings = {}
+        local migratedSuccess, migratedResult = pcall(function()
+                return MarketplaceDataStore:GetAsync("MigratedListingIds")
+        end)
+        
+        if migratedSuccess and migratedResult then
+                migratedListings = migratedResult
+        end
+        
         print("Starting Robux listings migration...")
         local robuxListings = {}
         local cashListings = {}
         
         for _, listing in ipairs(activeListings) do
                 if listing.ListingType == "robux" then
+                        if not listing.ListingId then
+                                listing.ListingId = game:GetService("HttpService"):GenerateGUID(false)
+                        end
                         table.insert(robuxListings, listing)
                 else
                         table.insert(cashListings, listing)
@@ -169,99 +181,111 @@ local function migrateRobuxListings()
                 return
         end
         
-        print("Found " .. #robuxListings .. " Robux listings to refund")
+        print("Found " .. #robuxListings .. " Robux listings to check for migration")
         local returnedCount = 0
+        local skippedCount = 0
         local failedCount = 0
-        local pendingReturns = {}
         
         for _, listing in ipairs(robuxListings) do
-                local itemToReturn = {
-                        RobloxId = listing.ItemData.RobloxId,
-                        Name = listing.ItemData.Name,
-                        Value = listing.ItemData.Value,
-                        Rarity = listing.ItemData.Rarity,
-                        SerialNumber = listing.ItemData.SerialNumber,
-                        Amount = 1
-                }
-                
-                local returnSuccess = false
-                local maxRetries = 3
-                
-                for attempt = 1, maxRetries do
-                        local player = Players:GetPlayerByUserId(listing.SellerUserId)
-                        
-                        if player and getPlayerData(player) then
-                                local addSuccess = pcall(function()
-                                        DataStoreAPI:AddItem(player, itemToReturn, true)
-                                end)
-                                
-                                if addSuccess then
-                                        returnSuccess = true
-                                        break
-                                end
-                        else
-                                local addOfflineSuccess = pcall(function()
-                                        local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
-                                        local HttpService = game:GetService("HttpService")
-                                        
-                                        PlayerDataStore:UpdateAsync("Player_" .. listing.SellerUserId, function(currentJsonData)
-                                                local playerData
-                                                if not currentJsonData then
-                                                        playerData = DataStoreManager:GetDefaultData()
-                                                else
-                                                        playerData = HttpService:JSONDecode(currentJsonData)
-                                                end
-                                                
-                                                if not playerData.Inventory then
-                                                        playerData.Inventory = {}
-                                                end
-                                                
-                                                table.insert(playerData.Inventory, itemToReturn)
-                                                
-                                                return HttpService:JSONEncode(playerData)
-                                        end)
-                                end)
-                                
-                                if addOfflineSuccess then
-                                        returnSuccess = true
-                                        break
-                                end
-                        end
-                        
-                        if attempt < maxRetries then
-                                task.wait(0.5)
-                        end
-                end
-                
-                if returnSuccess then
-                        sendOrSaveNotification(listing.SellerUserId, {
-                                Type = "VICTORY",
-                                Title = "Listing Refunded",
-                                Body = "Your Robux listing for " .. listing.ItemData.Name .. " was cancelled. Item returned to inventory (Robux sales removed).",
-                                ImageId = listing.ItemData.RobloxId
-                        })
-                        returnedCount = returnedCount + 1
+                if migratedListings[listing.ListingId] then
+                        skippedCount = skippedCount + 1
+                        print("Skipping already migrated listing: " .. listing.ItemData.Name)
                 else
-                        table.insert(pendingReturns, listing)
-                        failedCount = failedCount + 1
-                        warn("Failed to return item " .. listing.ItemData.Name .. " to user " .. listing.SellerUserId)
+                        local itemToReturn = {
+                                RobloxId = listing.ItemData.RobloxId,
+                                Name = listing.ItemData.Name,
+                                Value = listing.ItemData.Value,
+                                Rarity = listing.ItemData.Rarity,
+                                SerialNumber = listing.ItemData.SerialNumber,
+                                Amount = 1
+                        }
+                        
+                        local returnSuccess = false
+                        local maxRetries = 3
+                        
+                        for attempt = 1, maxRetries do
+                                local player = Players:GetPlayerByUserId(listing.SellerUserId)
+                                
+                                if player and getPlayerData(player) then
+                                        local addSuccess = pcall(function()
+                                                DataStoreAPI:AddItem(player, itemToReturn, true)
+                                        end)
+                                        
+                                        if addSuccess then
+                                                returnSuccess = true
+                                                break
+                                        end
+                                else
+                                        local addOfflineSuccess = pcall(function()
+                                                local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
+                                                local HttpService = game:GetService("HttpService")
+                                                
+                                                PlayerDataStore:UpdateAsync("Player_" .. listing.SellerUserId, function(currentJsonData)
+                                                        local playerData
+                                                        if not currentJsonData then
+                                                                playerData = DataStoreManager:GetDefaultData()
+                                                        else
+                                                                playerData = HttpService:JSONDecode(currentJsonData)
+                                                        end
+                                                        
+                                                        if not playerData.Inventory then
+                                                                playerData.Inventory = {}
+                                                        end
+                                                        
+                                                        table.insert(playerData.Inventory, itemToReturn)
+                                                        
+                                                        return HttpService:JSONEncode(playerData)
+                                                end)
+                                        end)
+                                        
+                                        if addOfflineSuccess then
+                                                returnSuccess = true
+                                                break
+                                        end
+                                end
+                                
+                                if attempt < maxRetries then
+                                        task.wait(0.5)
+                                end
+                        end
+                        
+                        if returnSuccess then
+                                sendOrSaveNotification(listing.SellerUserId, {
+                                        Type = "VICTORY",
+                                        Title = "Listing Refunded",
+                                        Body = "Your Robux listing for " .. listing.ItemData.Name .. " was cancelled. Item returned to inventory (Robux sales removed).",
+                                        ImageId = listing.ItemData.RobloxId
+                                })
+                                migratedListings[listing.ListingId] = true
+                                pcall(function()
+                                        MarketplaceDataStore:SetAsync("MigratedListingIds", migratedListings)
+                                end)
+                                returnedCount = returnedCount + 1
+                                print("✅ Migrated listing: " .. listing.ItemData.Name .. " for user " .. listing.SellerUserId)
+                        else
+                                failedCount = failedCount + 1
+                                warn("Failed to return item " .. listing.ItemData.Name .. " to user " .. listing.SellerUserId)
+                        end
                 end
         end
         
         activeListings = cashListings
-        for _, pending in ipairs(pendingReturns) do
-                table.insert(activeListings, pending)
+        
+        for _, listing in ipairs(robuxListings) do
+                if not migratedListings[listing.ListingId] then
+                        table.insert(activeListings, listing)
+                end
         end
         
         saveListings()
         
-        if #pendingReturns == 0 then
+        if returnedCount + skippedCount == #robuxListings then
                 pcall(function()
                         MarketplaceDataStore:SetAsync("RobuxListingsMigrated", true)
                 end)
-                print("✅ Robux listings migration complete: " .. returnedCount .. " items returned")
+                print("✅ Robux listings migration complete: " .. returnedCount .. " items returned, " .. skippedCount .. " already migrated")
         else
-                warn("⚠️ Robux listings migration partial: " .. returnedCount .. " returned, " .. failedCount .. " failed (will retry next startup)")
+                warn("⚠️ Robux listings migration partial: " .. returnedCount .. " returned, " .. skippedCount .. " skipped, " .. failedCount .. " failed (will retry next startup)")
         end
 end
 
