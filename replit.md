@@ -12,9 +12,9 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 ## System Architecture
 
 ### Core Game Systems
--   **Item System**: Supports regular, "Limited", and "Vanity" rarity items. Regular items have stack limits (100 for common, no limit for Epic+), while Limited items are event-exclusive with stock or timer-based availability. Vanity items are exclusive to the Tix Shop and cannot be rolled, traded, or sold.
+-   **Item System**: Supports regular, "Limited", and "Vanity" rarity items. Regular items have stack limits (100 for common, no limit for Epic+), while Limited items are event-exclusive with stock or timer-based availability. Vanity items are exclusive to the Tix Shop and cannot be rolled, traded, or sold. **Vanity items do not contribute to player inventory value (InvValue)**. Body parts from Roblox bundles are stored as individual Vanity items with BundleId and BodyPartType metadata.
 -   **Crate Opening**: Features weighted random selection, visual animations, camera shake effects (intensity scales with rarity), serial number display, "Fast Roll," "AutoRoll," and "HideRolls" options. High-value unboxes trigger server-wide notifications. Limited and Vanity items are not rollable via crates.
--   **Tix Shop System**: Hourly rotating shop featuring exclusive Vanity items purchasable with in-game cash. Shop displays 3-6 unique items per rotation (no duplicates) with weighted selection (higher value = rarer appearance). Features proximity prompt interaction, countdown timer, purchase confirmation UI, close button, success notifications, and server-wide rotation notifications. Admins can force manual shop rotation via ForceRefreshTixShopEvent. Vanity items cannot be traded or sold, only equipped and kept in inventory.
+-   **Tix Shop System**: Hourly rotating shop featuring exclusive Vanity items purchasable with in-game cash. Shop displays 3-6 unique items per rotation (no duplicates) with weighted selection (higher value = rarer appearance). Features proximity prompt interaction, countdown timer, purchase confirmation UI, close button, success notifications, and server-wide rotation notifications. Admins can force manual shop rotation via ForceRefreshTixShopEvent. Vanity items cannot be traded or sold, only equipped and kept in inventory. **Bundle Support**: Supports Roblox bundles (e.g., Korblox) that are automatically broken down into individual R6 body parts (Head, Torso, LeftArm, RightArm, LeftLeg, RightLeg). Each body part is stored as a separate equippable Vanity item with BundleId and BodyPartType fields. Bundle contents are fetched from Roblox Catalog API and cached per rotation. Shop displays bundles using the first body part's thumbnail, and ownership is tracked by checking if all parts are owned. Body parts are equipped using CharacterMesh with proper mesh/texture extraction via InsertService.
 -   **Luck System**: A three-tier system providing multiplicative luck multipliers for different rarity groups (Regular, Mythic, Insane) to boost Epic+ item probabilities.
 -   **Event System**: Dynamic, modular system with automatic and manual triggers. Only one event can be active at a time. Examples include "Random Item Drops" and "Scavenger Hunt," utilizing actual Roblox item models with rarity-colored highlights.
 -   **Barrel Event System**: Players can pull items from barrels for in-game currency. Features weighted RNG (including a rare chance for a Chroma Valkyrie), camera animations, item spawning, and transaction safety with refunds. Primarily for hat items.
@@ -49,7 +49,7 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 -   `RemoteEvents` and `RemoteFunctions` for client-server communication.
 -   Asynchronous ItemDatabase loading.
 -   Debounced DataStore saves.
--   Roblox `InsertService` for equipping items and displaying models in events.
+-   Roblox `InsertService` for equipping items, displaying models in events, and loading R6 body part meshes/textures for CharacterMesh objects.
 -   Roblox `MarketplaceService` for gamepass checks, purchase prompting, and ownership validation.
 -   Roblox `BadgeService` for mastery badge awards and ownership verification.
 -   Roblox `MessagingService` for cross-server notifications.
@@ -59,7 +59,8 @@ This project is a Roblox crate opening/unboxing game simulating a virtual econom
 ## External Dependencies
 -   **Roblox DataStore Service**: Persistent data storage.
 -   **Roblox API Services**: Requires "Studio Access to API Services" enabled.
--   **Roblox InsertService**: Loads and attaches accessories/tools, and displays event items.
+-   **Roblox InsertService**: Loads and attaches accessories/tools, displays event items, and extracts mesh/texture data from R6 body part assets.
+-   **Roblox Catalog API**: Fetches bundle contents (https://catalog.roblox.com/v1/bundles/{id}/details) to break down bundles into individual R6 body parts using assetType IDs.
 -   **Roblox MarketplaceService**: Checks gamepass ownership.
 -   **Roblox MessagingService**: Cross-server notifications.
 -   **Roblox TeleportService**: Handles automatic player rejoining.
