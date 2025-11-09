@@ -182,30 +182,38 @@ local function updateSelectedItemsDisplay()
                 warn("updateSelectedItemsDisplay: No current gamble")
                 return 
         end
-
-        local playerFolder = currentGamble.Player1.Value.Value == client.Name and currentGamble.Player1 or
-            currentGamble.Player2
-        local opponentFolder = currentGamble.Player1.Value.Value == client.Name and currentGamble.Player2 or
-            currentGamble.Player1
-
-        local selectItems = gameMain:FindFirstChild("SelectItems")
-        if not selectItems then 
-                warn("updateSelectedItemsDisplay: SelectItems not found")
-                return 
+        
+        local player1 = currentGamble:FindFirstChild("Player1")
+        local player2 = currentGamble:FindFirstChild("Player2")
+        
+        if not player1 or not player2 then
+                warn("updateSelectedItemsDisplay: Player1 or Player2 not found yet")
+                return
+        end
+        
+        local player1Value = player1:FindFirstChild("Value")
+        local player2Value = player2:FindFirstChild("Value")
+        
+        if not player1Value or not player2Value then
+                warn("updateSelectedItemsDisplay: Player values not found yet")
+                return
         end
 
-        local selectedItemsFrame = selectItems:FindFirstChild("Selected_Items")
+        local playerFolder = player1Value.Value == client.Name and player1 or player2
+        local opponentFolder = player1Value.Value == client.Name and player2 or player1
+
+        local selectedItemsFrame = gameMain:FindFirstChild("Selected_Items")
         if not selectedItemsFrame then
-                warn("updateSelectedItemsDisplay: Selected_Items frame not found")
+                warn("updateSelectedItemsDisplay: Selected_Items frame not found under Main")
                 return
         end
         
         local selectedItemsScroll = selectedItemsFrame:FindFirstChild("SelectedItems")
         local totalChosenValue = selectedItemsFrame:FindFirstChild("TotalChosenValue")
 
-        local opponentItemsFrame = selectItems:FindFirstChild("Opponent_Items")
+        local opponentItemsFrame = gameMain:FindFirstChild("Opponent_Items")
         if not opponentItemsFrame then
-                warn("updateSelectedItemsDisplay: Opponent_Items frame not found")
+                warn("updateSelectedItemsDisplay: Opponent_Items frame not found under Main")
                 return
         end
         
@@ -342,15 +350,16 @@ local function updateSelectedItemsDisplay()
                 end
         end
 
-        local player1Confirmed = currentGamble.Player1:FindFirstChild("CONFIRMED")
-        local player2Confirmed = currentGamble.Player2:FindFirstChild("CONFIRMED")
+        local player1Confirmed = player1:FindFirstChild("CONFIRMED")
+        local player2Confirmed = player2:FindFirstChild("CONFIRMED")
 
-        local mainTxt = selectItems:FindFirstChild("MainTxt")
+        local selectItems = gameMain:FindFirstChild("SelectItems")
+        local mainTxt = selectItems and selectItems:FindFirstChild("MainTxt")
         if mainTxt then
                 if player1Confirmed and player2Confirmed then
                         mainTxt.Text = "Both players confirmed!"
-                elseif (currentGamble.Player1.Value.Value == client.Name and player1Confirmed) or
-                    (currentGamble.Player2.Value.Value == client.Name and player2Confirmed) then
+                elseif (player1Value.Value == client.Name and player1Confirmed) or
+                    (player2Value.Value == client.Name and player2Confirmed) then
                         mainTxt.Text = "Waiting for opponent to confirm..."
                 else
                         mainTxt.Text = "Select Items To Bet"
