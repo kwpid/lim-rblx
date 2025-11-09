@@ -732,12 +732,20 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                 end
 
                 task.spawn(function()
-                        local animationDuration = 2.5
-                        local spinInterval = 0.08
-                        local totalSpins = math.floor(animationDuration / spinInterval)
-                        local spinsBeforeSlow = math.floor(totalSpins * 0.7)
+                        local totalDuration = 5
+                        local minInterval = 0.05
+                        local maxInterval = 0.4
                         
-                        for currentSpin = 1, totalSpins do
+                        local elapsed = 0
+                        local spinCount = 0
+                        
+                        while elapsed < totalDuration do
+                                local progress = elapsed / totalDuration
+                                
+                                local easeProgress = progress * progress * progress
+                                
+                                local currentInterval = minInterval + (maxInterval - minInterval) * easeProgress
+                                
                                 local tempYourItem = getRandomItemFromCache()
                                 local tempTheirItem = getRandomItemFromCache()
 
@@ -761,11 +769,9 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                                         theirItemName.Text = tempTheirItem.Name
                                 end
 
-                                if currentSpin >= spinsBeforeSlow then
-                                        task.wait(0.15)
-                                else
-                                        task.wait(spinInterval)
-                                end
+                                task.wait(currentInterval)
+                                elapsed = elapsed + currentInterval
+                                spinCount = spinCount + 1
                         end
 
                         if yourItem then
@@ -809,13 +815,13 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                                 end
                         end
 
-                        task.wait(1.5)
+                        task.wait(2.5)
 
                         if currentRound < 7 then
                                 currentRound = currentRound + 1
                                 gambleEvent:FireServer("request round", { RoundNumber = currentRound })
                         else
-                                task.wait(1)
+                                task.wait(1.5)
                                 gambleEvent:FireServer("finish game")
                         end
                 end)
