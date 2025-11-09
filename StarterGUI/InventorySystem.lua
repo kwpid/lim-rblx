@@ -75,7 +75,6 @@ sellByRarityEvent.Name = "SellByRarityEvent"
 sellByRarityEvent.Parent = remoteEvents
 local getEquippedItemsFunction = remoteEvents:WaitForChild("GetEquippedItemsFunction", 10)
 local createListingEvent = remoteEvents:WaitForChild("CreateListingEvent", 10)
-local validateGamepassFunction = remoteEvents:WaitForChild("ValidateGamepassFunction", 10)
 local toggleLockItemEvent = remoteEvents:WaitForChild("ToggleLockItemEvent", 10)
 
 local rarityColors = {
@@ -702,47 +701,26 @@ if marketSellBtn and marketConfirm then
                         end
                 end
 
-                local gamepassIdBox = pop:FindFirstChild("GamepassID")
                 local cashAmountBox = pop:FindFirstChild("CashAmount")
                 local sellPriceLabel = pop:FindFirstChild("SellPrice")
 
-                if gamepassIdBox then gamepassIdBox.Text = "" end
                 if cashAmountBox then cashAmountBox.Text = "" end
-                if sellPriceLabel then sellPriceLabel.Text = "Enter cash amount or gamepass ID" end
+                if sellPriceLabel then sellPriceLabel.Text = "Enter cash amount" end
         end)
 
         local pop = marketConfirm:FindFirstChild("Pop")
         if pop then
-                local gamepassIdBox = pop:FindFirstChild("GamepassID")
                 local cashAmountBox = pop:FindFirstChild("CashAmount")
                 local sellPriceLabel = pop:FindFirstChild("SellPrice")
                 local confirmBtn = pop:FindFirstChild("Confirm")
                 local cancelBtn = pop:FindFirstChild("Cancel")
 
                 local function updateSellPrice()
-                        if not gamepassIdBox or not cashAmountBox or not sellPriceLabel then return end
+                        if not cashAmountBox or not sellPriceLabel then return end
 
-                        local gamepassId = gamepassIdBox.Text
                         local cashAmount = cashAmountBox.Text
 
-                        if gamepassId ~= "" and cashAmount ~= "" then
-                                sellPriceLabel.Text = "Error: Choose either cash OR gamepass, not both"
-                                sellPriceLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-                                return
-                        end
-
-                        if gamepassId ~= "" then
-                                local validGamepass, robuxPrice = validateGamepassFunction:InvokeServer(gamepassId)
-
-                                if validGamepass and robuxPrice > 0 then
-                                        local sellerReceives = math.floor(robuxPrice * 0.70)
-                                        sellPriceLabel.Text = "You will receive R$" .. formatNumber(sellerReceives) .. " upon sale (30% Tax)"
-                                        sellPriceLabel.TextColor3 = Color3.fromRGB(111, 218, 40)
-                                else
-                                        sellPriceLabel.Text = "Invalid gamepass ID"
-                                        sellPriceLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-                                end
-                        elseif cashAmount ~= "" then
+                        if cashAmount ~= "" then
                                 local cash = tonumber(cashAmount)
 
                                 if cash and cash >= 1 and cash <= 1000000000 then
@@ -754,13 +732,9 @@ if marketSellBtn and marketConfirm then
                                         sellPriceLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
                                 end
                         else
-                                sellPriceLabel.Text = "Enter cash amount or gamepass ID"
+                                sellPriceLabel.Text = "Enter cash amount"
                                 sellPriceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
                         end
-                end
-
-                if gamepassIdBox then
-                        gamepassIdBox:GetPropertyChangedSignal("Text"):Connect(updateSellPrice)
                 end
 
                 if cashAmountBox then
@@ -771,19 +745,12 @@ if marketSellBtn and marketConfirm then
                         confirmBtn.MouseButton1Click:Connect(function()
                                 if not selectedItemData then return end
 
-                                local gamepassId = gamepassIdBox and gamepassIdBox.Text or ""
                                 local cashAmount = cashAmountBox and cashAmountBox.Text or ""
 
-                                if gamepassId ~= "" and cashAmount ~= "" then
-                                        return
-                                end
-
-                                if gamepassId ~= "" then
-                                        createListingEvent:FireServer(selectedItemData, "robux", 0, gamepassId)
-                                elseif cashAmount ~= "" then
+                                if cashAmount ~= "" then
                                         local cash = tonumber(cashAmount)
                                         if cash and cash >= 1 and cash <= 1000000000 then
-                                                createListingEvent:FireServer(selectedItemData, "cash", cash, nil)
+                                                createListingEvent:FireServer(selectedItemData, "cash", cash)
                                         else
                                                 return
                                         end

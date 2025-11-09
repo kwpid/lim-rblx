@@ -45,10 +45,6 @@ local getListingsFunction = Instance.new("RemoteFunction")
 getListingsFunction.Name = "GetListingsFunction"
 getListingsFunction.Parent = remoteEventsFolder
 
-local validateGamepassFunction = Instance.new("RemoteFunction")
-validateGamepassFunction.Name = "ValidateGamepassFunction"
-validateGamepassFunction.Parent = remoteEventsFolder
-
 local notificationEvent = remoteEventsFolder:FindFirstChild("CreateNotification")
 if not notificationEvent then
         notificationEvent = Instance.new("RemoteEvent")
@@ -653,22 +649,6 @@ getListingsFunction.OnServerInvoke = function(player)
         end
 
         return listingsWithOwnership
-end
-
-validateGamepassFunction.OnServerInvoke = function(player, gamepassId)
-        if not gamepassId or gamepassId == "" then
-                return false, 0
-        end
-
-        local success, productInfo = pcall(function()
-                return MarketplaceService:GetProductInfo(tonumber(gamepassId), Enum.InfoType.GamePass)
-        end)
-
-        if success and productInfo then
-                return true, productInfo.PriceInRobux or 0
-        else
-                return false, 0
-        end
 end
 
 loadListings()
