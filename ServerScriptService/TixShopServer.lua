@@ -119,10 +119,15 @@ local function RotateShop()
         
         ShopRotationEvent:FireAllClients(CurrentRotation, NextRotationTime)
         
-        local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
-        if NotificationEvent then
+        local notificationEvent = RemoteEvents:FindFirstChild("CreateNotification")
+        if notificationEvent then
                 for _, player in ipairs(Players:GetPlayers()) do
-                        NotificationEvent:FireClient(player, "EVENT_START", "Tix Shop has rotated! Check out the new items!")
+                        notificationEvent:FireClient(player, {
+                                Type = "EVENT_START",
+                                Title = "Tix Shop Rotated!",
+                                Body = "New items are now available in the shop. Check it out!",
+                                ImageId = 385892087
+                        })
                 end
         end
         
@@ -198,18 +203,26 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
         end
         
         if playerData.Cash < itemData.Price then
-                local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
-                if NotificationEvent then
-                        NotificationEvent:FireClient(player, "ERROR", "Not enough cash! You need " .. FormatCash(itemData.Price))
+                local notificationEvent = RemoteEvents:FindFirstChild("CreateNotification")
+                if notificationEvent then
+                        notificationEvent:FireClient(player, {
+                                Type = "ERROR",
+                                Title = "Not Enough Cash",
+                                Body = "You need " .. FormatCash(itemData.Price) .. " to purchase this item!"
+                        })
                 end
                 return
         end
         
         if itemData.IsBundle and itemData.BundleItems then
                 if not itemData.BundleItems or #itemData.BundleItems == 0 then
-                        local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
-                        if NotificationEvent then
-                                NotificationEvent:FireClient(player, "ERROR", "Bundle has no items configured!")
+                        local notificationEvent = RemoteEvents:FindFirstChild("CreateNotification")
+                        if notificationEvent then
+                                notificationEvent:FireClient(player, {
+                                        Type = "ERROR",
+                                        Title = "Invalid Bundle",
+                                        Body = "This bundle has no items configured!"
+                                })
                         end
                         return
                 end
@@ -231,9 +244,13 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                 end
                 
                 if alreadyOwnsAll then
-                        local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
-                        if NotificationEvent then
-                                NotificationEvent:FireClient(player, "ERROR", "You already own all items in this bundle!")
+                        local notificationEvent = RemoteEvents:FindFirstChild("CreateNotification")
+                        if notificationEvent then
+                                notificationEvent:FireClient(player, {
+                                        Type = "ERROR",
+                                        Title = "Already Owned",
+                                        Body = "You already own all items in this bundle!"
+                                })
                         end
                         return
                 end
@@ -288,9 +305,14 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                         end
                 end
                 
-                local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
-                if NotificationEvent then
-                        NotificationEvent:FireClient(player, "VICTORY", "Purchased " .. itemData.Name .. " bundle (" .. #itemData.BundleItems .. " items) for " .. FormatCash(itemData.Price) .. "!")
+                local notificationEvent = RemoteEvents:FindFirstChild("CreateNotification")
+                if notificationEvent then
+                        notificationEvent:FireClient(player, {
+                                Type = "PURCHASE",
+                                Title = "Bundle Purchased!",
+                                Body = "Bought " .. itemData.Name .. " with " .. #itemData.BundleItems .. " items for " .. FormatCash(itemData.Price),
+                                ImageId = itemData.ImageId or itemData.RobloxId
+                        })
                 end
                 
                 print("[TixShop] Player " .. player.Name .. " purchased bundle " .. itemData.Name .. " for $" .. itemData.Price)
@@ -304,9 +326,13 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                 end
                 
                 if alreadyOwns then
-                        local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
-                        if NotificationEvent then
-                                NotificationEvent:FireClient(player, "ERROR", "You already own this item!")
+                        local notificationEvent = RemoteEvents:FindFirstChild("CreateNotification")
+                        if notificationEvent then
+                                notificationEvent:FireClient(player, {
+                                        Type = "ERROR",
+                                        Title = "Already Owned",
+                                        Body = "You already own this item!"
+                                })
                         end
                         return
                 end
@@ -320,9 +346,14 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                         Rarity = "Vanity"
                 })
                 
-                local NotificationEvent = RemoteEvents:FindFirstChild("NotificationEvent")
-                if NotificationEvent then
-                        NotificationEvent:FireClient(player, "VICTORY", "Purchased " .. itemData.Name .. " for " .. FormatCash(itemData.Price) .. "!", itemData.RobloxId)
+                local notificationEvent = RemoteEvents:FindFirstChild("CreateNotification")
+                if notificationEvent then
+                        notificationEvent:FireClient(player, {
+                                Type = "PURCHASE",
+                                Title = "Item Purchased!",
+                                Body = "Bought " .. itemData.Name .. " for " .. FormatCash(itemData.Price),
+                                ImageId = itemData.RobloxId
+                        })
                 end
                 
                 print("[TixShop] Player " .. player.Name .. " purchased " .. itemData.Name .. " for $" .. itemData.Price)
