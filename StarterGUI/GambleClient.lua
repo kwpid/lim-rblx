@@ -193,7 +193,7 @@ local function updateSelectedItemsDisplay()
         local totalChosenValue = selectedItemsFrame and selectedItemsFrame:FindFirstChild("TotalChosenValue")
 
         local opponentItemsFrame = selectItems:FindFirstChild("Opponent_Items")
-        local oppSelectedScroll = opponentItemsFrame and opponentItemsFrame:FindFirstChild("Opp_SelectedItem")
+        local oppSelectedScroll = opponentItemsFrame and opponentItemsFrame:FindFirstChild("Opp_SelectedItems")
         local oppTotalValue = opponentItemsFrame and opponentItemsFrame:FindFirstChild("TotalChosenValue")
 
         if selectedItemsScroll then
