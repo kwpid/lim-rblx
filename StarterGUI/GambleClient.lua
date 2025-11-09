@@ -732,9 +732,9 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                                         theirItemName.Text = data.TheirItem.Name
                                 end
 
-                                if data.YouWon then
+                                if data.YourItem.Value > data.TheirItem.Value then
                                         yourWins = yourWins + 1
-                                else
+                                elseif data.TheirItem.Value > data.YourItem.Value then
                                         theirWins = theirWins + 1
                                 end
 
@@ -746,6 +746,17 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                                         local oppName = currentGamble.Player1.Value.Value == client.Name and
                                             currentGamble.Player2.Value.Value or currentGamble.Player1.Value.Value
                                         oppWinsLabel.Text = "@" .. oppName .. " Wins: " .. theirWins
+                                end
+                                
+                                local roundStatus = gameFrame:FindFirstChild("RoundStatus") or gameFrame:FindFirstChild("MainTxt")
+                                if roundStatus then
+                                        if data.YourItem.Value > data.TheirItem.Value then
+                                                roundStatus.Text = "You won Round " .. data.RoundNumber .. "!"
+                                        elseif data.TheirItem.Value > data.YourItem.Value then
+                                                roundStatus.Text = "You lost Round " .. data.RoundNumber
+                                        else
+                                                roundStatus.Text = "Round " .. data.RoundNumber .. " - Tie!"
+                                        end
                                 end
 
                                 task.wait(1.5)
