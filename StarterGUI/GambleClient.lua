@@ -3,6 +3,9 @@ local client = game.Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GambleConfig = require(ReplicatedStorage:WaitForChild("GambleConfig"))
 
+local rollableItemsCache = {}
+local getRollableItemsFunction = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("GetRollableItems")
+
 local gambleRequestsFolder = ReplicatedStorage:WaitForChild("GAMBLE REQUESTS", 30)
 if not gambleRequestsFolder then
         warn("gamble requests folder not found")
@@ -663,8 +666,18 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
 
                                         isInGame = true
                                         currentRound = 1
-                                        yourWins = 0
-                                        theirWins = 0
+
+                                        print("Fetching rollable items for animation...")
+                                        local success, items = pcall(function()
+                                                return getRollableItemsFunction:InvokeServer()
+                                        end)
+                                        
+                                        if success and items and #items > 0 then
+                                                rollableItemsCache = items
+                                                print("Loaded " .. #rollableItemsCache .. " items for animation")
+                                        else
+                                                warn("Failed to load rollable items, animation will use placeholders")
+                                        end
 
                                         print("Requesting round 1...")
                                         task.wait(1)
@@ -711,117 +724,99 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                 local yourWinsLabel = gameFrame:FindFirstChild("YourWins")
                 local oppWinsLabel = gameFrame:FindFirstChild("OppWins")
 
-                local animationDuration = 3
-                local spinInterval = 0.05
-                local spinsBeforeSlow = math.floor(animationDuration / spinInterval * 0.7)
-                local currentSpin = 0
-
-                local function getRandomItem()
-                        local items = {
-                                { Id = 12345, Name = "Random Item 1", Value = math.random(1000, 1000000) },
-                                { Id = 67890, Name = "Random Item 2", Value = math.random(1000, 1000000) },
-                                { Id = 54321, Name = "Random Item 3", Value = math.random(1000, 1000000) }
-                        }
-                        return items[math.random(1, #items)]
+                local function getRandomItemFromCache()
+                        if #rollableItemsCache == 0 then
+                                return { RobloxId = 0, Name = "Loading...", Value = 0 }
+                        end
+                        return rollableItemsCache[math.random(1, #rollableItemsCache)]
                 end
 
-                local spinConnection
-                spinConnection = game:GetService("RunService").Heartbeat:Connect(function()
-                        currentSpin = currentSpin + 1
-
-                        local tempYourItem = getRandomItem()
-                        local tempTheirItem = getRandomItem()
-
-                        if yourItem then
-                                yourItem.Image = "rbxthumb://type=Asset&id=" .. tempYourItem.Id .. "&w=150&h=150"
-                        end
-                        if yourItemValue then
-                                yourItemValue.Text = "R$" .. formatNumber(tempYourItem.Value)
-                        end
-                        if yourItemName then
-                                yourItemName.Text = tempYourItem.Name
-                        end
-
-                        if theirItem then
-                                theirItem.Image = "rbxthumb://type=Asset&id=" .. tempTheirItem.Id .. "&w=150&h=150"
-                        end
-                        if theirItemValue then
-                                theirItemValue.Text = "R$" .. formatNumber(tempTheirItem.Value)
-                        end
-                        if theirItemName then
-                                theirItemName.Text = tempTheirItem.Name
-                        end
-
-                        if currentSpin >= spinsBeforeSlow then
-                                task.wait(0.1)
-                        else
-                                task.wait(spinInterval)
-                        end
-
-                        if currentSpin >= animationDuration / spinInterval then
-                                spinConnection:Disconnect()
+                task.spawn(function()
+                        local animationDuration = 2.5
+                        local spinInterval = 0.08
+                        local totalSpins = math.floor(animationDuration / spinInterval)
+                        local spinsBeforeSlow = math.floor(totalSpins * 0.7)
+                        
+                        for currentSpin = 1, totalSpins do
+                                local tempYourItem = getRandomItemFromCache()
+                                local tempTheirItem = getRandomItemFromCache()
 
                                 if yourItem then
-                                        yourItem.Image = "rbxthumb://type=Asset&id=" ..
-                                            data.YourItem.RobloxId .. "&w=150&h=150"
+                                        yourItem.Image = "rbxthumb://type=Asset&id=" .. tempYourItem.RobloxId .. "&w=150&h=150"
                                 end
                                 if yourItemValue then
-                                        yourItemValue.Text = "R$" .. formatNumber(data.YourItem.Value)
+                                        yourItemValue.Text = "R$" .. formatNumber(tempYourItem.Value)
                                 end
                                 if yourItemName then
-                                        yourItemName.Text = data.YourItem.Name
+                                        yourItemName.Text = tempYourItem.Name
                                 end
 
                                 if theirItem then
-                                        theirItem.Image = "rbxthumb://type=Asset&id=" ..
-                                            data.TheirItem.RobloxId .. "&w=150&h=150"
+                                        theirItem.Image = "rbxthumb://type=Asset&id=" .. tempTheirItem.RobloxId .. "&w=150&h=150"
                                 end
                                 if theirItemValue then
-                                        theirItemValue.Text = "R$" .. formatNumber(data.TheirItem.Value)
+                                        theirItemValue.Text = "R$" .. formatNumber(tempTheirItem.Value)
                                 end
                                 if theirItemName then
-                                        theirItemName.Text = data.TheirItem.Name
+                                        theirItemName.Text = tempTheirItem.Name
                                 end
 
-                                if data.YourItem.Value > data.TheirItem.Value then
-                                        yourWins = yourWins + 1
-                                elseif data.TheirItem.Value > data.YourItem.Value then
-                                        theirWins = theirWins + 1
-                                end
-
-                                if yourWinsLabel then
-                                        yourWinsLabel.Text = "@" .. client.Name .. " Wins: " .. yourWins
-                                end
-
-                                if oppWinsLabel then
-                                        local oppName = currentGamble.Player1.Value.Value == client.Name and
-                                            currentGamble.Player2.Value.Value or currentGamble.Player1.Value.Value
-                                        oppWinsLabel.Text = "@" .. oppName .. " Wins: " .. theirWins
-                                end
-                                
-                                local roundStatus = gameFrame:FindFirstChild("RoundStatus") or gameFrame:FindFirstChild("MainTxt")
-                                if roundStatus then
-                                        if data.YourItem.Value > data.TheirItem.Value then
-                                                roundStatus.Text = "You won Round " .. data.RoundNumber .. "!"
-                                        elseif data.TheirItem.Value > data.YourItem.Value then
-                                                roundStatus.Text = "You lost Round " .. data.RoundNumber
-                                        else
-                                                roundStatus.Text = "Round " .. data.RoundNumber .. " - Tie!"
-                                        end
-                                end
-
-                                task.wait(1.5)
-
-                                if currentRound < 7 then
-                                        currentRound = currentRound + 1
-                                        gambleEvent:FireServer("request round", { RoundNumber = currentRound })
+                                if currentSpin >= spinsBeforeSlow then
+                                        task.wait(0.15)
                                 else
-                                        task.wait(1)
-                                        gambleEvent:FireServer("finish game", {
-                                                YourWins = yourWins,
-                                                TheirWins = theirWins
-                                        })
+                                        task.wait(spinInterval)
                                 end
+                        end
+
+                        if yourItem then
+                                yourItem.Image = "rbxthumb://type=Asset&id=" .. data.YourItem.RobloxId .. "&w=150&h=150"
+                        end
+                        if yourItemValue then
+                                yourItemValue.Text = "R$" .. formatNumber(data.YourItem.Value)
+                        end
+                        if yourItemName then
+                                yourItemName.Text = data.YourItem.Name
+                        end
+
+                        if theirItem then
+                                theirItem.Image = "rbxthumb://type=Asset&id=" .. data.TheirItem.RobloxId .. "&w=150&h=150"
+                        end
+                        if theirItemValue then
+                                theirItemValue.Text = "R$" .. formatNumber(data.TheirItem.Value)
+                        end
+                        if theirItemName then
+                                theirItemName.Text = data.TheirItem.Name
+                        end
+
+                        if yourWinsLabel then
+                                yourWinsLabel.Text = "@" .. client.Name .. " Wins: " .. (data.YourWins or 0)
+                        end
+
+                        if oppWinsLabel then
+                                local oppName = currentGamble.Player1.Value.Value == client.Name and
+                                    currentGamble.Player2.Value.Value or currentGamble.Player1.Value.Value
+                                oppWinsLabel.Text = "@" .. oppName .. " Wins: " .. (data.TheirWins or 0)
+                        end
+                        
+                        local roundStatus = gameFrame:FindFirstChild("RoundStatus") or gameFrame:FindFirstChild("MainTxt")
+                        if roundStatus then
+                                if data.YourItem.Value > data.TheirItem.Value then
+                                        roundStatus.Text = "You won Round " .. data.RoundNumber .. "!"
+                                elseif data.TheirItem.Value > data.YourItem.Value then
+                                        roundStatus.Text = "You lost Round " .. data.RoundNumber
+                                else
+                                        roundStatus.Text = "Round " .. data.RoundNumber .. " - Tie!"
+                                end
+                        end
+
+                        task.wait(1.5)
+
+                        if currentRound < 7 then
+                                currentRound = currentRound + 1
+                                gambleEvent:FireServer("request round", { RoundNumber = currentRound })
+                        else
+                                task.wait(1)
+                                gambleEvent:FireServer("finish game")
                         end
                 end)
         end
