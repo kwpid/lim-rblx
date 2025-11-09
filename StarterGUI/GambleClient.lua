@@ -699,16 +699,113 @@ ongoingGamblesFolder.ChildRemoved:Connect(function(child)
         if currentGamble == child then
                 currentGamble = nil
                 isInGame = false
+                currentRound = 1
+                yourWins = 0
+                theirWins = 0
+                
                 gameMain.Visible = false
 
                 local selectItems = gameMain:FindFirstChild("SelectItems")
                 if selectItems then
                         selectItems.Visible = false
+                        
+                        local handler = selectItems:FindFirstChild("Handler")
+                        if handler then
+                                for _, btn in pairs(handler:GetChildren()) do
+                                        if btn:IsA("ImageButton") then
+                                                btn:Destroy()
+                                        end
+                                end
+                        end
+                        
+                        local confirmButton = selectItems:FindFirstChild("Confirm")
+                        if confirmButton then
+                                confirmButton.Text = "Confirm"
+                        end
+                        
+                        local mainTxt = selectItems:FindFirstChild("MainTxt")
+                        if mainTxt then
+                                mainTxt.Text = "Select Items To Bet"
+                        end
                 end
 
                 local gameFrame = gameMain:FindFirstChild("Game")
                 if gameFrame then
                         gameFrame.Visible = false
+                        
+                        local yourWinsLabel = gameFrame:FindFirstChild("YourWins")
+                        if yourWinsLabel then
+                                yourWinsLabel.Text = "@" .. client.Name .. " Wins: 0"
+                        end
+                        
+                        local oppWinsLabel = gameFrame:FindFirstChild("OppWins")
+                        if oppWinsLabel then
+                                oppWinsLabel.Text = "Opponent Wins: 0"
+                        end
+                        
+                        local roundStatus = gameFrame:FindFirstChild("RoundStatus") or gameFrame:FindFirstChild("MainTxt")
+                        if roundStatus then
+                                roundStatus.Text = "Get Ready!"
+                        end
+                end
+                
+                local selectedItemsFrame = gameMain:FindFirstChild("Selected_Items")
+                if selectedItemsFrame then
+                        local selectedScroll = selectedItemsFrame:FindFirstChild("SelectedItems")
+                        if selectedScroll then
+                                for _, btn in pairs(selectedScroll:GetChildren()) do
+                                        if btn:IsA("ImageButton") then
+                                                btn:Destroy()
+                                        end
+                                end
+                        end
+                        
+                        local totalValue = selectedItemsFrame:FindFirstChild("TotalChosenValue")
+                        if totalValue then
+                                totalValue.Text = "R$0"
+                        end
+                end
+                
+                local opponentItemsFrame = gameMain:FindFirstChild("Opponent_Items")
+                if opponentItemsFrame then
+                        local oppScroll = opponentItemsFrame:FindFirstChild("Opp_SelectedItems")
+                        if oppScroll then
+                                for _, btn in pairs(oppScroll:GetChildren()) do
+                                        if btn:IsA("ImageButton") then
+                                                btn:Destroy()
+                                        end
+                                end
+                        end
+                        
+                        local oppTotalValue = opponentItemsFrame:FindFirstChild("TotalChosenValue")
+                        if oppTotalValue then
+                                oppTotalValue.Text = "R$0"
+                        end
+                end
+                
+                for _, btn in pairs(selectedItemsButtons) do
+                        if btn then
+                                btn:Destroy()
+                        end
+                end
+                selectedItemsButtons = {}
+                
+                for _, btn in pairs(handlerItemsButtons) do
+                        if btn then
+                                btn:Destroy()
+                        end
+                end
+                handlerItemsButtons = {}
+                
+                rollableItemsCache = {}
+                
+                if confirmConnection then
+                        confirmConnection:Disconnect()
+                        confirmConnection = nil
+                end
+                if cancelConnection then
+                        cancelConnection:Disconnect()
+                        cancelConnection = nil
                 end
         end
 end)

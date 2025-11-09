@@ -53,12 +53,71 @@ function removeGambles(plr)
                         local otherPlayerName = gamble.Player1.Value.Value == plr.Name and gamble.Player2.Value.Value or gamble.Player1.Value.Value
                         local otherPlayer = Players:FindFirstChild(otherPlayerName)
                         
-                        if createNotificationEvent and otherPlayer then
-                                createNotificationEvent:FireClient(otherPlayer, {
-                                        Type = "ERROR",
-                                        Title = "Gamble Cancelled",
-                                        Body = plr.Name .. " left the game. Gamble cancelled."
-                                })
+                        if gamble:FindFirstChild("GAME_STARTED") and otherPlayer then
+                                local winner = otherPlayer
+                                local loser = plr
+                                
+                                local winnerItems = winner.Name == gamble.Player1.Value.Value and gamble.Player1.Items or gamble.Player2.Items
+                                local loserItems = loser.Name == gamble.Player1.Value.Value and gamble.Player1.Items or gamble.Player2.Items
+                                
+                                for _, itemFolder in ipairs(loserItems:GetChildren()) do
+                                        local robloxId = itemFolder.RobloxId.Value
+                                        local serialNumber = itemFolder:FindFirstChild("SerialNumber") and itemFolder.SerialNumber.Value or nil
+                                        
+                                        local index, item = findItemInInventory(loser, robloxId, serialNumber)
+                                        if index then
+                                                local loserData = DataStoreAPI:GetPlayerData(loser)
+                                                if loserData and loserData.Inventory[index] then
+                                                        if serialNumber then
+                                                                table.remove(loserData.Inventory, index)
+                                                        else
+                                                                local currentAmount = loserData.Inventory[index].Amount or 1
+                                                                if currentAmount > 1 then
+                                                                        loserData.Inventory[index].Amount = currentAmount - 1
+                                                                        ItemDatabase:DecrementTotalCopies(robloxId, 1)
+                                                                else
+                                                                        table.remove(loserData.Inventory, index)
+                                                                        ItemDatabase:DecrementTotalCopies(robloxId, 1)
+                                                                end
+                                                        end
+                                                        
+                                                        DataStoreAPI:UpdateInventoryValue(loser)
+                                                end
+                                                
+                                                local itemData = {
+                                                        RobloxId = robloxId,
+                                                        Name = itemFolder.ItemName.Value,
+                                                        Value = itemFolder.ItemValue.Value,
+                                                        Rarity = itemFolder.Rarity.Value
+                                                }
+                                                
+                                                if serialNumber then
+                                                        itemData.SerialNumber = serialNumber
+                                                end
+                                                
+                                                DataStoreAPI:AddItem(winner, itemData)
+                                        end
+                                end
+                                
+                                local DataStoreManager = require(script.Parent.DataStoreManager)
+                                DataStoreManager:SavePlayerData(loser)
+                                DataStoreManager:SavePlayerData(winner)
+                                
+                                if createNotificationEvent then
+                                        createNotificationEvent:FireClient(winner, {
+                                                Type = "VICTORY",
+                                                Title = "You Won!",
+                                                Body = plr.Name .. " left the game. You win by default and receive all items!"
+                                        })
+                                end
+                        elseif otherPlayer then
+                                if createNotificationEvent then
+                                        createNotificationEvent:FireClient(otherPlayer, {
+                                                Type = "ERROR",
+                                                Title = "Gamble Cancelled",
+                                                Body = plr.Name .. " left the game. Gamble cancelled."
+                                        })
+                                end
                         end
                         
                         gamble:Destroy()
@@ -740,6 +799,10 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                                 end
                         end
 
+                        local DataStoreManager = require(script.Parent.DataStoreManager)
+                        DataStoreManager:SavePlayerData(winner)
+                        DataStoreManager:SavePlayerData(loser)
+                        
                         if createNotificationEvent then
                                 createNotificationEvent:FireClient(winner, {
                                         Type = "VICTORY",
