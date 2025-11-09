@@ -35,6 +35,8 @@ local function equipItemToCharacter(player, robloxId, bodyPartType)
         desc.RightLeg = robloxId
       elseif bodyPartType == "Torso" then
         desc.Torso = robloxId
+      elseif bodyPartType == "Head" then
+        desc.Head = robloxId
       end
       
       -- Apply the updated description
@@ -131,6 +133,8 @@ local function unequipItemFromCharacter(player, robloxId, bodyPartType)
         currentDesc.RightLeg = originalDesc.RightLeg
       elseif bodyPartType == "Torso" then
         currentDesc.Torso = originalDesc.Torso
+      elseif bodyPartType == "Head" then
+        currentDesc.Head = originalDesc.Head
       end
       
       humanoid:ApplyDescription(currentDesc)
