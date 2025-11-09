@@ -5,19 +5,35 @@ local UseGroupRanks = false -- Displays the rank name next to the player's name
 local UseRankTitles = false -- Uses the name of the rank in the group instead of Group_Ranks
 local TitlesEnabled = false
 
-local Player_Ranks = { -- Custom titles next to player's names
-  Player1 = { Title = "Dev", Color = Color3.fromRGB(44, 210, 255) }
+local Player_Ranks = { -- Custom titles next to player's names (use UserId)
+  [1547280148] = { Title = "Dev", Color = Color3.fromRGB(44, 210, 255) }
 }
 local Group_Ranks = {
   [255] = { Title = "Cody", Color = Color3.fromRGB(222, 121, 255) },
   [254] = { Title = "Ian", Color = Color3.fromRGB(44, 210, 255) },
 }
-local PlayerIcons = { -- Custom icons (like the premium and friend icons)
-  EchoAUS = { "rbxassetid://5585574829" },
-  Player1 = { "rbxassetid://5590163573" }
+local PlayerIcons = { -- Custom icons (like the premium and friend icons) (use UserId)
+  [1547280148] = { "rbxassetid://5590163573" }
 }
 
 ------------- You can ignore everything below -------------
+
+local function formatStatNumber(value)
+  if type(value) ~= "number" then
+    return tostring(value)
+  end
+  
+  if value >= 1000000000 then
+    return string.format("%.1fB", value / 1000000000)
+  elseif value >= 1000000 then
+    return string.format("%.1fM", value / 1000000)
+  elseif value >= 1000 then
+    return string.format("%.1fK", value / 1000)
+  else
+    return tostring(value)
+  end
+end
+
 game.StarterGui:SetCoreGuiEnabled("PlayerList", false)
 local LocalPlayer = game.Players.LocalPlayer
 
@@ -231,8 +247,8 @@ local FriendCache = {}
 local function SetIcon(player, icon, textlabel)
   local c1 = game.CreatorType == Enum.CreatorType.User and player.UserId == game.CreatorId
   local c2 = game.CreatorType == Enum.CreatorType.Group and player:GetRankInGroup(game.CreatorId) == 255
-  if PlayerIcons[player.Name] then
-    SetImage(icon, textlabel, PlayerIcons[player.Name])
+  if PlayerIcons[player.UserId] then
+    SetImage(icon, textlabel, PlayerIcons[player.UserId])
   elseif c1 or c2 then
     SetImage(icon, textlabel, Icons.Developer)
   elseif FriendCache[player.UserId] then
@@ -403,7 +419,7 @@ local function NewStat(player, stat, statFolder)
       local value = titleValues:WaitForChild(stat.Name, math.huge)
       local s = script.Stat:Clone()
       s.Name = stat.Name
-      s.Text = stat.Value
+      s.Text = formatStatNumber(stat.Value)
       s.Position = UDim2.new(1, value.Position.X.Offset, 0.5, 0)
       s.Size = UDim2.new(0, value.Size.X.Offset, 0, 14)
       if player == LocalPlayer then
@@ -412,7 +428,7 @@ local function NewStat(player, stat, statFolder)
       s.Parent = statFolder
 
       stat.Changed:Connect(function(val)
-        s.Text = val
+        s.Text = formatStatNumber(val)
       end)
     end)
   end
@@ -476,8 +492,8 @@ local function PlayerAdded(player)
     end
 
     if TitlesEnabled then
-      if Player_Ranks[player.Name] then
-        local t = Player_Ranks[player.Name]
+      if Player_Ranks[player.UserId] then
+        local t = Player_Ranks[player.UserId]
         textlabel.Text = textlabel.Text .. " [" .. TagColor3(t.Color) .. t.Title .. "</font>]"
       elseif UseRankTitles and player:IsInGroup(GroupId) then
         local t = { Title = player:GetRoleInGroup(GroupId), Color = 92, 225, 255 }
