@@ -178,9 +178,9 @@ end
 local function updateSelectedItemsDisplay()
         if not currentGamble then return end
 
-        local playerFolder = currentGamble.Player1.Value == client.Name and currentGamble.Player1 or
+        local playerFolder = currentGamble.Player1.Value.Value == client.Name and currentGamble.Player1 or
             currentGamble.Player2
-        local opponentFolder = currentGamble.Player1.Value == client.Name and currentGamble.Player2 or
+        local opponentFolder = currentGamble.Player1.Value.Value == client.Name and currentGamble.Player2 or
             currentGamble.Player1
 
         local selectItems = gameMain:FindFirstChild("SelectItems")
@@ -317,8 +317,8 @@ local function updateSelectedItemsDisplay()
         if mainTxt then
                 if player1Confirmed and player2Confirmed then
                         mainTxt.Text = "Both players confirmed!"
-                elseif (currentGamble.Player1.Value == client.Name and player1Confirmed) or
-                    (currentGamble.Player2.Value == client.Name and player2Confirmed) then
+                elseif (currentGamble.Player1.Value.Value == client.Name and player1Confirmed) or
+                    (currentGamble.Player2.Value.Value == client.Name and player2Confirmed) then
                         mainTxt.Text = "Waiting for opponent to confirm..."
                 else
                         mainTxt.Text = "Select Items To Bet"
@@ -425,19 +425,23 @@ local function startGambleSelection()
 end
 
 ongoingGamblesFolder.ChildAdded:Connect(function(child)
-        local player1 = child:WaitForChild("Player1", 5)
-        local player2 = child:WaitForChild("Player2", 5)
+        local player1Folder = child:WaitForChild("Player1", 5)
+        local player2Folder = child:WaitForChild("Player2", 5)
         
-        if not player1 or not player2 then
+        if not player1Folder or not player2Folder then
                 warn("Failed to find Player1 or Player2 in gamble folder")
                 return
         end
         
-        while player1.Value == "" or player2.Value == "" do
-                task.wait(0.05)
+        local player1Name = player1Folder:WaitForChild("Value", 5)
+        local player2Name = player2Folder:WaitForChild("Value", 5)
+        
+        if not player1Name or not player2Name then
+                warn("Failed to find player names in gamble folder")
+                return
         end
         
-        if player1.Value == client.Name or player2.Value == client.Name then
+        if player1Name.Value == client.Name or player2Name.Value == client.Name then
                 currentGamble = child
                 isInGame = false
                 currentRound = 1
@@ -512,8 +516,8 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
                                         end
 
                                         if oppWinsLabel then
-                                                local oppName = currentGamble.Player1.Value == client.Name and
-                                                    currentGamble.Player2.Value or currentGamble.Player1.Value
+                                                local oppName = currentGamble.Player1.Value.Value == client.Name and
+                                                    currentGamble.Player2.Value.Value or currentGamble.Player1.Value.Value
                                                 oppWinsLabel.Text = "@" .. oppName .. " Wins: 0"
                                         end
 
@@ -664,8 +668,8 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                                 end
 
                                 if oppWinsLabel then
-                                        local oppName = currentGamble.Player1.Value == client.Name and
-                                            currentGamble.Player2.Value or currentGamble.Player1.Value
+                                        local oppName = currentGamble.Player1.Value.Value == client.Name and
+                                            currentGamble.Player2.Value.Value or currentGamble.Player1.Value.Value
                                         oppWinsLabel.Text = "@" .. oppName .. " Wins: " .. theirWins
                                 end
 
