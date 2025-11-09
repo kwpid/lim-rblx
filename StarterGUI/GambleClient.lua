@@ -425,7 +425,19 @@ local function startGambleSelection()
 end
 
 ongoingGamblesFolder.ChildAdded:Connect(function(child)
-        if child.Player1.Value == client.Name or child.Player2.Value == client.Name then
+        local player1 = child:WaitForChild("Player1", 5)
+        local player2 = child:WaitForChild("Player2", 5)
+        
+        if not player1 or not player2 then
+                warn("Failed to find Player1 or Player2 in gamble folder")
+                return
+        end
+        
+        while player1.Value == "" or player2.Value == "" do
+                task.wait(0.05)
+        end
+        
+        if player1.Value == client.Name or player2.Value == client.Name then
                 currentGamble = child
                 isInGame = false
                 currentRound = 1
@@ -435,6 +447,7 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
                 gambleFrame.Visible = true
                 requestFrame.Visible = false
                 sendRequestFrame.Visible = false
+                gameMain.Visible = true
 
                 startGambleSelection()
 
