@@ -253,8 +253,22 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                         end
                         
                         if not alreadyOwnsItem then
-                                local partName = bodyPartType or ("Item #" .. itemId)
-                                local itemName = itemData.Name .. " " .. partName
+                                local itemName = itemData.Name
+                                
+                                if bodyPartType then
+                                        itemName = itemData.Name .. " " .. bodyPartType
+                                else
+                                        local productInfo = nil
+                                        local success = pcall(function()
+                                                productInfo = game:GetService("MarketplaceService"):GetProductInfo(itemId, Enum.InfoType.Asset)
+                                        end)
+                                        
+                                        if success and productInfo and productInfo.Name then
+                                                itemName = productInfo.Name
+                                        else
+                                                itemName = itemData.Name .. " Accessory"
+                                        end
+                                end
                                 
                                 local newItem = {
                                         RobloxId = itemId,

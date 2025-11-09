@@ -101,7 +101,8 @@ TixShopDatabase.VanityItems = {
                         {RobloxId = 139607625, BodyPartType = "LeftArm"},
                         {RobloxId = 139607673, BodyPartType = "RightArm"},
                         {RobloxId = 139607828, BodyPartType = "Torso"},
-                        {RobloxId = 139607570, BodyPartType = "Head"}
+                        {RobloxId = 139607570, BodyPartType = "Head"},
+                        {RobloxId = 139607699}
                 },
                 Price = 5000000
         },
