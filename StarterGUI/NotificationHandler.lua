@@ -102,10 +102,10 @@ function NewNotification(data: {Type: string, Title: string, Body: string, Image
   local body = data.Body or notificationPreset.DEFAULT_BODY or ""
   local image = data.ImageId or notificationPreset.DEFAULT_IMAGE or ""
   local sound = data.SoundId or notificationPreset.DEFAULT_SOUND
-  local color = data.Color or notificationPreset.DEFAULT_COLOR or Color3.new(1, 1, 1)	
+  local color = data.Color or notificationPreset.DEFAULT_COLOR or Color3.new(1, 1, 1)   
 
   if tonumber(image) then
-    image = "rbxassetid://" .. image
+    image = "rbxthumb://type=Asset&id=" .. image .. "&w=150&h=150"
   end
   if tonumber(sound) then
     sound = "rbxassetid://" .. sound
