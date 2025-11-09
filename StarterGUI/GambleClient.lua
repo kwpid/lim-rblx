@@ -358,52 +358,60 @@ local function populateInventoryHandler()
                 return a.Value > b.Value
         end)
 
+        local playerFolder = currentGamble and (currentGamble.Player1.Value.Value == client.Name and currentGamble.Player1 or currentGamble.Player2)
+        local selectedItemsFolder = playerFolder and playerFolder.Items
+
         for i, item in ipairs(inventory) do
-                if item.Rarity ~= "Vanity" then
-                        local button = sample:Clone()
-                        button.Name = item.Name or "Item_" .. i
-                        button.LayoutOrder = i
-                        button.Visible = true
-                        button.Parent = handler
+                if item.Rarity ~= "Vanity" and not item.IsLocked then
+                        local itemKey = tostring(item.RobloxId) .. "_" .. tostring(item.SerialNumber or "")
+                        local alreadySelected = selectedItemsFolder and selectedItemsFolder:FindFirstChild(itemKey)
 
-                        button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
+                        if not alreadySelected then
+                                local button = sample:Clone()
+                                button.Name = item.Name or "Item_" .. i
+                                button.LayoutOrder = i
+                                button.Visible = true
+                                button.Parent = handler
 
-                        local uiStroke = button:FindFirstChildOfClass("UIStroke")
-                        if uiStroke then
-                                uiStroke.Color = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-                        end
+                                button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
 
-                        local serialLabel = button:FindFirstChild("Serial")
-                        if serialLabel then
-                                if item.SerialNumber then
-                                        serialLabel.Text = "#" .. item.SerialNumber
-                                        serialLabel.Visible = true
-                                else
-                                        serialLabel.Visible = false
+                                local uiStroke = button:FindFirstChildOfClass("UIStroke")
+                                if uiStroke then
+                                        uiStroke.Color = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
                                 end
-                        end
 
-                        local qtyLabel = button:FindFirstChild("Qty")
-                        if qtyLabel then
-                                if item.SerialNumber then
-                                        qtyLabel.Visible = false
-                                elseif item.Amount then
-                                        qtyLabel.Text = item.Amount
-                                        qtyLabel.Visible = true
-                                else
-                                        qtyLabel.Text = "1"
-                                        qtyLabel.Visible = true
+                                local serialLabel = button:FindFirstChild("Serial")
+                                if serialLabel then
+                                        if item.SerialNumber then
+                                                serialLabel.Text = "#" .. item.SerialNumber
+                                                serialLabel.Visible = true
+                                        else
+                                                serialLabel.Visible = false
+                                        end
                                 end
+
+                                local qtyLabel = button:FindFirstChild("Qty")
+                                if qtyLabel then
+                                        if item.SerialNumber then
+                                                qtyLabel.Visible = false
+                                        elseif item.Amount then
+                                                qtyLabel.Text = item.Amount
+                                                qtyLabel.Visible = true
+                                        else
+                                                qtyLabel.Text = "1"
+                                                qtyLabel.Visible = true
+                                        end
+                                end
+
+                                button.MouseButton1Click:Connect(function()
+                                        gambleEvent:FireServer("add item to gamble", {
+                                                RobloxId = item.RobloxId,
+                                                SerialNumber = item.SerialNumber
+                                        })
+                                end)
+
+                                table.insert(handlerItemsButtons, button)
                         end
-
-                        button.MouseButton1Click:Connect(function()
-                                gambleEvent:FireServer("add item to gamble", {
-                                        RobloxId = item.RobloxId,
-                                        SerialNumber = item.SerialNumber
-                                })
-                        end)
-
-                        table.insert(handlerItemsButtons, button)
                 end
         end
 end
@@ -482,18 +490,22 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
 
                 child.Player1.Items.ChildAdded:Connect(function()
                         updateSelectedItemsDisplay()
+                        populateInventoryHandler()
                 end)
 
                 child.Player1.Items.ChildRemoved:Connect(function()
                         updateSelectedItemsDisplay()
+                        populateInventoryHandler()
                 end)
 
                 child.Player2.Items.ChildAdded:Connect(function()
                         updateSelectedItemsDisplay()
+                        populateInventoryHandler()
                 end)
 
                 child.Player2.Items.ChildRemoved:Connect(function()
                         updateSelectedItemsDisplay()
+                        populateInventoryHandler()
                 end)
 
                 child.Player1.ChildAdded:Connect(function(obj)
