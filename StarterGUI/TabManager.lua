@@ -7,6 +7,7 @@ local indexFrame = gui:WaitForChild("Index", 5)
 local masteryFrame = gui:WaitForChild("Mastery", 5)
 local marketplaceFrame = gui:WaitForChild("Marketplace", 5)
 local tradingFrame = gui:WaitForChild("Trading", 5)
+local gambleFrame = gui:WaitForChild("Gamble", 5)
 
 local buttonContainer = gui:WaitForChild("ButtonContainer", 5)
 
@@ -15,6 +16,7 @@ local indexOpenButton = buttonContainer:WaitForChild("IndexOpen", 5)
 local masteryOpenButton = buttonContainer:WaitForChild("MasteryOpen", 5)
 local marketplaceOpenButton = buttonContainer:WaitForChild("MarketplaceOpen", 5)
 local tradingOpenButton = buttonContainer:WaitForChild("TradingOpen", 5)
+local gambleOpenButton = buttonContainer:WaitForChild("GambleOpen", 5)
 
 local sendTradesFrame = tradingFrame and tradingFrame:WaitForChild("SendTradesFrame", 5)
 local tradeRequestFrame = tradingFrame and tradingFrame:WaitForChild("TradeRequestFrame", 5)
@@ -22,12 +24,17 @@ local tradeFrame = tradingFrame and tradingFrame:WaitForChild("TradeFrame", 5)
 local tradeHistoryFrame = tradingFrame and tradingFrame:WaitForChild("TradeHistoryFrame", 5)
 local viewInventoryFrame = tradingFrame and tradingFrame:WaitForChild("ViewInventoryFrame", 5)
 
+local sendRequestFrame = gambleFrame and gambleFrame:WaitForChild("SendRequest", 5)
+local gambleRequestFrame = gambleFrame and gambleFrame:WaitForChild("RequestFrame", 5)
+local gambleMainFrame = gambleFrame and gambleFrame:WaitForChild("Main", 5)
+
 local allFrames = {
         Inventory = inventoryFrame,
         Index = indexFrame,
         Mastery = masteryFrame,
         Marketplace = marketplaceFrame,
-        Trading = tradingFrame
+        Trading = tradingFrame,
+        Gamble = gambleFrame
 }
 
 local currentOpenFrame = nil
@@ -45,6 +52,17 @@ local function closeAllFrames()
                                 if viewInventoryFrame then
                                         viewInventoryFrame.Visible = false
                                 end
+                        elseif frameName == "Gamble" then
+                                if sendRequestFrame then
+                                        sendRequestFrame.Visible = false
+                                end
+                                if gambleRequestFrame then
+                                        gambleRequestFrame.Visible = false
+                                end
+                                if gambleMainFrame then
+                                        gambleMainFrame.Visible = false
+                                end
+                                frame.Visible = false
                         else
                                 frame.Visible = false
                         end
@@ -63,6 +81,11 @@ local function openFrame(frameName)
                 tradingFrame.Visible = true
                 if sendTradesFrame then
                         sendTradesFrame.Visible = true
+                end
+        elseif frameName == "Gamble" then
+                gambleFrame.Visible = true
+                if sendRequestFrame then
+                        sendRequestFrame.Visible = true
                 end
         else
                 allFrames[frameName].Visible = true
@@ -88,6 +111,17 @@ for frameName, frame in pairs(allFrames) do
                         end
                         if viewInventoryFrame then
                                 viewInventoryFrame.Visible = false
+                        end
+                elseif frameName == "Gamble" then
+                        gambleFrame.Visible = true
+                        if sendRequestFrame then
+                                sendRequestFrame.Visible = false
+                        end
+                        if gambleRequestFrame then
+                                gambleRequestFrame.Visible = false
+                        end
+                        if gambleMainFrame then
+                                gambleMainFrame.Visible = false
                         end
                 else
                         frame.Visible = false
@@ -145,6 +179,16 @@ if tradingOpenButton then
         end)
 end
 
+if gambleOpenButton then
+        gambleOpenButton.MouseButton1Click:Connect(function()
+                if currentOpenFrame == "Gamble" then
+                        closeAllFrames()
+                else
+                        openFrame("Gamble")
+                end
+        end)
+end
+
 local inventoryCloseButton = inventoryFrame and inventoryFrame:FindFirstChild("Close")
 if inventoryCloseButton then
         inventoryCloseButton.MouseButton1Click:Connect(closeAllFrames)
@@ -183,5 +227,19 @@ if tradeHistoryFrame then
         local historyCloseButton = tradeHistoryFrame:FindFirstChild("CloseButton")
         if historyCloseButton then
                 historyCloseButton.MouseButton1Click:Connect(closeAllFrames)
+        end
+end
+
+if sendRequestFrame then
+        local gambleCloseButton = sendRequestFrame:FindFirstChild("Close")
+        if gambleCloseButton then
+                gambleCloseButton.MouseButton1Click:Connect(closeAllFrames)
+        end
+end
+
+if gambleMainFrame then
+        local mainCloseButton = gambleMainFrame:FindFirstChild("Close")
+        if mainCloseButton then
+                mainCloseButton.MouseButton1Click:Connect(closeAllFrames)
         end
 end
