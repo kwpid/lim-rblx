@@ -737,9 +737,9 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                 end
 
                 task.spawn(function()
-                        local totalDuration = 2.5
+                        local totalDuration = 2.2
                         local minInterval = 0.05
-                        local maxInterval = 0.3
+                        local maxInterval = 0.25
                         
                         local elapsed = 0
                         local spinCount = 0
@@ -777,6 +777,33 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
                                 task.wait(currentInterval)
                                 elapsed = elapsed + currentInterval
                                 spinCount = spinCount + 1
+                        end
+                        
+                        for finalSpin = 1, 3 do
+                                local tempYourItem = getRandomItemFromCache()
+                                local tempTheirItem = getRandomItemFromCache()
+
+                                if yourItem then
+                                        yourItem.Image = "rbxthumb://type=Asset&id=" .. tempYourItem.RobloxId .. "&w=150&h=150"
+                                end
+                                if yourItemValue then
+                                        yourItemValue.Text = "R$" .. formatNumber(tempYourItem.Value)
+                                end
+                                if yourItemName then
+                                        yourItemName.Text = tempYourItem.Name
+                                end
+
+                                if theirItem then
+                                        theirItem.Image = "rbxthumb://type=Asset&id=" .. tempTheirItem.RobloxId .. "&w=150&h=150"
+                                end
+                                if theirItemValue then
+                                        theirItemValue.Text = "R$" .. formatNumber(tempTheirItem.Value)
+                                end
+                                if theirItemName then
+                                        theirItemName.Text = tempTheirItem.Name
+                                end
+                                
+                                task.wait(0.35 + (finalSpin * 0.1))
                         end
 
                         if yourItem then

@@ -708,7 +708,23 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
 
                                 local index, item = findItemInInventory(loser, robloxId, serialNumber)
                                 if index then
-                                        DataStoreAPI:RemoveItem(loser, robloxId, serialNumber, 1)
+                                        local loserData = DataStoreAPI:GetPlayerData(loser)
+                                        if loserData and loserData.Inventory[index] then
+                                                if serialNumber then
+                                                        table.remove(loserData.Inventory, index)
+                                                else
+                                                        local currentAmount = loserData.Inventory[index].Amount or 1
+                                                        if currentAmount > 1 then
+                                                                loserData.Inventory[index].Amount = currentAmount - 1
+                                                                ItemDatabase:DecrementTotalCopies(robloxId, 1)
+                                                        else
+                                                                table.remove(loserData.Inventory, index)
+                                                                ItemDatabase:DecrementTotalCopies(robloxId, 1)
+                                                        end
+                                                end
+                                                
+                                                DataStoreAPI:UpdateInventoryValue(loser)
+                                        end
                                         
                                         local itemData = {
                                                 RobloxId = robloxId,
