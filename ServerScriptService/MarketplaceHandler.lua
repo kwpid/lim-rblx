@@ -57,7 +57,6 @@ if not notificationEvent then
 end
 
 local activeListings = {}
-local ROBUX_TAX_RATE = 0.30
 local CASH_TAX_RATE = 0.30
 local ADMIN_USER_ID = 1547280148
 
@@ -72,6 +71,133 @@ local function loadListings()
         else
                 activeListings = {}
                 print("No existing listings or failed to load")
+        end
+end
+
+local function migrateRobuxListings()
+        local migrationFlag = false
+        local success, result = pcall(function()
+                return MarketplaceDataStore:GetAsync("RobuxListingsMigrated")
+        end)
+        
+        if success and result == true then
+                print("Robux listings migration already completed, skipping")
+                return
+        end
+        
+        print("Starting Robux listings migration...")
+        local robuxListings = {}
+        local cashListings = {}
+        
+        for _, listing in ipairs(activeListings) do
+                if listing.ListingType == "robux" then
+                        table.insert(robuxListings, listing)
+                else
+                        table.insert(cashListings, listing)
+                end
+        end
+        
+        if #robuxListings == 0 then
+                print("No Robux listings to migrate")
+                pcall(function()
+                        MarketplaceDataStore:SetAsync("RobuxListingsMigrated", true)
+                end)
+                return
+        end
+        
+        print("Found " .. #robuxListings .. " Robux listings to refund")
+        local returnedCount = 0
+        local failedCount = 0
+        local pendingReturns = {}
+        
+        for _, listing in ipairs(robuxListings) do
+                local itemToReturn = {
+                        RobloxId = listing.ItemData.RobloxId,
+                        Name = listing.ItemData.Name,
+                        Value = listing.ItemData.Value,
+                        Rarity = listing.ItemData.Rarity,
+                        SerialNumber = listing.ItemData.SerialNumber,
+                        Amount = 1
+                }
+                
+                local returnSuccess = false
+                local maxRetries = 3
+                
+                for attempt = 1, maxRetries do
+                        local player = Players:GetPlayerByUserId(listing.SellerUserId)
+                        
+                        if player and getPlayerData(player) then
+                                local addSuccess = pcall(function()
+                                        DataStoreAPI:AddItem(player, itemToReturn, true)
+                                end)
+                                
+                                if addSuccess then
+                                        returnSuccess = true
+                                        break
+                                end
+                        else
+                                local addOfflineSuccess = pcall(function()
+                                        local PlayerDataStore = DataStoreService:GetDataStore("PlayerData_v1")
+                                        local HttpService = game:GetService("HttpService")
+                                        
+                                        PlayerDataStore:UpdateAsync("Player_" .. listing.SellerUserId, function(currentJsonData)
+                                                local playerData
+                                                if not currentJsonData then
+                                                        playerData = DataStoreManager:GetDefaultData()
+                                                else
+                                                        playerData = HttpService:JSONDecode(currentJsonData)
+                                                end
+                                                
+                                                if not playerData.Inventory then
+                                                        playerData.Inventory = {}
+                                                end
+                                                
+                                                table.insert(playerData.Inventory, itemToReturn)
+                                                
+                                                return HttpService:JSONEncode(playerData)
+                                        end)
+                                end)
+                                
+                                if addOfflineSuccess then
+                                        returnSuccess = true
+                                        break
+                                end
+                        end
+                        
+                        if attempt < maxRetries then
+                                task.wait(0.5)
+                        end
+                end
+                
+                if returnSuccess then
+                        sendOrSaveNotification(listing.SellerUserId, {
+                                Type = "VICTORY",
+                                Title = "Listing Refunded",
+                                Body = "Your Robux listing for " .. listing.ItemData.Name .. " was cancelled. Item returned to inventory (Robux sales removed).",
+                                ImageId = listing.ItemData.RobloxId
+                        })
+                        returnedCount = returnedCount + 1
+                else
+                        table.insert(pendingReturns, listing)
+                        failedCount = failedCount + 1
+                        warn("Failed to return item " .. listing.ItemData.Name .. " to user " .. listing.SellerUserId)
+                end
+        end
+        
+        activeListings = cashListings
+        for _, pending in ipairs(pendingReturns) do
+                table.insert(activeListings, pending)
+        end
+        
+        saveListings()
+        
+        if #pendingReturns == 0 then
+                pcall(function()
+                        MarketplaceDataStore:SetAsync("RobuxListingsMigrated", true)
+                end)
+                print("✅ Robux listings migration complete: " .. returnedCount .. " items returned")
+        else
+                warn("⚠️ Robux listings migration partial: " .. returnedCount .. " returned, " .. failedCount .. " failed (will retry next startup)")
         end
 end
 
