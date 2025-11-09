@@ -41,8 +41,8 @@ end
 
 function removeGambles(plr)
         for _, gamble in pairs(ongoingGamblesFolder:GetChildren()) do
-                if gamble.Player1.Value == plr.Name or gamble.Player2.Value == plr.Name then
-                        local otherPlayerName = gamble.Player1.Value == plr.Name and gamble.Player2.Value or gamble.Player1.Value
+                if gamble.Player1.Value.Value == plr.Name or gamble.Player2.Value.Value == plr.Name then
+                        local otherPlayerName = gamble.Player1.Value.Value == plr.Name and gamble.Player2.Value.Value or gamble.Player1.Value.Value
                         local otherPlayer = Players:FindFirstChild(otherPlayerName)
                         
                         if createNotificationEvent and otherPlayer then
@@ -76,7 +76,7 @@ Players.PlayerRemoving:Connect(removeGambles)
 
 function findGambleForPlayer(plr)
         for _, gamble in pairs(ongoingGamblesFolder:GetChildren()) do
-                if gamble.Player1.Value == plr.Name or gamble.Player2.Value == plr.Name then
+                if gamble.Player1.Value.Value == plr.Name or gamble.Player2.Value.Value == plr.Name then
                         return gamble
                 end
         end
@@ -124,7 +124,7 @@ function isPlayerInGamble(plr, gamble)
         if not gamble then
                 return false
         end
-        return gamble.Player1.Value == plr.Name or gamble.Player2.Value == plr.Name
+        return gamble.Player1.Value.Value == plr.Name or gamble.Player2.Value.Value == plr.Name
 end
 
 function calculateStakeValue(itemsFolder)
@@ -176,8 +176,8 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         local inGamble = false
 
                         for _, gamble in pairs(ongoingGamblesFolder:GetChildren()) do
-                                if gamble.Player1.Value == playerSent.Name or gamble.Player1.Value == plr.Name or
-                                        gamble.Player2.Value == playerSent.Name or gamble.Player2.Value == plr.Name then
+                                if gamble.Player1.Value.Value == playerSent.Name or gamble.Player1.Value.Value == plr.Name or
+                                        gamble.Player2.Value.Value == playerSent.Name or gamble.Player2.Value.Value == plr.Name then
                                         inGamble = true
                                         break
                                 end
@@ -312,7 +312,7 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         return
                 end
 
-                local playerFolder = gamble.Player1.Value == plr.Name and gamble.Player1 or gamble.Player2
+                local playerFolder = gamble.Player1.Value.Value == plr.Name and gamble.Player1 or gamble.Player2
                 local itemsFolder = playerFolder.Items
 
                 local existingItem = itemsFolder:FindFirstChild(tostring(robloxId) .. "_" .. tostring(serialNumber or ""))
@@ -366,7 +366,7 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                 local robloxId = data.RobloxId
                 local serialNumber = data.SerialNumber
 
-                local playerFolder = gamble.Player1.Value == plr.Name and gamble.Player1 or gamble.Player2
+                local playerFolder = gamble.Player1.Value.Value == plr.Name and gamble.Player1 or gamble.Player2
                 local itemsFolder = playerFolder.Items
 
                 local itemToRemove = itemsFolder:FindFirstChild(tostring(robloxId) .. "_" .. tostring(serialNumber or ""))
@@ -385,7 +385,7 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         return
                 end
 
-                local playerFolder = gamble.Player1.Value == plr.Name and gamble.Player1 or gamble.Player2
+                local playerFolder = gamble.Player1.Value.Value == plr.Name and gamble.Player1 or gamble.Player2
                 local itemsFolder = playerFolder.Items
 
                 if #itemsFolder:GetChildren() == 0 then
@@ -481,7 +481,7 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
         elseif instruction == "cancel gamble" then
                 local gamble = findGambleForPlayer(plr)
                 if gamble and isPlayerInGamble(plr, gamble) then
-                        local otherPlayerName = gamble.Player1.Value == plr.Name and gamble.Player2.Value or gamble.Player1.Value
+                        local otherPlayerName = gamble.Player1.Value.Value == plr.Name and gamble.Player2.Value.Value or gamble.Player1.Value.Value
                         local otherPlayer = Players:FindFirstChild(otherPlayerName)
 
                         if createNotificationEvent and otherPlayer then

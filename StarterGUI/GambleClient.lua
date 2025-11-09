@@ -74,6 +74,8 @@ local isInGame = false
 local currentRound = 1
 local yourWins = 0
 local theirWins = 0
+local confirmConnection = nil
+local cancelConnection = nil
 
 local function populatePlayerList()
         local playerList = sendRequestFrame:FindFirstChild("PlayerList")
@@ -415,6 +417,29 @@ local function startGambleSelection()
 
         if selectItems then
                 selectItems.Visible = true
+                
+                if confirmConnection then
+                        confirmConnection:Disconnect()
+                        confirmConnection = nil
+                end
+                if cancelConnection then
+                        cancelConnection:Disconnect()
+                        cancelConnection = nil
+                end
+                
+                local confirmButton = selectItems:FindFirstChild("Confirm")
+                if confirmButton then
+                        confirmConnection = confirmButton.MouseButton1Click:Connect(function()
+                                gambleEvent:FireServer("confirm items")
+                        end)
+                end
+
+                local cancelButton = selectItems:FindFirstChild("Cancel")
+                if cancelButton then
+                        cancelConnection = cancelButton.MouseButton1Click:Connect(function()
+                                gambleEvent:FireServer("cancel gamble")
+                        end)
+                end
         end
         if gameFrame then
                 gameFrame.Visible = false
@@ -551,23 +576,6 @@ ongoingGamblesFolder.ChildRemoved:Connect(function(child)
                 end
         end
 end)
-
-local selectItems = gameMain:FindFirstChild("SelectItems")
-if selectItems then
-        local confirmButton = selectItems:FindFirstChild("Confirm")
-        if confirmButton then
-                confirmButton.MouseButton1Click:Connect(function()
-                        gambleEvent:FireServer("confirm items")
-                end)
-        end
-
-        local cancelButton = selectItems:FindFirstChild("Cancel")
-        if cancelButton then
-                cancelButton.MouseButton1Click:Connect(function()
-                        gambleEvent:FireServer("cancel gamble")
-                end)
-        end
-end
 
 gambleEvent.OnClientEvent:Connect(function(instruction, data)
         if instruction == "round result" then
