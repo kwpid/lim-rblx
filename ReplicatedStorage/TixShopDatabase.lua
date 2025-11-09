@@ -93,7 +93,9 @@ TixShopDatabase.VanityItems = {
         },
         {
                 Name = "Korblox",
-                BundleId = 192,
+                IsBundle = true,
+                ImageId = 139607718,
+                BundleItems = {139607718, 139607770, 139607625, 139607673, 139607828, 139607570},
                 Price = 5000000
         },
 }
