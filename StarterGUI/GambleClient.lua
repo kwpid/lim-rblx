@@ -194,14 +194,23 @@ local function updateSelectedItemsDisplay()
                 return 
         end
 
-        local selectedItemsScroll = selectItems:FindFirstChild("SelectedItems")
-        local oppSelectedScroll = selectItems:FindFirstChild("Opp_SelectedItems")
-        
         local selectedItemsFrame = selectItems:FindFirstChild("Selected_Items")
-        local totalChosenValue = selectedItemsFrame and selectedItemsFrame:FindFirstChild("TotalChosenValue")
+        if not selectedItemsFrame then
+                warn("updateSelectedItemsDisplay: Selected_Items frame not found")
+                return
+        end
+        
+        local selectedItemsScroll = selectedItemsFrame:FindFirstChild("SelectedItems")
+        local totalChosenValue = selectedItemsFrame:FindFirstChild("TotalChosenValue")
 
         local opponentItemsFrame = selectItems:FindFirstChild("Opponent_Items")
-        local oppTotalValue = opponentItemsFrame and opponentItemsFrame:FindFirstChild("TotalChosenValue")
+        if not opponentItemsFrame then
+                warn("updateSelectedItemsDisplay: Opponent_Items frame not found")
+                return
+        end
+        
+        local oppSelectedScroll = opponentItemsFrame:FindFirstChild("Opp_SelectedItems")
+        local oppTotalValue = opponentItemsFrame:FindFirstChild("TotalChosenValue")
         
         print("updateSelectedItemsDisplay called")
         print("selectedItemsScroll found:", selectedItemsScroll ~= nil)
