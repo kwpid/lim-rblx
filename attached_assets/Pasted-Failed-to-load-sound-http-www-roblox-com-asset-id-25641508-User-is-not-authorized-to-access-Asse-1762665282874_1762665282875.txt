@@ -1,0 +1,24 @@
+Failed to load sound http://www.roblox.com/asset/?id=25641508: User is not authorized to access Asset.  -  Studio
+  00:13:57.040  The experience doesn't have access permission to use asset id 25641508. Click to share access  -  Studio
+  00:13:57.048  Failed to load sound http://www.roblox.com/asset/?id=25641508: User is not authorized to access Asset.  -  Studio
+  00:13:57.048  The experience doesn't have access permission to use asset id 25641508. Click to share access  -  Studio
+  00:13:57.160  MarketplaceUI loaded successfully  -  Client - MarketplaceMain:363
+  00:13:57.224  database item not found for Korblox LeftLeg (ID: 139607673) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.224  database item not found for Korblox RightLeg (ID: 139607718) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.224  database item not found for Korblox LeftArm (ID: 139607570) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.224  database item not found for Korblox RightArm (ID: 139607625) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.224  database item not found for Korblox Torso (ID: 139607770) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.224  database item not found for Korblox Deathspeaker Hood (ID: 139610147) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.691  database item not found for Korblox LeftLeg (ID: 139607673) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.691  database item not found for Korblox RightLeg (ID: 139607718) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.691  database item not found for Korblox LeftArm (ID: 139607570) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.691  database item not found for Korblox RightArm (ID: 139607625) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.691  database item not found for Korblox Torso (ID: 139607770) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:57.691  database item not found for Korblox Deathspeaker Hood (ID: 139610147) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:58.074  database item not found for Korblox LeftLeg (ID: 139607673) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:58.074  database item not found for Korblox RightLeg (ID: 139607718) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:58.074  database item not found for Korblox LeftArm (ID: 139607570) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:58.074  database item not found for Korblox RightArm (ID: 139607625) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:58.075  database item not found for Korblox Torso (ID: 139607770) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:58.075  database item not found for Korblox Deathspeaker Hood (ID: 139610147) - this may indicate the item needs to be registered  -  Server - DataStoreAPI:242
+  00:13:58.957   ▶ AddAcessory failed: Accessory is already being worn by another character. (x2)  -  Studio

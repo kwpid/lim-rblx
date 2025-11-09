@@ -270,6 +270,9 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                                         end
                                 end
                                 
+                                -- Register the item in ItemDatabase before adding to inventory
+                                ItemDatabase:EnsureVanityItem(itemId, itemName, 0)
+                                
                                 local newItem = {
                                         RobloxId = itemId,
                                         Name = itemName,
