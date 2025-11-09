@@ -77,7 +77,7 @@ local theirWins = 0
 
 local function populatePlayerList()
         local playerList = sendRequestFrame:FindFirstChild("PlayerList")
-        local playerFrameSample = script.PlayerFrame
+        local playerFrameSample = sendRequestFrame:FindFirstChild("PlayerFrame")
 
         if not playerList or not playerFrameSample then
                 warn("PlayerList or PlayerFrame sample not found")
@@ -100,16 +100,29 @@ local function populatePlayerList()
                         playerFrame.LayoutOrder = i
                         playerFrame.Parent = playerList
 
-                        local nameLabel = playerFrame:FindFirstChild("PlayerName")
-                        if nameLabel then
-                                nameLabel.Text = player.Name
+                        local playerImage = playerFrame:FindFirstChild("PlayerImage")
+                        if playerImage then
+                                playerImage.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=48&height=48&format=png"
                         end
 
-                        local sendButton = playerFrame:FindFirstChild("Send")
+                        local displayNameLabel = playerFrame:FindFirstChild("PlayerDisplayName")
+                        if displayNameLabel then
+                                displayNameLabel.Text = player.DisplayName
+                        end
+
+                        local usernameLabel = playerFrame:FindFirstChild("PlayerUsername")
+                        if usernameLabel then
+                                usernameLabel.Text = "@" .. player.Name
+                        end
+
+                        local sendButton = playerFrame:FindFirstChild("SendButton")
                         if sendButton then
                                 sendButton.MouseButton1Click:Connect(function()
-                                        gambleEvent:FireServer("send gamble request", { player })
+                                        gambleEvent:FireServer("send gamble request", player)
+                                        sendRequestFrame.Visible = false
                                 end)
+                        else
+                                warn("SendButton not found in PlayerFrame for " .. player.Name)
                         end
 
                         table.insert(playerListButtons, playerFrame)
