@@ -154,27 +154,14 @@ function showTooltip(item, button)
   rollLabel.TextXAlignment = Enum.TextXAlignment.Left
   rollLabel.Parent = tooltip
 
-  if item.Rarity == "Limited" then
+  if item.Rarity == "Limited" or item.Rarity == "Vanity" then
     rollLabel.Text = "Not Rollable"
   else
     local percentage = item.RollPercentage or 0
     local percentText = string.format("%.10f", percentage)
-
-    local decimalPart = percentText:match("%.(%d+)")
-    local firstNonZeroPos = 4
-
-    if decimalPart then
-      for i = 1, #decimalPart do
-        if decimalPart:sub(i, i) ~= "0" then
-          firstNonZeroPos = math.max(4, i)
-          break
-        end
-      end
-    end
-
-    percentText = string.format("%." .. firstNonZeroPos .. "f%%", percentage)
-    percentText = percentText:gsub("(%d)0+%%", "%1%%"):gsub("%.0+%%", "%%")
-    rollLabel.Text = percentText
+    percentText = percentText:gsub("0+$", "")
+    percentText = percentText:gsub("%.$", "")
+    rollLabel.Text = percentText .. "%"
   end
 
   tooltip.Position = UDim2.new(0, button.AbsolutePosition.X - gui.AbsolutePosition.X + button.AbsoluteSize.X + 10, 0,
