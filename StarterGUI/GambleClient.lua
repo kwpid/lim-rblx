@@ -851,12 +851,12 @@ gambleEvent.OnClientEvent:Connect(function(instruction, data)
 
                         local isPlayer1 = currentGamble and currentGamble.Player1.Value.Value == client.Name
                         if isPlayer1 then
-                                if currentRound < 7 then
-                                        currentRound = currentRound + 1
-                                        gambleEvent:FireServer("request round", { RoundNumber = currentRound })
-                                else
+                                if data.YourWins >= 7 or data.TheirWins >= 7 then
                                         task.wait(1)
                                         gambleEvent:FireServer("finish game")
+                                else
+                                        currentRound = currentRound + 1
+                                        gambleEvent:FireServer("request round", { RoundNumber = currentRound })
                                 end
                         end
                 end)

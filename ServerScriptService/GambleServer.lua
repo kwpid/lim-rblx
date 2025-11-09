@@ -683,19 +683,18 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                 local player1Wins = player1WinsCounter.Value
                 local player2Wins = player2WinsCounter.Value
                 
-                local totalRounds = player1Wins + player2Wins
-                if totalRounds ~= 7 then
+                if player1Wins < 7 and player2Wins < 7 then
                         if createNotificationEvent then
                                 createNotificationEvent:FireClient(plr, {
                                         Type = "ERROR",
                                         Title = "Game Not Finished",
-                                        Body = "All 7 rounds must be completed!"
+                                        Body = "No one has reached 7 wins yet!"
                                 })
                         end
                         return
                 end
 
-                local winner = player1Wins > player2Wins and player1 or (player2Wins > player1Wins and player2 or nil)
+                local winner = player1Wins >= 7 and player1 or (player2Wins >= 7 and player2 or nil)
                 local loser = winner == player1 and player2 or (winner == player2 and player1 or nil)
 
                 if winner and loser then
