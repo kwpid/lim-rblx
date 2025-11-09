@@ -178,7 +178,10 @@ if rejectButton then
 end
 
 local function updateSelectedItemsDisplay()
-        if not currentGamble then return end
+        if not currentGamble then 
+                warn("updateSelectedItemsDisplay: No current gamble")
+                return 
+        end
 
         local playerFolder = currentGamble.Player1.Value.Value == client.Name and currentGamble.Player1 or
             currentGamble.Player2
@@ -186,7 +189,10 @@ local function updateSelectedItemsDisplay()
             currentGamble.Player1
 
         local selectItems = gameMain:FindFirstChild("SelectItems")
-        if not selectItems then return end
+        if not selectItems then 
+                warn("updateSelectedItemsDisplay: SelectItems not found")
+                return 
+        end
 
         local selectedItemsFrame = selectItems:FindFirstChild("Selected_Items")
         local selectedItemsScroll = selectedItemsFrame and selectedItemsFrame:FindFirstChild("SelectedItems")
@@ -195,6 +201,10 @@ local function updateSelectedItemsDisplay()
         local opponentItemsFrame = selectItems:FindFirstChild("Opponent_Items")
         local oppSelectedScroll = opponentItemsFrame and opponentItemsFrame:FindFirstChild("Opp_SelectedItems")
         local oppTotalValue = opponentItemsFrame and opponentItemsFrame:FindFirstChild("TotalChosenValue")
+        
+        print("updateSelectedItemsDisplay called")
+        print("selectedItemsScroll found:", selectedItemsScroll ~= nil)
+        print("oppSelectedScroll found:", oppSelectedScroll ~= nil)
 
         if selectedItemsScroll then
                 for _, btn in pairs(selectedItemsButtons) do
@@ -205,10 +215,15 @@ local function updateSelectedItemsDisplay()
                 selectedItemsButtons = {}
 
                 local sample = script:FindFirstChild("Sample")
-                if not sample then return end
+                if not sample then 
+                        warn("Sample not found in GambleClient script!")
+                        return 
+                end
 
                 local totalValue = 0
                 local items = playerFolder.Items:GetChildren()
+                
+                print("Updating selected items display, found " .. #items .. " items")
 
                 for i, itemFolder in ipairs(items) do
                         local button = sample:Clone()
@@ -267,10 +282,15 @@ local function updateSelectedItemsDisplay()
                 end
 
                 local sample = script:FindFirstChild("Sample")
-                if not sample then return end
+                if not sample then 
+                        warn("Sample not found in GambleClient script (opponent section)!")
+                        return 
+                end
 
                 local oppTotalVal = 0
                 local oppItems = opponentFolder.Items:GetChildren()
+                
+                print("Updating opponent items display, found " .. #oppItems .. " items")
 
                 for i, itemFolder in ipairs(oppItems) do
                         local button = sample:Clone()
