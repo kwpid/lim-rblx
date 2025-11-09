@@ -1,0 +1,44 @@
+in this, i want to add a gamemode
+in @StarterGUI/TabManager.lua , ive added new uis:
+GambleOpen button to Open the Gamble frame
+gamble frame has RI_Main local script parented to it, with PlayerFrame and Sample
+
+when the player presses the button, they open the SendRequest Frame. in this is a PlayerList scrolling frame, popualted from PlayerFrame (like how trade system works kinda)
+playerframe also has send and such (exact same as trade clietn and stuff)
+
+then, when u clcik send, it again works like the trade system, sending a request to that user to RI 1v1, theres a RequestFrame in the Gamble frame with accept/reject
+
+if accepted, it gets into the main game:
+Game.Main has all the UI for the main part
+Main.SelectItems is shown by default (when they start), SelectItems.Handler is populated via Sample in the RI_Main.Sample, and so Handler is populated from items in your invnetory (sorted from highest value to lowest), Sample is the exact same as in the one in the inventory, so similiar logic
+when u click on one of the items, you choose that to bet in, so that specific item (only 1) gets put into Main.Selected_Items.SelectedItems
+thsi also updates SelectedItems_.TotalChosenValue to show the current value youve put in
+you can click the items in the selecteditems scorlling frame to unchoose them (they show back in handler)
+theres also Main.Opponent_items which is similir, but shows what ur opponent is putting in (Opponenet_Items.Opp_SelectedItem, TotalChosenValue)
+
+theres also Cancel and Confirm in the SelectedItems frame, and MainTxt which says Select Items To Bet
+
+when youve chosen the items, you can select confirm, and the text changes to confirm, and the main Txt shows what plaeyrs have confirmed
+if the other player, or you choose another item or take out an item, it unconfirms
+when both players confirm, items are locked in
+note: your value vs opponenet value must be within 25% of each other (so you can bet in 100k vs 10m and such)
+Cancel cancels the game
+
+when both players confirm, the main game starts, SelectItems frame is set to visible = false
+
+now heres the game logic:
+7 total rounds, both players spin for a random item (from the existing database), whoever lands on the highest valued item wins that round
+goes on for the 7 rounds, whoever hast eh most wins, wins the pot (gets the other players items)
+theres a Game frame in the main frame which is set to visible when the game is ready
+after a few second, the game starts.
+theres:
+YourItem (imagelabel), ItemValue and ItemName (textlabels)
+TheirItem (imagelabel), TheirItemValue and TheirItemName (textlabels) which shows what theyre spinning and got
+texts that show value always format liek R$1,000,000 etc
+
+theres also YourWins (@username Wins: 0) and OppWins (same thing but shows opponenet wins)
+
+youritem/itemvalue/item,name and opponenets stuff changes based off the chosen item, have a simple animaiton with the item image (and texts) change items fast before slowing down and landing on an item (lasts 3 seconds), then a short delay before next round
+Note; the player doesn tget items they roll, only the other player items if they win.
+
+is this too complciated to understand and make?
