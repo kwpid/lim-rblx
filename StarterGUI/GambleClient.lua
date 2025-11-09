@@ -194,12 +194,13 @@ local function updateSelectedItemsDisplay()
                 return 
         end
 
+        local selectedItemsScroll = selectItems:FindFirstChild("SelectedItems")
+        local oppSelectedScroll = selectItems:FindFirstChild("Opp_SelectedItems")
+        
         local selectedItemsFrame = selectItems:FindFirstChild("Selected_Items")
-        local selectedItemsScroll = selectedItemsFrame and selectedItemsFrame:FindFirstChild("SelectedItems")
         local totalChosenValue = selectedItemsFrame and selectedItemsFrame:FindFirstChild("TotalChosenValue")
 
         local opponentItemsFrame = selectItems:FindFirstChild("Opponent_Items")
-        local oppSelectedScroll = opponentItemsFrame and opponentItemsFrame:FindFirstChild("Opp_SelectedItems")
         local oppTotalValue = opponentItemsFrame and opponentItemsFrame:FindFirstChild("TotalChosenValue")
         
         print("updateSelectedItemsDisplay called")
