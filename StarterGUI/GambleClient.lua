@@ -355,12 +355,28 @@ local function updateSelectedItemsDisplay()
 
         local selectItems = gameMain:FindFirstChild("SelectItems")
         local mainTxt = selectItems and selectItems:FindFirstChild("MainTxt")
+        local confirmButton = selectItems and selectItems:FindFirstChild("Confirm")
+        
+        local isPlayer1 = player1Value.Value == client.Name
+        local myConfirmed = isPlayer1 and player1Confirmed or player2Confirmed
+        local oppConfirmed = isPlayer1 and player2Confirmed or player1Confirmed
+        local oppName = isPlayer1 and player2Value.Value or player1Value.Value
+        
+        if confirmButton then
+                if myConfirmed then
+                        confirmButton.Text = "Confirmed"
+                else
+                        confirmButton.Text = "Confirm"
+                end
+        end
+        
         if mainTxt then
                 if player1Confirmed and player2Confirmed then
                         mainTxt.Text = "Both players confirmed!"
-                elseif (player1Value.Value == client.Name and player1Confirmed) or
-                    (player2Value.Value == client.Name and player2Confirmed) then
-                        mainTxt.Text = "Waiting for opponent to confirm..."
+                elseif myConfirmed and not oppConfirmed then
+                        mainTxt.Text = "Waiting for " .. oppName .. "..."
+                elseif oppConfirmed and not myConfirmed then
+                        mainTxt.Text = oppName .. " confirmed"
                 else
                         mainTxt.Text = "Select Items To Bet"
                 end
