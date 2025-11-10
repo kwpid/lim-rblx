@@ -400,53 +400,51 @@ local function updateSelectedItemsDisplay()
         end
 end
 
-local function populateInventoryHandler()
+local inventoryItemsData = {}
+
+local function populateInventoryHandler(forceRefresh)
         local selectItems = gameMain:FindFirstChild("SelectItems")
         if not selectItems then return end
 
         local handler = selectItems:FindFirstChild("Handler")
         if not handler then return end
 
-        for _, btn in pairs(handlerItemsButtons) do
-                if btn then
-                        btn:Destroy()
-                end
-        end
-        handlerItemsButtons = {}
-
         local sample = script:FindFirstChild("Sample")
         if not sample then return end
 
-        local success, inventory = pcall(function()
-                return getInventoryFunction:InvokeServer()
-        end)
+        if forceRefresh then
+                for _, btn in pairs(handlerItemsButtons) do
+                        if btn then
+                                btn:Destroy()
+                        end
+                end
+                handlerItemsButtons = {}
+                inventoryItemsData = {}
 
-        if not success or not inventory then
-                warn("Failed to get inventory")
-                return
-        end
+                local success, inventory = pcall(function()
+                        return getInventoryFunction:InvokeServer()
+                end)
 
-        table.sort(inventory, function(a, b)
-                return a.Value > b.Value
-        end)
+                if not success or not inventory then
+                        warn("Failed to get inventory")
+                        return
+                end
 
-        local playerFolder = currentGamble and (currentGamble.Player1.Value.Value == client.Name and currentGamble.Player1 or currentGamble.Player2)
-        local selectedItemsFolder = playerFolder and playerFolder.Items
+                table.sort(inventory, function(a, b)
+                        return a.Value > b.Value
+                end)
 
-        local layoutOrder = 0
-        for i, item in ipairs(inventory) do
-                local isAllowedRarity = item.Rarity ~= "Vanity" and item.Rarity ~= "Common" 
-                        and (item.Rarity ~= "Uncommon" or GambleConfig.AllowUncommons)
-                
-                if isAllowedRarity and not item.IsLocked then
-                        if item.SerialNumber then
-                                local itemKey = tostring(item.RobloxId) .. "_" .. tostring(item.SerialNumber)
-                                local alreadySelected = selectedItemsFolder and selectedItemsFolder:FindFirstChild(itemKey)
-
-                                if not alreadySelected then
+                local layoutOrder = 0
+                for i, item in ipairs(inventory) do
+                        local isAllowedRarity = item.Rarity ~= "Vanity" and item.Rarity ~= "Common" 
+                                and (item.Rarity ~= "Uncommon" or GambleConfig.AllowUncommons)
+                        
+                        if isAllowedRarity and not item.IsLocked then
+                                if item.SerialNumber then
                                         layoutOrder = layoutOrder + 1
+                                        local itemKey = tostring(item.RobloxId) .. "_" .. tostring(item.SerialNumber)
                                         local button = sample:Clone()
-                                        button.Name = item.Name or "Item_" .. i
+                                        button.Name = itemKey
                                         button.LayoutOrder = layoutOrder
                                         button.Visible = true
                                         button.Parent = handler
@@ -477,53 +475,72 @@ local function populateInventoryHandler()
                                         end)
 
                                         table.insert(handlerItemsButtons, button)
+                                        inventoryItemsData[itemKey] = {button = button, isSerial = true}
+                                else
+                                        local amount = item.Amount or 1
+                                        
+                                        for copyNum = 1, amount do
+                                                layoutOrder = layoutOrder + 1
+                                                local itemKey = tostring(item.RobloxId) .. "_copy" .. copyNum
+                                                local button = sample:Clone()
+                                                button.Name = itemKey
+                                                button.LayoutOrder = layoutOrder
+                                                button.Visible = true
+                                                button.Parent = handler
+
+                                                button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
+
+                                                local uiStroke = button:FindFirstChildOfClass("UIStroke")
+                                                if uiStroke then
+                                                        uiStroke.Color = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
+                                                end
+
+                                                local serialLabel = button:FindFirstChild("Serial")
+                                                if serialLabel then
+                                                        serialLabel.Visible = false
+                                                end
+
+                                                local qtyLabel = button:FindFirstChild("Qty")
+                                                if qtyLabel then
+                                                        qtyLabel.Visible = false
+                                                end
+
+                                                button.MouseButton1Click:Connect(function()
+                                                        if button.Visible then
+                                                                gambleEvent:FireServer("add item to gamble", {
+                                                                        RobloxId = item.RobloxId,
+                                                                        SerialNumber = nil
+                                                                })
+                                                        end
+                                                end)
+
+                                                table.insert(handlerItemsButtons, button)
+                                                inventoryItemsData[itemKey] = {button = button, isSerial = false, robloxId = item.RobloxId}
+                                        end
                                 end
+                        end
+                end
+        else
+                local playerFolder = currentGamble and (currentGamble.Player1.Value.Value == client.Name and currentGamble.Player1 or currentGamble.Player2)
+                local selectedItemsFolder = playerFolder and playerFolder.Items
+
+                if not selectedItemsFolder then return end
+
+                for key, data in pairs(inventoryItemsData) do
+                        if data.isSerial then
+                                local alreadySelected = selectedItemsFolder:FindFirstChild(key)
+                                data.button.Visible = not alreadySelected
                         else
                                 local selectedCount = 0
-                                if selectedItemsFolder then
-                                        for _, selectedItem in ipairs(selectedItemsFolder:GetChildren()) do
-                                                if selectedItem.RobloxId.Value == item.RobloxId and not selectedItem:FindFirstChild("SerialNumber") then
-                                                        selectedCount = selectedCount + 1
-                                                end
+                                for _, selectedItem in ipairs(selectedItemsFolder:GetChildren()) do
+                                        if selectedItem.RobloxId.Value == data.robloxId and not selectedItem:FindFirstChild("SerialNumber") then
+                                                selectedCount = selectedCount + 1
                                         end
                                 end
                                 
-                                local amount = item.Amount or 1
-                                local remainingToShow = amount - selectedCount
-                                
-                                for copyNum = 1, remainingToShow do
-                                        layoutOrder = layoutOrder + 1
-                                        local button = sample:Clone()
-                                        button.Name = (item.Name or "Item") .. "_" .. copyNum
-                                        button.LayoutOrder = layoutOrder
-                                        button.Visible = true
-                                        button.Parent = handler
-
-                                        button.Image = "rbxthumb://type=Asset&id=" .. item.RobloxId .. "&w=150&h=150"
-
-                                        local uiStroke = button:FindFirstChildOfClass("UIStroke")
-                                        if uiStroke then
-                                                uiStroke.Color = rarityColors[item.Rarity] or Color3.new(1, 1, 1)
-                                        end
-
-                                        local serialLabel = button:FindFirstChild("Serial")
-                                        if serialLabel then
-                                                serialLabel.Visible = false
-                                        end
-
-                                        local qtyLabel = button:FindFirstChild("Qty")
-                                        if qtyLabel then
-                                                qtyLabel.Visible = false
-                                        end
-
-                                        button.MouseButton1Click:Connect(function()
-                                                gambleEvent:FireServer("add item to gamble", {
-                                                        RobloxId = item.RobloxId,
-                                                        SerialNumber = nil
-                                                })
-                                        end)
-
-                                        table.insert(handlerItemsButtons, button)
+                                local copyNum = tonumber(key:match("_copy(%d+)"))
+                                if copyNum then
+                                        data.button.Visible = copyNum > selectedCount
                                 end
                         end
                 end
@@ -567,7 +584,7 @@ local function startGambleSelection()
                 gameFrame.Visible = false
         end
 
-        populateInventoryHandler()
+        populateInventoryHandler(true)
         updateSelectedItemsDisplay()
 end
 
@@ -607,28 +624,28 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
                 child.Player1.Items.ChildAdded:Connect(function()
                         updateSelectedItemsDisplay()
                         if isPlayer1 then
-                                populateInventoryHandler()
+                                populateInventoryHandler(false)
                         end
                 end)
 
                 child.Player1.Items.ChildRemoved:Connect(function()
                         updateSelectedItemsDisplay()
                         if isPlayer1 then
-                                populateInventoryHandler()
+                                populateInventoryHandler(false)
                         end
                 end)
 
                 child.Player2.Items.ChildAdded:Connect(function()
                         updateSelectedItemsDisplay()
                         if not isPlayer1 then
-                                populateInventoryHandler()
+                                populateInventoryHandler(false)
                         end
                 end)
 
                 child.Player2.Items.ChildRemoved:Connect(function()
                         updateSelectedItemsDisplay()
                         if not isPlayer1 then
-                                populateInventoryHandler()
+                                populateInventoryHandler(false)
                         end
                 end)
 
