@@ -81,14 +81,24 @@ local theirWins = 0
 local confirmConnection = nil
 local cancelConnection = nil
 
+local isPopulatingPlayerList = false
+
 local function populatePlayerList()
+        if isPopulatingPlayerList then
+                return
+        end
+        isPopulatingPlayerList = true
+
         local playerList = sendRequestFrame:FindFirstChild("PlayerList")
-        local playerFrameSample = script.PlayerFrame
+        local playerFrameSample = script:FindFirstChild("PlayerFrame")
 
         if not playerList or not playerFrameSample then
                 warn("PlayerList or PlayerFrame sample not found")
+                isPopulatingPlayerList = false
                 return
         end
+
+        playerFrameSample.Visible = false
 
         for _, child in pairs(playerList:GetChildren()) do
                 if child:IsA("Frame") then
@@ -118,9 +128,16 @@ local function populatePlayerList()
 
                         local playerImage = playerFrame:FindFirstChild("PlayerImage")
                         if playerImage then
-                                playerImage.Image = game.Players:GetUserThumbnailAsync(player.UserId,
-                                        Enum.ThumbnailType.HeadShot,
-                                        Enum.ThumbnailSize.Size100x100)
+                                task.spawn(function()
+                                        local success, thumbnail = pcall(function()
+                                                return game.Players:GetUserThumbnailAsync(player.UserId,
+                                                        Enum.ThumbnailType.HeadShot,
+                                                        Enum.ThumbnailSize.Size100x100)
+                                        end)
+                                        if success and playerImage and playerImage.Parent then
+                                                playerImage.Image = thumbnail
+                                        end
+                                end)
                         end
 
                         local sendButton = playerFrame:FindFirstChild("SendButton")
@@ -133,6 +150,8 @@ local function populatePlayerList()
                         table.insert(playerListButtons, playerFrame)
                 end
         end
+
+        isPopulatingPlayerList = false
 end
 
 gambleRequestsFolder.ChildAdded:Connect(function(child)
@@ -1009,12 +1028,6 @@ end
 
 sendRequestFrame:GetPropertyChangedSignal("Visible"):Connect(function()
         if sendRequestFrame.Visible then
-                populatePlayerList()
-        end
-end)
-
-gambleFrame:GetPropertyChangedSignal("Visible"):Connect(function()
-        if gambleFrame.Visible and sendRequestFrame.Visible then
                 populatePlayerList()
         end
 end)
