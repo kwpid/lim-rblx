@@ -18,14 +18,14 @@ local DROP_INTERVAL = EVENT_DURATION / NUM_ITEMS_TO_DROP
 
 
 local RARITY_MULTIPLIERS = {
-	["Common"] = 1,       
-	["Uncommon"] = 2,     
-	["Rare"] = 1300,       
-	["Ultra Rare"] = 940,  
-	["Epic"] = 1204,         
-	["Ultra Epic"] = 1000,   
-	["Mythic"] = 915,       
-	["Insane"] = 1000        
+        ["Common"] = 1,       
+        ["Uncommon"] = 2,     
+        ["Rare"] = 1300,       
+        ["Ultra Rare"] = 940,  
+        ["Epic"] = 1204,         
+        ["Ultra Epic"] = 1000,   
+        ["Mythic"] = 915,       
+        ["Insane"] = 1000        
 }
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
@@ -68,7 +68,7 @@ local function pickRandomEventItem(items)
   local weights = {}
 
   for _, item in ipairs(items) do
-    local normalRollChance = 1 / (item.Value ^ 0.9)
+    local normalRollChance = 1 / (item.Value ^ 1.1)
     local rarity = item.Rarity or ItemRarityModule.GetRarity(item.Value)
     local multiplier = RARITY_MULTIPLIERS[rarity] or 2
     local eventWeight = normalRollChance * multiplier

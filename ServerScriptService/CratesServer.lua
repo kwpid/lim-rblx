@@ -102,7 +102,7 @@ local function pickRandomItem(items, luckMultiplier, mythicLuckMultiplier, insan
 
   local totalInverseValue = 0
   for _, item in ipairs(items) do
-    local baseWeight = 1 / (item.Value ^ 0.9)
+    local baseWeight = 1 / (item.Value ^ 1.1)
     if item.Value >= LUCK_MIN_VALUE then
       baseWeight *= luckMultiplier
     end
@@ -119,7 +119,7 @@ local function pickRandomItem(items, luckMultiplier, mythicLuckMultiplier, insan
   local cumulative = 0
 
   for _, item in ipairs(items) do
-    local baseWeight = 1 / (item.Value ^ 0.9)
+    local baseWeight = 1 / (item.Value ^ 1.1)
     if item.Value >= LUCK_MIN_VALUE then
       baseWeight *= luckMultiplier
     end

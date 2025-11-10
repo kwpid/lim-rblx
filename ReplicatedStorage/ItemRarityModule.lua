@@ -95,7 +95,7 @@ end
 function ItemRarityModule:GetRollPercentage(value, totalValue)
   if totalValue == 0 then return 0 end
 
-  local inverseValue = 1 / (value ^ 0.9)
+  local inverseValue = 1 / (value ^ 1.1)
   local percentage = (inverseValue / totalValue) * 100
 
   return percentage
@@ -105,7 +105,7 @@ function ItemRarityModule:CalculateAllRollPercentages(items)
   local totalInverseValue = 0
   for _, item in ipairs(items) do
     if item.Rarity ~= "Limited" and item.Rarity ~= "Vanity" and item.Value > 0 then
-      totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
+      totalInverseValue = totalInverseValue + (1 / (item.Value ^ 1.1))
     end
   end
 

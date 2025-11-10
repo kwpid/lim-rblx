@@ -162,8 +162,8 @@ local function showCollectionDetails(collection)
         
         local totalInverseValue = 0
         for _, item in ipairs(itemDatabase) do
-                if item.Rarity ~= "Limited" then
-                        totalInverseValue = totalInverseValue + (1 / (item.Value ^ 0.9))
+                if item.Rarity ~= "Limited" and item.Rarity ~= "Vanity" then
+                        totalInverseValue = totalInverseValue + (1 / (item.Value ^ 1.1))
                 end
         end
         
@@ -178,12 +178,18 @@ local function showCollectionDetails(collection)
                         itemButton:WaitForChild("Name").Text = itemData.Name
                         
                         local rollPercent
-                        if itemData.Rarity == "Limited" then
+                        if itemData.Rarity == "Limited" or itemData.Rarity == "Vanity" then
                                 rollPercent = 0
                                 itemButton:WaitForChild("Roll").Text = "Not Rollable"
                         else
                                 rollPercent = ItemRarityModule:GetRollPercentage(itemData.Value, totalInverseValue)
-                                itemButton:WaitForChild("Roll").Text = string.format("%.4f%%", rollPercent)
+                                if rollPercent >= 0.0001 then
+                                        itemButton:WaitForChild("Roll").Text = string.format("%.4f%%", rollPercent)
+                                elseif rollPercent > 0 then
+                                        itemButton:WaitForChild("Roll").Text = string.format("%.6f%%", rollPercent)
+                                else
+                                        itemButton:WaitForChild("Roll").Text = "0%"
+                                end
                         end
                         
                         local imageLabel = itemButton:WaitForChild("ImageLabel")
