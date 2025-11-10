@@ -69,6 +69,13 @@ function DataStoreManager:LoadData(player)
         return self:GetDefaultData()
       end
 
+      local savedVersion = data.DataVersion
+      
+      if savedVersion ~= DATA_VERSION then
+        warn("Data version mismatch for " .. player.Name .. " (saved: " .. tostring(savedVersion) .. ", current: " .. DATA_VERSION .. ") - resetting data")
+        return self:GetDefaultData()
+      end
+
       if not data.Inventory then data.Inventory = {} end
       if not data.Rolls then data.Rolls = 0 end
       if not data.Cash then data.Cash = 0 end
