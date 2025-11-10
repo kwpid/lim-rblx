@@ -53,7 +53,7 @@ if not notificationEvent then
 end
 
 local activeListings = {}
-local CASH_TAX_RATE = 0.30
+local CASH_TAX_RATE = 0.15
 local ADMIN_USER_ID = 1547280148
 
 local function loadListings()

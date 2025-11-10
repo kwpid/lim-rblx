@@ -724,8 +724,8 @@ if marketSellBtn and marketConfirm then
                                 local cash = tonumber(cashAmount)
 
                                 if cash and cash >= 1 and cash <= 1000000000 then
-                                        local sellerReceives = math.floor(cash * 0.70)
-                                        sellPriceLabel.Text = "You will receive $" .. formatNumber(sellerReceives) .. " upon sale (30% Tax)"
+                                        local sellerReceives = math.floor(cash * 0.85)
+                                        sellPriceLabel.Text = "You will receive $" .. formatNumber(sellerReceives) .. " upon sale (15% Tax)"
                                         sellPriceLabel.TextColor3 = Color3.fromRGB(111, 218, 40)
                                 else
                                         sellPriceLabel.Text = "Cash must be between $1 and $1,000,000,000"
