@@ -171,6 +171,24 @@ function DataStoreAPI:AddCash(player, amount)
   return true
 end
 
+function DataStoreAPI:SubtractCash(player, amount)
+  local data = self:GetPlayerData(player)
+  if not data then return false end
+
+  if data.Cash < amount then return false end
+
+  data.Cash = data.Cash - amount
+
+  if player:FindFirstChild("leaderstats") then
+    local cash = player.leaderstats:FindFirstChild("Cash")
+    if cash then
+      cash.Value = data.Cash
+    end
+  end
+
+  return true
+end
+
 function DataStoreAPI:IncrementRolls(player)
   local data = self:GetPlayerData(player)
   if not data then return false end

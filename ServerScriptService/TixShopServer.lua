@@ -255,7 +255,7 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                         return
                 end
                 
-                playerData.Cash = playerData.Cash - itemData.Price
+                DataStoreAPI:SubtractCash(player, itemData.Price)
                 
                 for _, bundleItem in ipairs(itemData.BundleItems) do
                         local itemId = type(bundleItem) == "table" and bundleItem.RobloxId or bundleItem
@@ -337,7 +337,7 @@ PurchaseTixItemEvent.OnServerEvent:Connect(function(player, itemIdentifier)
                         return
                 end
                 
-                playerData.Cash = playerData.Cash - itemData.Price
+                DataStoreAPI:SubtractCash(player, itemData.Price)
                 
                 DataStoreAPI:AddItem(player, {
                         RobloxId = itemData.RobloxId,

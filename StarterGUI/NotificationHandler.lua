@@ -5,11 +5,11 @@ local template = script:WaitForChild("NotificationFrame")
 local ts = game:GetService("TweenService")
 local ti = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 
-local config = game.ReplicatedStorage:WaitForChild("NotificationsConfiguration")
-local notificationPresets = require(config:WaitForChild("NotificationPresets"))
-local maxNotifications = config:WaitForChild("MaxNotifications")
-local notificationLifetime = config:WaitForChild("NotificationLifetime")
-local notificationPadding = config:WaitForChild("PaddingBetweenNotifications")
+local notificationPresets = require(game.ReplicatedStorage:WaitForChild("NotificationPresets"))
+
+local MaxNotifications = 5
+local NotificationLifetime = 5
+local NotificationPadding = 10
 
 local remotes = game.ReplicatedStorage:WaitForChild("RemoteEvents")
 local notificationRE = remotes:WaitForChild("CreateNotification")
@@ -19,7 +19,7 @@ local queuedNotifications = {}
 
 function NotificationUpTween(notificationFrame: Frame)
 
-  local offsetY = (container.AbsoluteSize.Y * template.Size.Y.Scale + template.Size.Y.Offset) + notificationPadding.Value
+  local offsetY = (container.AbsoluteSize.Y * template.Size.Y.Scale + template.Size.Y.Offset) + NotificationPadding
   local scaleY = offsetY / container.AbsoluteSize.Y
   local newY = notificationFrame.Position.Y.Scale - scaleY
 
@@ -75,9 +75,9 @@ function ShiftNotificationsUp()
     return a.AbsolutePosition.Y < b.AbsolutePosition.Y
   end)
 
-  if #existingNotifications >= maxNotifications.Value then
+  if #existingNotifications >= MaxNotifications then
 
-    for i = 1, #existingNotifications - maxNotifications.Value + 1 do
+    for i = 1, #existingNotifications - MaxNotifications + 1 do
 
       local existingNotification = existingNotifications[i]
       NotificationOutTween(existingNotification)
@@ -141,7 +141,7 @@ function NewNotification(data: {Type: string, Title: string, Body: string, Image
 
   task.spawn(function()
 
-    task.wait(notificationLifetime.Value)
+    task.wait(NotificationLifetime)
     NotificationOutTween(notificationFrame)
   end)
 end
