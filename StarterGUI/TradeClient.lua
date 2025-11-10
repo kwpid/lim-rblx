@@ -50,12 +50,24 @@ viewInventoryFrame.Visible = false
 
 tradeRequestsFolder.ChildAdded:Connect(function(child)
         if child.Value == client.Name then
+                local senderPlayer = game.Players:FindFirstChild(child.Name)
+                if not senderPlayer then
+                        child:Destroy()
+                        return
+                end
+                
                 tradeRequestFrame.TradeText.Text = child.Name .. " sent you a trade request!"
 
                 tradeRequestFrame.AcceptButton.Visible = true
                 tradeRequestFrame.RejectButton.Visible = true
                 tradeRequestFrame.Visible = true
         elseif child.Name == client.Name then
+                local targetPlayer = game.Players:FindFirstChild(child.Value)
+                if not targetPlayer then
+                        child:Destroy()
+                        return
+                end
+                
                 tradeRequestFrame.TradeText.Text = "You sent a trade request to " .. child.Value
 
                 tradeRequestFrame.AcceptButton.Visible = false
@@ -671,7 +683,16 @@ ongoingTradesFolder.ChildAdded:Connect(function(child)
         end
 end)
 
+local playerFrameConnections = {}
+
 local function populatePlayerList()
+        for _, connection in pairs(playerFrameConnections) do
+                if connection then
+                        connection:Disconnect()
+                end
+        end
+        playerFrameConnections = {}
+        
         for _, child in pairs(sendTradesFrame.PlayerList:GetChildren()) do
                 if child:IsA("Frame") then
                         child:Destroy()
@@ -687,17 +708,19 @@ local function populatePlayerList()
                                 Enum.ThumbnailType.HeadShot,
                                 Enum.ThumbnailSize.Size100x100)
 
-                        playerFrame.SendButton.MouseButton1Click:Connect(function()
+                        local sendConnection = playerFrame.SendButton.MouseButton1Click:Connect(function()
                                 if tradeRequestFrame.Visible == false then
                                         tradeEvent:FireServer("send trade request", { plr })
                                 end
                         end)
+                        table.insert(playerFrameConnections, sendConnection)
 
                         local viewInvBtn = playerFrame:FindFirstChild("ViewInventory")
                         if viewInvBtn then
-                                viewInvBtn.MouseButton1Click:Connect(function()
+                                local viewConnection = viewInvBtn.MouseButton1Click:Connect(function()
                                         populateViewInventory(plr)
                                 end)
+                                table.insert(playerFrameConnections, viewConnection)
                         end
 
                         playerFrame.Parent = sendTradesFrame.PlayerList

@@ -71,6 +71,7 @@ local function formatNumber(n)
 end
 
 local playerListButtons = {}
+local playerListConnections = {}
 local selectedItemsButtons = {}
 local handlerItemsButtons = {}
 local currentGamble = nil
@@ -88,6 +89,13 @@ local function populatePlayerList()
                 return
         end
         isPopulatingPlayerList = true
+
+        for _, connection in pairs(playerListConnections) do
+                if connection then
+                        connection:Disconnect()
+                end
+        end
+        playerListConnections = {}
 
         local playerList = sendRequestFrame:FindFirstChild("PlayerList")
         local playerFrameSample = script:FindFirstChild("PlayerFrame")
@@ -141,9 +149,10 @@ local function populatePlayerList()
 
                         local sendButton = playerFrame:FindFirstChild("SendButton")
                         if sendButton then
-                                sendButton.MouseButton1Click:Connect(function()
+                                local sendConnection = sendButton.MouseButton1Click:Connect(function()
                                         gambleEvent:FireServer("send gamble request", { player })
                                 end)
+                                table.insert(playerListConnections, sendConnection)
                         end
 
                         table.insert(playerListButtons, playerFrame)
@@ -155,6 +164,12 @@ end
 
 gambleRequestsFolder.ChildAdded:Connect(function(child)
         if child.Value == client.Name then
+                local senderPlayer = game.Players:FindFirstChild(child.Name)
+                if not senderPlayer then
+                        child:Destroy()
+                        return
+                end
+                
                 requestFrame:FindFirstChild("RequestText").Text = child.Name .. " wants to Risk It 1v1!"
 
                 local acceptButton = requestFrame:FindFirstChild("Accept")
@@ -172,6 +187,12 @@ gambleRequestsFolder.ChildAdded:Connect(function(child)
                 gameMain.Visible = false
                 requestFrame.Visible = true
         elseif child.Name == client.Name then
+                local targetPlayer = game.Players:FindFirstChild(child.Value)
+                if not targetPlayer then
+                        child:Destroy()
+                        return
+                end
+                
                 requestFrame:FindFirstChild("RequestText").Text = "You sent a request to " .. child.Value
 
                 local acceptButton = requestFrame:FindFirstChild("Accept")
