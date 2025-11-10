@@ -93,7 +93,6 @@ local function populatePlayerList()
         local playerFrameSample = script:FindFirstChild("PlayerFrame")
 
         if not playerList or not playerFrameSample then
-                warn("PlayerList or PlayerFrame sample not found")
                 isPopulatingPlayerList = false
                 return
         end
@@ -214,7 +213,6 @@ end
 
 local function updateSelectedItemsDisplay()
         if not currentGamble then 
-                warn("updateSelectedItemsDisplay: No current gamble")
                 return 
         end
         
@@ -222,7 +220,6 @@ local function updateSelectedItemsDisplay()
         local player2 = currentGamble:FindFirstChild("Player2")
         
         if not player1 or not player2 then
-                warn("updateSelectedItemsDisplay: Player1 or Player2 not found yet")
                 return
         end
         
@@ -230,7 +227,6 @@ local function updateSelectedItemsDisplay()
         local player2Value = player2:FindFirstChild("Value")
         
         if not player1Value or not player2Value then
-                warn("updateSelectedItemsDisplay: Player values not found yet")
                 return
         end
 
@@ -239,7 +235,6 @@ local function updateSelectedItemsDisplay()
 
         local selectedItemsFrame = gameMain:FindFirstChild("Selected_Items")
         if not selectedItemsFrame then
-                warn("updateSelectedItemsDisplay: Selected_Items frame not found under Main")
                 return
         end
         
@@ -248,16 +243,11 @@ local function updateSelectedItemsDisplay()
 
         local opponentItemsFrame = gameMain:FindFirstChild("Opponent_Items")
         if not opponentItemsFrame then
-                warn("updateSelectedItemsDisplay: Opponent_Items frame not found under Main")
                 return
         end
         
         local oppSelectedScroll = opponentItemsFrame:FindFirstChild("Opp_SelectedItems")
         local oppTotalValue = opponentItemsFrame:FindFirstChild("TotalChosenValue")
-        
-        print("updateSelectedItemsDisplay called")
-        print("selectedItemsScroll found:", selectedItemsScroll ~= nil)
-        print("oppSelectedScroll found:", oppSelectedScroll ~= nil)
 
         if selectedItemsScroll then
                 for _, btn in pairs(selectedItemsButtons) do
@@ -269,14 +259,11 @@ local function updateSelectedItemsDisplay()
 
                 local sample = script:FindFirstChild("Sample")
                 if not sample then 
-                        warn("Sample not found in GambleClient script!")
                         return 
                 end
 
                 local totalValue = 0
                 local items = playerFolder.Items:GetChildren()
-                
-                print("Updating selected items display, found " .. #items .. " items")
 
                 for i, itemFolder in ipairs(items) do
                         local button = sample:Clone()
@@ -336,14 +323,11 @@ local function updateSelectedItemsDisplay()
 
                 local sample = script:FindFirstChild("Sample")
                 if not sample then 
-                        warn("Sample not found in GambleClient script (opponent section)!")
                         return 
                 end
 
                 local oppTotalVal = 0
                 local oppItems = opponentFolder.Items:GetChildren()
-                
-                print("Updating opponent items display, found " .. #oppItems .. " items")
 
                 for i, itemFolder in ipairs(oppItems) do
                         local button = sample:Clone()
@@ -445,7 +429,6 @@ local function populateInventoryHandler(forceRefresh)
                 end)
 
                 if not success or not inventory then
-                        warn("Failed to get inventory")
                         return
                 end
 
@@ -612,7 +595,6 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
         local player2Folder = child:WaitForChild("Player2", 5)
         
         if not player1Folder or not player2Folder then
-                warn("Failed to find Player1 or Player2 in gamble folder")
                 return
         end
         
@@ -620,7 +602,6 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
         local player2Name = player2Folder:WaitForChild("Value", 5)
         
         if not player1Name or not player2Name then
-                warn("Failed to find player names in gamble folder")
                 return
         end
         
@@ -694,20 +675,15 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
 
                 child.ChildAdded:Connect(function(obj)
                         if obj.Name == "GAME_STARTED" then
-                                print("GAME_STARTED detected! Transitioning to game...")
                                 task.wait(1)
 
                                 local selectItems = gameMain:FindFirstChild("SelectItems")
                                 if selectItems then
-                                        print("Hiding SelectItems")
                                         selectItems.Visible = false
-                                else
-                                        warn("SelectItems not found!")
                                 end
 
                                 local gameFrame = gameMain:FindFirstChild("Game")
                                 if gameFrame then
-                                        print("Showing Game frame")
                                         gameFrame.Visible = true
 
                                         local yourWinsLabel = gameFrame:FindFirstChild("YourWins")
@@ -726,28 +702,19 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
                                         isInGame = true
                                         currentRound = 1
 
-                                        print("Fetching rollable items for animation...")
                                         local success, items = pcall(function()
                                                 return getRollableItemsFunction:InvokeServer()
                                         end)
                                         
                                         if success and items and #items > 0 then
                                                 rollableItemsCache = items
-                                                print("Loaded " .. #rollableItemsCache .. " items for animation")
-                                        else
-                                                warn("Failed to load rollable items, animation will use placeholders")
                                         end
 
                                         local isPlayer1 = currentGamble.Player1.Value.Value == client.Name
                                         if isPlayer1 then
-                                                print("Player 1 requesting round 1...")
                                                 task.wait(1)
                                                 gambleEvent:FireServer("request round", { RoundNumber = currentRound })
-                                        else
-                                                print("Player 2 waiting for round 1...")
                                         end
-                                else
-                                        warn("Game frame not found!")
                                 end
                         end
                 end)
@@ -762,6 +729,9 @@ ongoingGamblesFolder.ChildRemoved:Connect(function(child)
                 yourWins = 0
                 theirWins = 0
                 
+                gambleFrame.Visible = true
+                sendRequestFrame.Visible = true
+                requestFrame.Visible = false
                 gameMain.Visible = false
 
                 local selectItems = gameMain:FindFirstChild("SelectItems")
@@ -855,6 +825,7 @@ ongoingGamblesFolder.ChildRemoved:Connect(function(child)
                         end
                 end
                 handlerItemsButtons = {}
+                inventoryItemsData = {}
                 
                 rollableItemsCache = {}
                 
@@ -866,6 +837,8 @@ ongoingGamblesFolder.ChildRemoved:Connect(function(child)
                         cancelConnection:Disconnect()
                         cancelConnection = nil
                 end
+                
+                populatePlayerList()
         end
 end)
 
