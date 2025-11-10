@@ -100,8 +100,14 @@ function removeGambles(plr)
                                 end
                                 
                                 local DataStoreManager = require(script.Parent.DataStoreManager)
-                                DataStoreManager:SavePlayerData(loser)
-                                DataStoreManager:SavePlayerData(winner)
+                                local loserData = DataStoreAPI:GetPlayerData(loser)
+                                local winnerData = DataStoreAPI:GetPlayerData(winner)
+                                if loserData then
+                                        DataStoreManager:SaveData(loser, loserData)
+                                end
+                                if winnerData then
+                                        DataStoreManager:SaveData(winner, winnerData)
+                                end
                                 
                                 if createNotificationEvent then
                                         createNotificationEvent:FireClient(winner, {
@@ -800,8 +806,14 @@ gambleEvent.OnServerEvent:Connect(function(plr, instruction, data)
                         end
 
                         local DataStoreManager = require(script.Parent.DataStoreManager)
-                        DataStoreManager:SavePlayerData(winner)
-                        DataStoreManager:SavePlayerData(loser)
+                        local winnerData = DataStoreAPI:GetPlayerData(winner)
+                        local loserData = DataStoreAPI:GetPlayerData(loser)
+                        if winnerData then
+                                DataStoreManager:SaveData(winner, winnerData)
+                        end
+                        if loserData then
+                                DataStoreManager:SaveData(loser, loserData)
+                        end
                         
                         if createNotificationEvent then
                                 createNotificationEvent:FireClient(winner, {

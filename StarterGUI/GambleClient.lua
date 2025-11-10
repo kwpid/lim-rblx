@@ -589,24 +589,34 @@ ongoingGamblesFolder.ChildAdded:Connect(function(child)
 
                 startGambleSelection()
 
+                local isPlayer1 = player1Name.Value == client.Name
+                
                 child.Player1.Items.ChildAdded:Connect(function()
                         updateSelectedItemsDisplay()
-                        populateInventoryHandler()
+                        if isPlayer1 then
+                                populateInventoryHandler()
+                        end
                 end)
 
                 child.Player1.Items.ChildRemoved:Connect(function()
                         updateSelectedItemsDisplay()
-                        populateInventoryHandler()
+                        if isPlayer1 then
+                                populateInventoryHandler()
+                        end
                 end)
 
                 child.Player2.Items.ChildAdded:Connect(function()
                         updateSelectedItemsDisplay()
-                        populateInventoryHandler()
+                        if not isPlayer1 then
+                                populateInventoryHandler()
+                        end
                 end)
 
                 child.Player2.Items.ChildRemoved:Connect(function()
                         updateSelectedItemsDisplay()
-                        populateInventoryHandler()
+                        if not isPlayer1 then
+                                populateInventoryHandler()
+                        end
                 end)
 
                 child.Player1.ChildAdded:Connect(function(obj)
