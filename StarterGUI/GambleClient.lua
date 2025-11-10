@@ -375,8 +375,6 @@ local function updateSelectedItemsDisplay()
         
         local isPlayer1 = player1Value.Value == client.Name
         local myConfirmed = isPlayer1 and player1Confirmed or player2Confirmed
-        local oppConfirmed = isPlayer1 and player2Confirmed or player1Confirmed
-        local oppName = isPlayer1 and player2Value.Value or player1Value.Value
         
         if confirmButton then
                 if myConfirmed then
@@ -387,12 +385,15 @@ local function updateSelectedItemsDisplay()
         end
         
         if mainTxt then
+                local player1Name = player1Value.Value
+                local player2Name = player2Value.Value
+                
                 if player1Confirmed and player2Confirmed then
-                        mainTxt.Text = "Both players confirmed! Starting game..."
-                elseif myConfirmed and not oppConfirmed then
-                        mainTxt.Text = "Waiting for " .. oppName .. " to confirm..."
-                elseif oppConfirmed and not myConfirmed then
-                        mainTxt.Text = oppName .. " is ready! Confirm your items"
+                        mainTxt.Text = player1Name .. " and " .. player2Name .. " Confirmed"
+                elseif player1Confirmed and not player2Confirmed then
+                        mainTxt.Text = player1Name .. " Confirmed"
+                elseif player2Confirmed and not player1Confirmed then
+                        mainTxt.Text = player2Name .. " Confirmed"
                 else
                         mainTxt.Text = "Select Items To Bet"
                 end
