@@ -12,13 +12,33 @@ local function rejoinPlayer(player)
                 return
         end
 
+        local notificationEvent = game.ReplicatedStorage:FindFirstChild("RemoteEvents")
+        if notificationEvent then
+                notificationEvent = notificationEvent:FindFirstChild("CreateNotification")
+                if notificationEvent then
+                        notificationEvent:FireClient(player, {
+                                Type = "ERROR",
+                                Title = "AFK Detected",
+                                Body = "You've been inactive for too long. Rejoining...",
+                        })
+                end
+        end
+
+        task.wait(2)
+
         local placeId = game.PlaceId
+        local teleportOptions = Instance.new("TeleportOptions")
+        teleportOptions.ShouldReserveServer = false
+        
         local success, errorMsg = pcall(function()
-                TeleportService:Teleport(placeId, player)
+                TeleportService:TeleportAsync(placeId, {player}, teleportOptions)
         end)
 
         if not success then
-                warn(string.format("failed to auto-rejoin %s: %s", player.Name, tostring(errorMsg)))
+                warn(string.format("Failed to auto-rejoin %s: %s", player.Name, tostring(errorMsg)))
+                pcall(function()
+                        player:Kick("You were inactive for too long. Please rejoin the game.")
+                end)
         end
 end
 
