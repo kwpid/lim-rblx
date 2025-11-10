@@ -90,9 +90,9 @@ local function populatePlayerList()
                 return
         end
 
-        for _, btn in pairs(playerListButtons) do
-                if btn then
-                        btn:Destroy()
+        for _, child in pairs(playerList:GetChildren()) do
+                if child:IsA("Frame") then
+                        child:Destroy()
                 end
         end
         playerListButtons = {}
