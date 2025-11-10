@@ -5,9 +5,14 @@ local template = script:WaitForChild("NotificationFrame")
 local ts = game:GetService("TweenService")
 local ti = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
 
-local notificationPresetsModule = game.ReplicatedStorage:WaitForChild("NotificationPresets", 10)
+local notificationsConfig = game.ReplicatedStorage:WaitForChild("NotificationsConfiguration", 10)
+if not notificationsConfig then
+        warn("NotificationsConfiguration not found in ReplicatedStorage!")
+        return
+end
+local notificationPresetsModule = notificationsConfig:WaitForChild("NotificationPresets", 10)
 if not notificationPresetsModule then
-        warn("NotificationPresets module not found in ReplicatedStorage!")
+        warn("NotificationPresets module not found in NotificationsConfiguration!")
         return
 end
 local notificationPresets = require(notificationPresetsModule)
