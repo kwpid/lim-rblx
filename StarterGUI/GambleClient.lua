@@ -106,9 +106,21 @@ local function populatePlayerList()
                         playerFrame.LayoutOrder = i
                         playerFrame.Parent = playerList
 
-                        local nameLabel = playerFrame:FindFirstChild("PlayerName")
-                        if nameLabel then
-                                nameLabel.Text = player.Name
+                        local displayNameLabel = playerFrame:FindFirstChild("PlayerDisplayName")
+                        if displayNameLabel then
+                                displayNameLabel.Text = player.DisplayName
+                        end
+
+                        local userNameLabel = playerFrame:FindFirstChild("PlayerUserName")
+                        if userNameLabel then
+                                userNameLabel.Text = "@" .. player.Name
+                        end
+
+                        local playerImage = playerFrame:FindFirstChild("PlayerImage")
+                        if playerImage then
+                                playerImage.Image = game.Players:GetUserThumbnailAsync(player.UserId,
+                                        Enum.ThumbnailType.HeadShot,
+                                        Enum.ThumbnailSize.Size100x100)
                         end
 
                         local sendButton = playerFrame:FindFirstChild("SendButton")
